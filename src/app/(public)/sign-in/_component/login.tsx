@@ -5,48 +5,31 @@ import { Button } from "@/app/_components/ui/button";
 import { Label } from "@/app/_components/ui/label";
 import { Input } from "@/app/_components/ui/input";
 import { useToast } from "@/app/_components/ui/use-toast";
-import { signIn } from "next-auth/react";
 import { api } from "@/trpc/react";
+import { authenticationRouter } from "@/server/api/routers/authentication";
+import { useRouter } from "next/navigation";
 
 const LoginComponent = () => {
+  const router = useRouter();
   const [isLoading] = useState<boolean>(false);
   const [adminId, setAdminId] = useState<string>("");
-
+  const [password, setPassword] = useState<string>("");
   const [signedIn, setSignedIn] = useState<boolean>(false);
-  const getEmailByAdminId = api.user.getEmailByAdminId.useMutation();
 
   const { toast } = useToast();
+  const authentication = api.authentication.firstTimeLogin.useMutation();
 
-  const login = () => {
-    getEmailByAdminId
-      .mutateAsync({ adminId: adminId })
-      .then((results) => {
-        if (results != null) {
-          signIn("email", {
-            email: results.email,
-            redirect: false,
-          })
-            .then((data) => {
-              if (data?.error === null) {
-                toast({
-                  title: "Check Email Inbox",
-                  description:
-                    "If your sign in is valid, you will receive a Sign In Link",
-                });
-                setAdminId("");
-              }
-              if (data?.error === "AccessDenied") {
-                setSignedIn(false);
-              }
-            })
-            .catch((error) => {
-              console.log(error);
-              setSignedIn(false);
-            });
-        }
+  const login = async () => {
+    await authentication
+      .mutateAsync({
+        adminId: adminId,
+        password: password,
       })
-      .catch((error) => {
-        console.log("error", error);
+      .then(() => {
+        // router.push("/");
+      })
+      .catch(() => {
+        return false;
       });
   };
 
@@ -97,11 +80,27 @@ const LoginComponent = () => {
               autoCorrect="off"
               disabled={isLoading}
             />
+            <Label
+              className="mb-2 block text-sm font-bold text-gray-700"
+              htmlFor="email"
+            >
+              Password
+            </Label>
+            <Input
+              value={password}
+              onChange={(e) => {
+                setPassword(e.target.value);
+              }}
+              id="password"
+              placeholder="Password Input"
+              minLength={1}
+              type="password"
+              autoCapitalize="none"
+              autoComplete="Password"
+              autoCorrect="off"
+              disabled={isLoading}
+            />
           </div>
-          <div className="mb-5">
-            <span className=" text-xs opacity-50">Omit P for Admin ID</span>
-          </div>
-
           <Button disabled={isLoading} className="w-full">
             Sign In
           </Button>
