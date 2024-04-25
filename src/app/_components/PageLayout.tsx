@@ -10,7 +10,7 @@ import {
   SheetTrigger,
 } from "@/app/_components/ui/sheet";
 import Link from "next/link";
-import { Button, buttonVariants } from "./ui/button";
+import { Button } from "./ui/button";
 import {
   FolderKanban,
   Home,
@@ -65,6 +65,122 @@ const PageLayout = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
+const equipmentLoans = [
+  {
+    itemName: "Loan Request",
+    pathName: "/equipment-loans/loan-request",
+  },
+  {
+    itemName: "Loans",
+    pathName: "/equipment-loans/loans",
+  },
+  {
+    itemName: "Overdue Loans",
+    pathName: "/equipment-loans/overdue-loans",
+  },
+  {
+    itemName: "History",
+    pathName: "/equipment-loans/history",
+  },
+  {
+    itemName: "Lost/Broken Loans",
+    pathName: "/equipment-loans/lost-broken-loans",
+  },
+];
+
+const equipmentManagement = [
+  {
+    itemName: "Equipment",
+    pathName: "/equipment-management/equipment",
+  },
+  {
+    itemName: "Inventory",
+    pathName: "/equipment-management/inventory",
+  },
+  {
+    itemName: "Equipment Categories",
+    pathName: "/equipment-management/equipment-categories",
+  },
+  {
+    itemName: "Eqiuipment Status",
+    pathName: "/equipment-management/eqiupment-status",
+  },
+  {
+    itemName: "General Settings",
+    pathName: "/equipment-management/general-settings",
+  },
+];
+
+const schoolAdmin = [
+  {
+    itemName: "Staff",
+    pathName: "/school-admin/staff",
+  },
+  {
+    itemName: "Student",
+    pathName: "/school-admin/student",
+  },
+  {
+    itemName: "Years of Admission",
+    pathName: "/school-admin/years-of-admission",
+  },
+  {
+    itemName: "Courses",
+    pathName: "/school-admin/courses",
+  },
+  {
+    itemName: "Staff Types",
+    pathName: "/school-admin/staff-types",
+  },
+  {
+    itemName: "Organisation Units",
+    pathName: "/school-admin/organisation-units",
+  },
+  {
+    itemName: "Roles",
+    pathName: "/school-admin/roles",
+  },
+  {
+    itemName: "Access Rights",
+    pathName: "/school-admin/access-rights",
+  },
+  {
+    itemName: "School Details",
+    pathName: "/school-admin/school-details",
+  },
+  {
+    itemName: "Semester and Holidays",
+    pathName: "/school-admin/semester-and-holidays",
+  },
+];
+
+const loanManagement = [
+  {
+    itemName: "Preparation",
+    pathName: "/loan-management/preparation",
+  },
+  {
+    itemName: "Collection",
+    pathName: "/loan-management/collection",
+  },
+  {
+    itemName: "Return",
+    pathName: "/loan-management/return",
+  },
+  {
+    itemName: "Track Loans",
+    pathName: "/loan-management/track-loans",
+  },
+  {
+    itemName: "Lost/Broken Loans",
+    pathName: "/loan-management/lost-broken-loans",
+  },
+  {
+    itemName: "Waiver",
+    pathName: "/loan-management/waiver",
+  },
+];
+
 const SideBarContent = () => {
   const [isActiveItem, setIsActiveItem] = useState<string>(
     usePathname().split("/")[1] || "/",
@@ -88,28 +204,9 @@ const SideBarContent = () => {
       <SideBarAccordion
         name="Equipment Loans"
         Icon={FolderKanban}
-        children={[
-          {
-            itemName: "Loan Request",
-            pathName: "/equipment-loans/loan-request",
-          },
-          {
-            itemName: "Loans",
-            pathName: "/equipment-loans/loans",
-          },
-          {
-            itemName: "Overdue Loans",
-            pathName: "/equipment-loans/overdue-loans",
-          },
-          {
-            itemName: "History",
-            pathName: "/equipment-loans/history",
-          },
-          {
-            itemName: "Lost/Broken Loans",
-            pathName: "/equipment-loans/lost-broken-loans",
-          },
-        ]}
+        children={equipmentLoans.filter(
+          (item) => chceckAccessRight(item.pathName) && item,
+        )}
         setIsActiveItem={setIsActiveItem}
         isActiveItem={isActiveItem}
       />
@@ -117,28 +214,9 @@ const SideBarContent = () => {
       <SideBarAccordion
         name="Equipment Management"
         Icon={SquareDashedKanban}
-        children={[
-          {
-            itemName: "Equipment",
-            pathName: "/equipment-management/equipment",
-          },
-          {
-            itemName: "Inventory",
-            pathName: "/equipment-management/inventory",
-          },
-          {
-            itemName: "Equipment Categories",
-            pathName: "/equipment-management/equipment-categories",
-          },
-          {
-            itemName: "Eqiuipment Status",
-            pathName: "/equipment-management/eqiupment-status",
-          },
-          {
-            itemName: "General Settings",
-            pathName: "/equipment-management/general-settings",
-          },
-        ]}
+        children={equipmentManagement.filter(
+          (item) => chceckAccessRight(item.pathName) && item,
+        )}
         setIsActiveItem={setIsActiveItem}
         isActiveItem={isActiveItem}
       />
@@ -146,48 +224,9 @@ const SideBarContent = () => {
       <SideBarAccordion
         name="School Admin"
         Icon={Lock}
-        children={[
-          {
-            itemName: "Staff",
-            pathName: "/school-admin/staff",
-          },
-          {
-            itemName: "Student",
-            pathName: "/school-admin/student",
-          },
-          {
-            itemName: "Years of Admission",
-            pathName: "/school-admin/years-of-admission",
-          },
-          {
-            itemName: "Courses",
-            pathName: "/school-admin/courses",
-          },
-          {
-            itemName: "Staff Types",
-            pathName: "/school-admin/staff-types",
-          },
-          {
-            itemName: "Organisation Units",
-            pathName: "/school-admin/organisation-units",
-          },
-          {
-            itemName: "Roles",
-            pathName: "/school-admin/roles",
-          },
-          {
-            itemName: "Access Rights",
-            pathName: "/school-admin/access-rights",
-          },
-          {
-            itemName: "School Details",
-            pathName: "/school-admin/school-details",
-          },
-          {
-            itemName: "Semester and Holidays",
-            pathName: "/school-admin/semester-and-holidays",
-          },
-        ]}
+        children={schoolAdmin.filter(
+          (item) => chceckAccessRight(item.pathName) && item,
+        )}
         setIsActiveItem={setIsActiveItem}
         isActiveItem={isActiveItem}
       />
@@ -195,49 +234,30 @@ const SideBarContent = () => {
       <SideBarAccordion
         name="Loan Management"
         Icon={Search}
-        children={[
-          {
-            itemName: "Preparation",
-            pathName: "/loan-management/preparation",
-          },
-          {
-            itemName: "Collection",
-            pathName: "/loan-management/collection",
-          },
-          {
-            itemName: "Return",
-            pathName: "/loan-management/return",
-          },
-          {
-            itemName: "Track Loans",
-            pathName: "/loan-management/track-loans",
-          },
-          {
-            itemName: "Lost/Broken Loans",
-            pathName: "/loan-management/lost-broken-loans",
-          },
-          {
-            itemName: "Waiver",
-            pathName: "/loan-management/waiver",
-          },
-        ]}
+        children={loanManagement.filter(
+          (item) => chceckAccessRight(item.pathName) && item,
+        )}
         setIsActiveItem={setIsActiveItem}
         isActiveItem={isActiveItem}
       />
 
-      <SideBarItem
-        pathName="/approval-management"
-        Icon={FolderKanban}
-        name="Approval Management"
-        setIsActiveItem={setIsActiveItem}
-      />
+      {chceckAccessRight("/approval-management") && (
+        <SideBarItem
+          pathName="/approval-management"
+          Icon={FolderKanban}
+          name="Approval Management"
+          setIsActiveItem={setIsActiveItem}
+        />
+      )}
 
-      <SideBarItem
-        pathName="/user-guide"
-        Icon={NotebookText}
-        name="User Guide"
-        setIsActiveItem={setIsActiveItem}
-      />
+      {chceckAccessRight("/user-guide") && (
+        <SideBarItem
+          pathName="/user-guide"
+          Icon={NotebookText}
+          name="User Guide"
+          setIsActiveItem={setIsActiveItem}
+        />
+      )}
     </div>
   );
 };
