@@ -33,9 +33,34 @@ const accessRight = [
 ];
 
 const PageLayout = ({ children }: { children: React.ReactNode }) => {
+  const pathName = usePathname().split("/")[1] || "/";
+
+  const topBarContent = (pathName: string) => {
+    switch (pathName) {
+      case "/":
+        return "Dashboard";
+      case "equipment-loans":
+        return "Equipment Loans";
+      case "equipment-management":
+        return "Equipment Management";
+      case "school-admin":
+        return "School Admin";
+      case "loan-management":
+        return "Loan Management";
+      case "approval-management":
+        return "Approval Management";
+      case "user-guide":
+        return "User Guide";
+      case "profile":
+        return "Profile";
+      default:
+        "";
+    }
+  };
+
   return (
     <div className="absolute inset-0 grid md:grid-cols-[1fr_4fr]">
-      <div className="sideBarContent h-full overflow-y-auto bg-[#1c6c91]  p-6 md:block">
+      <div className="sideBarContent h-full overflow-y-auto bg-[#1c6c91] hidden  p-6 md:block">
         <SideBarContent />
       </div>
       <div className="flex w-full flex-col">
@@ -55,7 +80,11 @@ const PageLayout = ({ children }: { children: React.ReactNode }) => {
                 </SheetContent>
               </Sheet>
             </span>
-            <span>top bar</span>
+            <span>
+              <h3 className="scroll-m-20 text-2xl font-semibold tracking-tight">
+                {topBarContent(pathName)}
+              </h3>
+            </span>
           </div>
           <span>profile</span>
         </div>
