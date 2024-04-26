@@ -30,6 +30,7 @@ export const uncachedValidateRequest = async (): Promise<
       );
     }
   } catch {
+    //TO DO: handle properly
     console.error("Failed to set session cookie");
   }
   return result;

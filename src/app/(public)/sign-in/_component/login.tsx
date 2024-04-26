@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 "use client";
 
 import React, { useState } from "react";
@@ -5,51 +6,32 @@ import { Button } from "@/app/_components/ui/button";
 import { Label } from "@/app/_components/ui/label";
 import { Input } from "@/app/_components/ui/input";
 import { useToast } from "@/app/_components/ui/use-toast";
-import { api } from "@/trpc/react";
-import { authenticationRouter } from "@/server/api/routers/authentication";
-import { useRouter } from "next/navigation";
+import { authLogin } from "@/lib/auth/actions";
 
 const LoginComponent = () => {
-  const router = useRouter();
   const [isLoading] = useState<boolean>(false);
   const [adminId, setAdminId] = useState<string>("");
   const [password, setPassword] = useState<string>("");
-  const [signedIn, setSignedIn] = useState<boolean>(false);
 
   const { toast } = useToast();
-  const authentication = api.authentication.firstTimeLogin.useMutation();
 
-  const login = async () => {
-    await authentication
-      .mutateAsync({
-        adminId: adminId,
-        password: password,
+  const login = () => {
+    authLogin(adminId, password)
+      .then((result) => {
+        if (result?.error != undefined) {
+          toast({
+            title: result.error,
+            description: result.message,
+          });
+        }
       })
-      .then(() => {
-        // router.push("/");
-      })
-      .catch(() => {
-        return false;
+      .catch((error) => {
+        console.log(error);
       });
   };
 
   return (
     <div className="mx-auto w-1/3 min-w-96">
-      {signedIn && (
-        <div
-          data-testid="notify-email-sent"
-          className="rounded-md bg-green-50 p-4"
-        >
-          <div className="flex">
-            <div className="flex-shrink-0"></div>
-            <div className="ml-3">
-              <p className="text-sm font-medium text-green-800">
-                Check your inbox for the login link
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
       <div className="mb-4 rounded-xl bg-white px-8 pb-8 pt-6 shadow-lg">
         <h1 className="mb-4 text-2xl tracking-tight">Welcome</h1>
 
@@ -79,6 +61,7 @@ const LoginComponent = () => {
               autoComplete="Admin Number"
               autoCorrect="off"
               disabled={isLoading}
+              className="mb-3"
             />
             <Label
               className="mb-2 block text-sm font-bold text-gray-700"
@@ -99,6 +82,7 @@ const LoginComponent = () => {
               autoComplete="Password"
               autoCorrect="off"
               disabled={isLoading}
+              className="mb-5"
             />
           </div>
           <Button disabled={isLoading} className="w-full">

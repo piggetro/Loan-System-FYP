@@ -4,7 +4,6 @@ import { Inter } from "next/font/google";
 import { TRPCReactProvider } from "@/trpc/react";
 import { Toaster } from "@/app/_components/ui/toaster";
 import { MantineProvider } from "@mantine/core";
-import { SessionProvider } from "next-auth/react";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -14,7 +13,7 @@ const inter = Inter({
 
 export const metadata = {
   title: "Sign In",
-  description: "A discussion forum built with Next.js and TRPC",
+  description: "Sign In Page For SOC Loan System",
 };
 
 export default async function RootLayout({
