@@ -1,17 +1,15 @@
 import React from "react";
-import { Payment, columns } from "./_components/Columns";
+import { AccessRights, columns } from "./_components/Columns";
 import { DataTable } from "./_components/DataTable";
 
-async function getData(): Promise<Payment[]> {
+async function getData(): Promise<AccessRights[]> {
   // Fetch data from your API here.
   return [
     {
       id: "728ed52f",
-      amount: 100,
-      status: "pending",
-      email: "m@example.com",
-    },
-    // ...
+      pageName: "School Admin",
+      pageLink: "/school-admin/access-rights"
+    }
   ];
 }
 const page = async () => {
@@ -25,8 +23,8 @@ const page = async () => {
       <h2 className="mt-5 scroll-m-20 border-b pb-2 text-3xl font-semibold tracking-tight first:mt-0">
         Access Rights
       </h2>
-      <div className="mt-5 bg-white rounded-md p-4 h-fit">
-        <DataTable columns={columns} data={data} />
+      <div className="mt-5 h-fit rounded-md bg-white p-4">
+        <DataTable columns={columns} defaultData={data} />
       </div>
     </div>
   );
