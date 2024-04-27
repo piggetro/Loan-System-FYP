@@ -1,3 +1,6 @@
+/* eslint-disable react-hooks/rules-of-hooks */
+/* eslint-disable @typescript-eslint/prefer-nullish-coalescing */
+/* eslint-disable react/no-children-prop */
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
@@ -21,6 +24,8 @@ import {
   Lock,
   Search,
 } from "lucide-react";
+import { logout } from "@/lib/auth/actions";
+import { toast } from "./ui/use-toast";
 
 const accessRight = [
   "/",
@@ -60,7 +65,7 @@ const PageLayout = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <div className="absolute inset-0 grid md:grid-cols-[1fr_4fr]">
-      <div className="sideBarContent h-full overflow-y-auto bg-[#1c6c91] hidden  p-6 md:block">
+      <div className="sideBarContent hidden h-full overflow-y-auto bg-[#1c6c91]  p-6 md:block">
         <SideBarContent />
       </div>
       <div className="flex w-full flex-col">
@@ -86,7 +91,25 @@ const PageLayout = ({ children }: { children: React.ReactNode }) => {
               </h3>
             </span>
           </div>
-          <span>profile</span>
+          <span>
+            {/* Profile */}
+            {/* ONLY FOR DEV FOR EASE OF SIGN OUT */}
+            <div
+              onClick={() => {
+                logout()
+                  .then((result) => {
+                    if (result.error != undefined) {
+                      toast({ title: result.error });
+                    }
+                  })
+                  .catch((error) => {
+                    console.log(error);
+                  });
+              }}
+            >
+              Logout
+            </div>
+          </span>
         </div>
         <div className="flex-1 overflow-y-auto p-8">{children}</div>
       </div>
