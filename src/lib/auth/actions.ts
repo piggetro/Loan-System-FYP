@@ -21,7 +21,7 @@ export interface ActionResponse<T> {
   formError?: string;
 }
 
-export async function authLogin(adminId: string, password: string) {
+export async function login(adminId: string, password: string) {
   return await db.user
     .findUnique({
       where: {
@@ -59,4 +59,25 @@ export async function authLogin(adminId: string, password: string) {
         };
       }
     });
+}
+
+export async function signup(adminId: string, password: string) {
+  return null;
+}
+
+export async function logout(): Promise<{ error: string }> {
+  const { session } = await validateRequest();
+  if (!session) {
+    return {
+      error: "No User was Logged In",
+    };
+  }
+  await lucia.invalidateSession(session.id);
+  const sessionCookie = lucia.createBlankSessionCookie();
+  cookies().set(
+    sessionCookie.name,
+    sessionCookie.value,
+    sessionCookie.attributes,
+  );
+  return redirect("login");
 }

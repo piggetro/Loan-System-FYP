@@ -12,8 +12,8 @@ const inter = Inter({
 });
 
 export const metadata = {
-  title: "Sign In",
-  description: "Sign In Page For SOC Loan System",
+  title: "Register",
+  description: "Register Page For SOC Loan System",
 };
 
 export default async function RootLayout({

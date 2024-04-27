@@ -6,17 +6,18 @@ import { Button } from "@/app/_components/ui/button";
 import { Label } from "@/app/_components/ui/label";
 import { Input } from "@/app/_components/ui/input";
 import { useToast } from "@/app/_components/ui/use-toast";
-import { authLogin } from "@/lib/auth/actions";
+import { login } from "@/lib/auth/actions";
 
-const LoginComponent = () => {
+const RegisterComponent = () => {
   const [isLoading] = useState<boolean>(false);
   const [adminId, setAdminId] = useState<string>("");
   const [password, setPassword] = useState<string>("");
-
+  const [confirmPassword, setConfirmPassword] = useState<string>("");
+  const [showPassword, setShowPassword] = useState<boolean>(false);
   const { toast } = useToast();
 
-  const login = () => {
-    authLogin(adminId, password)
+  const performLogin = () => {
+    login(adminId, password)
       .then((result) => {
         if (result?.error != undefined) {
           toast({
@@ -38,7 +39,7 @@ const LoginComponent = () => {
         <form
           onSubmit={(e) => {
             e.preventDefault();
-            login();
+            performLogin();
           }}
         >
           <div className="">
@@ -63,12 +64,22 @@ const LoginComponent = () => {
               disabled={isLoading}
               className="mb-3"
             />
-            <Label
-              className="mb-2 block text-sm font-bold text-gray-700"
-              htmlFor="email"
-            >
-              Password
-            </Label>
+            <div className="mb-2 flex items-center text-sm">
+              <Label
+                className="block w-1/2 font-bold text-gray-700"
+                htmlFor="email"
+              >
+                Password
+              </Label>
+              <div
+                className="flex w-1/2 justify-end font-medium hover:cursor-pointer"
+                onClick={() => {
+                  setShowPassword(!showPassword);
+                }}
+              >
+                Show Password
+              </div>
+            </div>
             <Input
               value={password}
               onChange={(e) => {
@@ -77,7 +88,28 @@ const LoginComponent = () => {
               id="password"
               placeholder="Password Input"
               minLength={1}
-              type="password"
+              type={showPassword ? "text" : "password"}
+              autoCapitalize="none"
+              autoComplete="Password"
+              autoCorrect="off"
+              disabled={isLoading}
+              className="mb-5"
+            />
+            <Label
+              className="mb-2 block text-sm font-bold text-gray-700"
+              htmlFor="email"
+            >
+              Confirm Password
+            </Label>
+            <Input
+              value={confirmPassword}
+              onChange={(e) => {
+                setConfirmPassword(e.target.value);
+              }}
+              id="confirmPassword"
+              placeholder="Password Input"
+              minLength={1}
+              type={showPassword ? "text" : "password"}
               autoCapitalize="none"
               autoComplete="Password"
               autoCorrect="off"
@@ -86,7 +118,7 @@ const LoginComponent = () => {
             />
           </div>
           <Button disabled={isLoading} className="w-full">
-            Sign In
+            Register
           </Button>
         </form>
       </div>
@@ -94,4 +126,4 @@ const LoginComponent = () => {
   );
 };
 
-export default LoginComponent;
+export default RegisterComponent;
