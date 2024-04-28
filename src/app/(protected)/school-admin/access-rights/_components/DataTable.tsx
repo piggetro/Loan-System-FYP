@@ -23,14 +23,13 @@ import { useState } from "react";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
-  defaultData: TData[];
+  data: TData[];
 }
 
 export function DataTable<TData, TValue>({
   columns,
-  defaultData,
+  data,
 }: DataTableProps<TData, TValue>) {
-  const [data, setData] = useState(() => [...defaultData]);
 
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
 
@@ -41,21 +40,6 @@ export function DataTable<TData, TValue>({
     getPaginationRowModel: getPaginationRowModel(),
     onColumnFiltersChange: setColumnFilters,
     getFilteredRowModel: getFilteredRowModel(),
-    meta: {
-      updateData: (rowIndex: number, columnId: string, value: string) => {
-        setData((old: TData[]) =>
-          old.map((row, index) => {
-            if (index === rowIndex) {
-              return {
-                ...row,
-                [columnId]: value,
-              };
-            }
-            return row;
-          }),
-        );
-      },
-    },
     state: {
       columnFilters,
     },

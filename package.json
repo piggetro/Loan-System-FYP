@@ -13,9 +13,11 @@
     "start": "next start"
   },
   "dependencies": {
+    "@hookform/resolvers": "^3.3.4",
     "@lucia-auth/adapter-prisma": "^4.0.1",
     "@mantine/core": "^7.8.1",
     "@prisma/client": "^5.10.2",
+    "@radix-ui/react-alert-dialog": "^1.0.5",
     "@radix-ui/react-checkbox": "^1.0.4",
     "@radix-ui/react-dialog": "^1.0.5",
     "@radix-ui/react-dropdown-menu": "^2.0.6",
@@ -38,11 +40,12 @@
     "oslo": "^1.2.0",
     "react": "18.2.0",
     "react-dom": "18.2.0",
+    "react-hook-form": "^7.51.3",
     "server-only": "^0.0.1",
     "superjson": "^2.2.1",
     "tailwind-merge": "^2.3.0",
     "tailwindcss-animate": "^1.0.7",
-    "zod": "^3.23.3"
+    "zod": "^3.23.4"
   },
   "devDependencies": {
     "@types/eslint": "^8.56.2",
