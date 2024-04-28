@@ -1,4 +1,4 @@
-import React from "react";
+import React, { use, useCallback, useMemo } from "react";
 import { AccessRights, columns } from "./_components/Columns";
 import { DataTable } from "./_components/DataTable";
 
@@ -8,12 +8,22 @@ async function getData(): Promise<AccessRights[]> {
     {
       id: "728ed52f",
       pageName: "School Admin",
-      pageLink: "/school-admin/access-rights"
-    }
+      pageLink: "/school-admin/access-rights",
+    },
   ];
 }
 const page = async () => {
   const data = await getData();
+
+  const onEdit = useCallback((accessRight: AccessRights) => {
+    alert(accessRight.id);
+  }, []);
+
+  const onDelete = useCallback((accessRight: AccessRights) => {
+    alert(accessRight.id);
+  }, []);
+
+  const TableColumns = useMemo(() => columns({ onEdit, onDelete }), []);
 
   return (
     <div>
@@ -24,7 +34,7 @@ const page = async () => {
         Access Rights
       </h2>
       <div className="mt-5 h-fit rounded-md bg-white p-4">
-        <DataTable columns={columns} defaultData={data} />
+        <DataTable columns={TableColumns} defaultData={data} />
       </div>
     </div>
   );

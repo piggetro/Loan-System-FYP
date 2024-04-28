@@ -3,14 +3,11 @@
 import {
   ColumnDef,
   ColumnFiltersState,
-  SortingState,
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
   getPaginationRowModel,
-  getSortedRowModel,
   useReactTable,
-  VisibilityState,
 } from "@tanstack/react-table";
 import {
   Table,
@@ -22,12 +19,6 @@ import {
 } from "@/app/_components/ui/table";
 import { Button } from "@/app/_components/ui/button";
 import { Input } from "@/app/_components/ui/input";
-import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuTrigger,
-} from "@/app/_components/ui/dropdown-menu";
 import { useState } from "react";
 
 interface DataTableProps<TData, TValue> {
