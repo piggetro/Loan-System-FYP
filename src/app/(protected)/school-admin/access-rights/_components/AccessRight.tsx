@@ -3,7 +3,6 @@
 import React, { useCallback, useMemo, useState } from "react";
 import { DataTable } from "./DataTable";
 import { AccessRights, columns } from "./Columns";
-import { useToast } from "@/app/_components/ui/use-toast";
 import EditAccessRightForm from "./EditAccessRightForm";
 import DeleteAccessRight from "./DeleteAccessRight";
 

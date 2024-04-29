@@ -22,6 +22,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "@/app/_components/ui/input";
 import { Loader2 } from "lucide-react";
+import { api } from "@/trpc/react";
 
 interface EditAccessRightFormProps {
   isDialogOpen: boolean;
@@ -48,6 +49,7 @@ const EditAccessRightForm = ({
   setAccessRights,
 }: EditAccessRightFormProps) => {
   const { toast } = useToast();
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -56,6 +58,32 @@ const EditAccessRightForm = ({
     },
     mode: "onChange",
   });
+
+  const { mutate: updateAccessRight, isPending } =
+    api.schoolAdmin.updateAccessRight.useMutation({
+      onSuccess: (data) => {
+        if (accessRight) {
+          setAccessRights((prev) =>
+            prev.map((item) =>
+              item.id === accessRight.id ? { ...item, ...data } : item,
+            ),
+          );
+          toast({
+            title: "Access Right Updated",
+            description: "The access right has been updated successfully",
+          });
+        }
+        setIsDialogOpen(false);
+      },
+      onError: (err) => {
+        console.log(err);
+        toast({
+          title: "Error",
+          description: "An error occurred while updating the access right",
+          variant: "destructive",
+        });
+      },
+    });
 
   useEffect(() => {
     if (accessRight) {
@@ -71,18 +99,11 @@ const EditAccessRightForm = ({
   const onSubmit: SubmitHandler<z.infer<typeof formSchema>> = (
     values: z.infer<typeof formSchema>,
   ) => {
-    if (accessRight) {
-      setAccessRights((prev) =>
-        prev.map((item) =>
-          item.id === accessRight.id ? { ...item, ...values } : item,
-        ),
-      );
-      toast({
-        title: "Access Right Updated",
-        description: "The access right has been updated successfully",
-      });
-    }
-    setIsDialogOpen(false);
+    updateAccessRight({
+      id: accessRight?.id ?? "",
+      pageName: values.pageName,
+      pageLink: values.pageLink,
+    });
   };
 
   return (
@@ -124,12 +145,10 @@ const EditAccessRightForm = ({
         <DialogFooter>
           <Button
             type="button"
-            // disabled={!form.formState.isValid || createMutation.isPending}
+            disabled={!form.formState.isValid || isPending}
             onClick={form.handleSubmit(onSubmit)}
           >
-            {/* {createMutation.isPending && (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            )} */}
+            {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Confirm
           </Button>
         </DialogFooter>

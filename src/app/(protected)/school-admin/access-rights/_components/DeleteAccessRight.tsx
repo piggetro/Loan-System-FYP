@@ -11,6 +11,8 @@ import {
 } from "@/app/_components/ui/alert-dialog";
 import { useToast } from "@/app/_components/ui/use-toast";
 import { AccessRights } from "./Columns";
+import { api } from "@/trpc/react";
+import { Loader2 } from "lucide-react";
 
 // In DeleteAccessRight.tsx
 interface DeleteAccessRightProps {
@@ -28,18 +30,27 @@ const DeleteAccessRight = ({
 }: DeleteAccessRightProps) => {
   const { toast } = useToast();
 
-  const onConfirmDelete = () => {
-    if (accessRight) {
-      setAccessRights((prev) =>
-        prev.filter((item) => item.id !== accessRight.id),
-      );
-      setIsDeleteDialogOpen(false);
-      toast({
-        title: "Access Right Deleted",
-        description: "The access right has been deleted successfully",
-      });
-    }
-  };
+  const { mutate: deleteAccessRight, isPending } =
+    api.schoolAdmin.deleteAccessRight.useMutation({
+      onSuccess: () => {
+        setAccessRights((prev) =>
+          prev.filter((item) => item.id !== accessRight?.id),
+        );
+        toast({
+          title: "Access Right Updated",
+          description: "The access right has been updated successfully",
+        });
+        setIsDeleteDialogOpen(false);
+      },
+      onError: (err) => {
+        console.log(err);
+        toast({
+          title: "Error",
+          description: "An error occurred while deleting the access right",
+          variant: "destructive",
+        });
+      },
+    });
 
   return (
     <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
@@ -59,7 +70,13 @@ const DeleteAccessRight = ({
           >
             Cancel
           </AlertDialogCancel>
-          <AlertDialogAction onClick={onConfirmDelete}>
+          <AlertDialogAction
+            disabled={isPending}
+            onClick={() => {
+              deleteAccessRight({ id: accessRight?.id! });
+            }}
+          >
+            {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Continue
           </AlertDialogAction>
         </AlertDialogFooter>
