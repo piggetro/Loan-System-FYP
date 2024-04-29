@@ -86,9 +86,9 @@ const PageLayout = ({ children }: { children: React.ReactNode }) => {
               </Sheet>
             </span>
             <span>
-              <h3 className="scroll-m-20 text-2xl font-semibold tracking-tight">
+              <p className="text-sm text-muted-foreground">
                 {topBarContent(pathName)}
-              </h3>
+              </p>
             </span>
           </div>
           <span>
@@ -111,7 +111,7 @@ const PageLayout = ({ children }: { children: React.ReactNode }) => {
             </div>
           </span>
         </div>
-        <div className="flex-1 overflow-y-auto p-8">{children}</div>
+        <div className="flex-1 overflow-y-auto px-8 py-4">{children}</div>
       </div>
     </div>
   );
@@ -244,6 +244,9 @@ const SideBarContent = () => {
 
   return (
     <div className="flex flex-col space-y-2">
+      <div className="flex w-full px-5 text-2xl text-white mb-4">
+        <span className="mr-2 font-bold">SOC</span>Loan System
+      </div>
       {chceckAccessRight("/") && (
         <SideBarItem
           pathName="/"

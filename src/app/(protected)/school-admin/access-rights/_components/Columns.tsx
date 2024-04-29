@@ -1,27 +1,39 @@
-"use client"
+"use client";
 
-import { ColumnDef } from "@tanstack/react-table"
+import { ColumnDef } from "@tanstack/react-table";
+import DataTableRowActions from "./DataTableRowActions";
 
-// This type is used to define the shape of our data.
-// You can use a Zod schema here if you want.
-export type Payment = {
-  id: string
-  amount: number
-  status: "pending" | "processing" | "success" | "failed"
-  email: string
+export type AccessRights = {
+  id: string;
+  pageName: string;
+  pageLink: string;
+};
+
+interface ColumnProps {
+  onEdit: (value: AccessRights) => void;
+  onDelete: (value: AccessRights) => void;
 }
 
-export const columns: ColumnDef<Payment>[] = [
+export const columns = ({
+  onEdit,
+  onDelete,
+}: ColumnProps): ColumnDef<AccessRights>[] => [
   {
-    accessorKey: "status",
-    header: "Status",
+    accessorKey: "id",
+    header: "ID",
   },
   {
-    accessorKey: "email",
-    header: "Email",
+    accessorKey: "pageName",
+    header: "Page Name",
   },
   {
-    accessorKey: "amount",
-    header: "Amount",
+    accessorKey: "pageLink",
+    header: "Page Link",
   },
-]
+  {
+    id: "actions",
+    cell: ({ row }) => (
+      <DataTableRowActions row={row} onEdit={onEdit} onDelete={onDelete} />
+    ),
+  },
+];
