@@ -179,12 +179,28 @@ enum WaiveRequestStatus {
 }
 
 model AccessRights {
-    id               String             @id @default(cuid())
+    id               String                @id @default(cuid())
     pageName         String
     pageLink         String
-    userAccessRights UserAccessRights[]
-    roles            Role?              @relation(fields: [rolesId], references: [id])
+    userAccessRights AccessRightsOnRoles[]
     rolesId          String?
+    UserAccessRights UserAccessRights[]
+}
+
+model AccessRightsOnRoles {
+    accessRight   AccessRights @relation(fields: [accessRightId], references: [id])
+    accessRightId String
+    role          Role         @relation(fields: [roleId], references: [id])
+    roleId        String
+
+    @@id([accessRightId, roleId])
+}
+
+model Role {
+    id           String                @id @default(cuid())
+    role         String
+    accessRights AccessRightsOnRoles[]
+    users        User[]
 }
 
 model UserAccessRights {
@@ -197,13 +213,6 @@ model UserAccessRights {
     grantedById   String
     grantedAt     DateTime     @default(now())
     assignedFrom  String
-}
-
-model Role {
-    id           String         @id @default(cuid())
-    role         String
-    accessRights AccessRights[]
-    users        User[]
 }
 
 model Semesters {
