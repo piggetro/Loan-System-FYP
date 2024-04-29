@@ -105,7 +105,7 @@ const LoginComponent = () => {
         <span className="mt-2 flex text-sm font-medium">
           Need to register?
           <div
-            className="ml-1 hover:cursor-pointer"
+            className="ml-1 hover:cursor-pointer hover:text-cyan-700"
             onClick={() => {
               router.push("register");
             }}

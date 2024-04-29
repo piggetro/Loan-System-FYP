@@ -13,7 +13,7 @@ const config = {
     config.externals.push("@node-rs/argon2", "@node-rs/bcrypt");
     return config;
   },
-  externals: ["@node-rs/argon2", "@node-rs/bcrypt"],
+  // externals: ["@node-rs/argon2", "@node-rs/bcrypt"],
 };
 
 export default config;

@@ -81,3 +81,59 @@ export async function logout(): Promise<{ error: string }> {
   );
   return redirect("login");
 }
+
+export async function register(
+  adminId: string,
+  password: string,
+  confirmPassword: string,
+) {
+  if (password !== confirmPassword) {
+    return {
+      title: "Registration Failed",
+      description: "Password's does not match",
+    };
+  }
+  return await db.user
+    .findUnique({
+      where: {
+        id: adminId,
+      },
+    })
+    .then(async (results) => {
+      if (results == null) {
+        return {
+          title: "Registration Failed",
+          description: "Admin ID is invalid",
+        };
+      }
+      if (results.hashed_password != null) {
+        return {
+          title: "Registration Failed",
+          description: "Admin ID is already registered",
+        };
+      }
+      const hashed_password = await new Argon2id().hash(password);
+      //Email Verification
+      try {
+        await db.user.update({
+          where: { id: adminId },
+          data: { hashed_password: hashed_password },
+        });
+        return {
+          title: "Registration Successful",
+          description: "You may now login",
+        };
+      } catch (error) {
+        return {
+          title: "Registration Failed",
+          description: "Admin ID is already registered",
+        };
+      }
+    })
+    .catch((error) => {
+      throw {
+        title: "Registration Failed",
+        description: "Please contact service desk",
+      };
+    });
+}

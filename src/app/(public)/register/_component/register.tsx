@@ -6,23 +6,33 @@ import { Button } from "@/app/_components/ui/button";
 import { Label } from "@/app/_components/ui/label";
 import { Input } from "@/app/_components/ui/input";
 import { useToast } from "@/app/_components/ui/use-toast";
-import { login } from "@/lib/auth/actions";
+import { register } from "@/lib/auth/actions";
+import { useRouter } from "next/navigation";
 
 const RegisterComponent = () => {
+  const router = useRouter();
   const [isLoading] = useState<boolean>(false);
   const [adminId, setAdminId] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [confirmPassword, setConfirmPassword] = useState<string>("");
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const { toast } = useToast();
+  //to do: Regex for password validation
+  const performRegister = () => {
+    if (password != confirmPassword) {
+      toast({
+        title: "Registration Failed",
+        description: "Password's does not match",
+      });
+      return;
+    }
 
-  const performLogin = () => {
-    login(adminId, password)
+    register(adminId, password, confirmPassword)
       .then((result) => {
-        if (result?.error != undefined) {
+        if (result?.title != undefined) {
           toast({
-            title: result.error,
-            description: result.message,
+            title: result.title,
+            description: result.description,
           });
         }
       })
@@ -39,7 +49,7 @@ const RegisterComponent = () => {
         <form
           onSubmit={(e) => {
             e.preventDefault();
-            performLogin();
+            performRegister();
           }}
         >
           <div className="">
@@ -121,6 +131,17 @@ const RegisterComponent = () => {
             Register
           </Button>
         </form>
+        <span className="mt-2 flex  text-sm font-medium">
+          Have an account?
+          <div
+            className="ml-1 hover:cursor-pointer hover:text-cyan-700"
+            onClick={() => {
+              router.push("login");
+            }}
+          >
+            Login Here
+          </div>
+        </span>
       </div>
     </div>
   );
