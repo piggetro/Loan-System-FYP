@@ -1,20 +1,15 @@
 /* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint @typescript-eslint/no-explicit-any:0, @typescript-eslint/prefer-optional-chain:0 */
 "use server";
 
-/* eslint @typescript-eslint/no-explicit-any:0, @typescript-eslint/prefer-optional-chain:0 */
-
-import { z } from "zod";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { generateId, Scrypt } from "lucia";
-import { isWithinExpirationDate, TimeSpan, createDate } from "oslo";
-import { generateRandomString, alphabet } from "oslo/crypto";
 import { lucia } from "@/lib/auth";
 import { db } from "@/server/db";
 import { validateRequest } from "@/lib/auth/validate-request";
-import { env } from "@/env";
 import { Argon2id } from "oslo/password";
-import { useToast } from "@/app/_components/ui/use-toast";
+import sendRegistrationEmail from "../email/registration-email";
+import { generate } from "generate-password";
 
 export interface ActionResponse<T> {
   fieldError?: Partial<Record<keyof T, string | undefined>>;
@@ -31,8 +26,9 @@ export async function login(adminId: string, password: string) {
     .then(async (results) => {
       if (results == null || results.hashed_password == null) {
         return {
-          error: "Login Failed",
-          message: "Admin ID or Password is wrong",
+          title: "Login Failed",
+          description: "Admin ID or Password is wrong",
+          variant: "destructive",
         };
       }
 
@@ -54,15 +50,12 @@ export async function login(adminId: string, password: string) {
     .catch((error) => {
       if (error == "Not Found") {
         throw {
-          error: "Login Failed",
-          message: "Admin ID or Password is wrong",
+          title: "Login Failed",
+          description: "Admin ID or Password is wrong",
+          variant: "destructive",
         };
       }
     });
-}
-
-export async function signup(adminId: string, password: string) {
-  return null;
 }
 
 export async function logout(): Promise<{ error: string }> {
@@ -82,17 +75,7 @@ export async function logout(): Promise<{ error: string }> {
   return redirect("login");
 }
 
-export async function register(
-  adminId: string,
-  password: string,
-  confirmPassword: string,
-) {
-  if (password !== confirmPassword) {
-    return {
-      title: "Registration Failed",
-      description: "Password's does not match",
-    };
-  }
+export async function register(adminId: string, mobile: string) {
   return await db.user
     .findUnique({
       where: {
@@ -104,20 +87,37 @@ export async function register(
         return {
           title: "Registration Failed",
           description: "Admin ID is invalid",
+          variant: "destructive",
         };
       }
       if (results.hashed_password != null) {
         return {
           title: "Registration Failed",
           description: "Admin ID is already registered",
+          variant: "destructive",
         };
       }
-      const hashed_password = await new Argon2id().hash(password);
+      if (results.email == undefined) {
+        return {
+          title: "Registration Failed",
+          description: "Account Issue, Please contact service desk",
+          variant: "destructive",
+        };
+      }
+      const password = generate({
+        length: 10,
+        numbers: true,
+        symbols: true,
+      });
+      sendRegistrationEmail(results?.email, password).catch((error) => {
+        console.log(error);
+      });
       //Email Verification
+      const hashed_password = await new Argon2id().hash(password);
       try {
         await db.user.update({
           where: { id: adminId },
-          data: { hashed_password: hashed_password },
+          data: { mobile: mobile, hashed_password: hashed_password },
         });
         return {
           title: "Registration Successful",
@@ -127,13 +127,15 @@ export async function register(
         return {
           title: "Registration Failed",
           description: "Admin ID is already registered",
+          variant: "destructive",
         };
       }
     })
-    .catch((error) => {
+    .catch(() => {
       throw {
         title: "Registration Failed",
         description: "Please contact service desk",
+        variant: "destructive",
       };
     });
 }

@@ -21,10 +21,10 @@ const LoginComponent = () => {
   const performLogin = () => {
     login(adminId, password)
       .then((result) => {
-        if (result?.error != undefined) {
+        if (result?.title != undefined) {
           toast({
-            title: result.error,
-            description: result.message,
+            title: result.title,
+            description: result.description,
           });
         }
       })

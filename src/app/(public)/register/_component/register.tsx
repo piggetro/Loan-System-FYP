@@ -13,26 +13,33 @@ const RegisterComponent = () => {
   const router = useRouter();
   const [isLoading] = useState<boolean>(false);
   const [adminId, setAdminId] = useState<string>("");
-  const [password, setPassword] = useState<string>("");
-  const [confirmPassword, setConfirmPassword] = useState<string>("");
-  const [showPassword, setShowPassword] = useState<boolean>(false);
+  const [mobile, setMobile] = useState<string>("");
   const { toast } = useToast();
-  //to do: Regex for password validation
+
   const performRegister = () => {
-    if (password != confirmPassword) {
+    if (adminId.length == 0) {
       toast({
-        title: "Registration Failed",
-        description: "Password's does not match",
+        title: "Admin ID not entered",
+        description: "Please enter Admin ID",
+        variant: "destructive",
       });
       return;
     }
-
-    register(adminId, password, confirmPassword)
+    if (mobile.length != 8) {
+      toast({
+        title: "Invalid Phone Number",
+        description: "Please enter Singapore phone number without +65 prefix",
+        variant: "destructive",
+      });
+      return;
+    }
+    register(adminId, mobile)
       .then((result) => {
         if (result?.title != undefined) {
           toast({
             title: result.title,
             description: result.description,
+            variant: result.variant ? "destructive" : "default",
           });
         }
       })
@@ -67,7 +74,7 @@ const RegisterComponent = () => {
               id="adminId"
               placeholder="Admin ID Input"
               minLength={1}
-              type="text"
+              type="number"
               autoCapitalize="none"
               autoComplete="Admin Number"
               autoCorrect="off"
@@ -77,51 +84,22 @@ const RegisterComponent = () => {
             <div className="mb-2 flex items-center text-sm">
               <Label
                 className="block w-1/2 font-bold text-gray-700"
-                htmlFor="email"
+                htmlFor="mobile number"
               >
-                Password
+                Mobile Number
               </Label>
-              <div
-                className="flex w-1/2 justify-end font-medium hover:cursor-pointer"
-                onClick={() => {
-                  setShowPassword(!showPassword);
-                }}
-              >
-                Show Password
-              </div>
             </div>
             <Input
-              value={password}
+              value={mobile}
               onChange={(e) => {
-                setPassword(e.target.value);
+                setMobile(e.target.value);
               }}
-              id="password"
+              id="mobileNumber"
               placeholder="Password Input"
               minLength={1}
-              type={showPassword ? "text" : "password"}
+              type="number"
               autoCapitalize="none"
-              autoComplete="Password"
-              autoCorrect="off"
-              disabled={isLoading}
-              className="mb-5"
-            />
-            <Label
-              className="mb-2 block text-sm font-bold text-gray-700"
-              htmlFor="email"
-            >
-              Confirm Password
-            </Label>
-            <Input
-              value={confirmPassword}
-              onChange={(e) => {
-                setConfirmPassword(e.target.value);
-              }}
-              id="confirmPassword"
-              placeholder="Password Input"
-              minLength={1}
-              type={showPassword ? "text" : "password"}
-              autoCapitalize="none"
-              autoComplete="Password"
+              autoComplete="tel"
               autoCorrect="off"
               disabled={isLoading}
               className="mb-5"

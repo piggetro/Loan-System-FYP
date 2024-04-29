@@ -6,7 +6,6 @@ import { validateRequest } from "@/lib/auth/validate-request";
 const LoginPage = async () => {
   //Checking if logged in
   const { user } = await validateRequest();
-  console.log(user)
 
   if (user != null) {
     redirect("/");
