@@ -49,7 +49,6 @@ model User {
     accessRightsGrantedBy UserAccessRights[] @relation("UserAccessRights_GrantedBy")
     session               Session[]
     waiveRequest          WaiveRequest[]
-    accountVerified       DateTime?
 }
 
 model VerificationToken {
