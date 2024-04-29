@@ -17,16 +17,18 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
       });
     }
   }
+
   const cookieHeader = request.headers.get("Cookie");
   if (cookieHeader?.includes("auth_session")) {
-
+    request.headers.delete("content-length");
     const checkAuthorisation = await fetch(`${process.env.DOMAIN}/api/prisma`, {
       method: "POST",
       headers: request.headers,
       body: JSON.stringify({ url: request.nextUrl.pathname }),
     });
 
-    if (checkAuthorisation.status !== 200) return NextResponse.redirect(new URL("/not-found", request.url));
+    if (checkAuthorisation.status !== 200)
+      return NextResponse.redirect(new URL("/not-found", request.url));
 
     return NextResponse.next();
   }
