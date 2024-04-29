@@ -211,7 +211,6 @@ model UserAccessRights {
     grantedBy     User         @relation("UserAccessRights_GrantedBy", fields: [grantedById], references: [id])
     grantedById   String
     grantedAt     DateTime     @default(now())
-    assignedFrom  String
 }
 
 model Semesters {

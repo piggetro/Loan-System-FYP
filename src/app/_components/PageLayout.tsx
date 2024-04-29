@@ -27,17 +27,13 @@ import {
 import { logout } from "@/lib/auth/actions";
 import { toast } from "./ui/use-toast";
 
-const accessRight = [
-  "/",
-  "/equipment-loans/loan-request",
-  "/equipment-management/equipment",
-  "/school-admin/staff",
-  "/loan-management/preparation",
-  "/user-guide",
-  "/approval-management",
-];
-
-const PageLayout = ({ children }: { children: React.ReactNode }) => {
+const PageLayout = ({
+  children,
+  accessRight,
+}: {
+  children: React.ReactNode;
+  accessRight: string[];
+}) => {
   const pathName = usePathname().split("/")[1] || "/";
 
   const topBarContent = (pathName: string) => {
@@ -66,7 +62,7 @@ const PageLayout = ({ children }: { children: React.ReactNode }) => {
   return (
     <div className="absolute inset-0 grid md:grid-cols-[1fr_4fr]">
       <div className="sideBarContent hidden h-full overflow-y-auto bg-[#1c6c91]  p-6 md:block">
-        <SideBarContent />
+        <SideBarContent accessRight={accessRight} />
       </div>
       <div className="flex w-full flex-col">
         <div className="flex h-16 w-full items-center justify-between bg-white px-8">
@@ -79,7 +75,7 @@ const PageLayout = ({ children }: { children: React.ReactNode }) => {
                 <SheetContent className="bg-[#1c6c91]">
                   <SheetHeader>
                     <SheetDescription className="mt-6">
-                      <SideBarContent />
+                      <SideBarContent accessRight={accessRight} />
                     </SheetDescription>
                   </SheetHeader>
                 </SheetContent>
@@ -117,123 +113,7 @@ const PageLayout = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
-const equipmentLoans = [
-  {
-    itemName: "Loan Request",
-    pathName: "/equipment-loans/loan-request",
-  },
-  {
-    itemName: "Loans",
-    pathName: "/equipment-loans/loans",
-  },
-  {
-    itemName: "Overdue Loans",
-    pathName: "/equipment-loans/overdue-loans",
-  },
-  {
-    itemName: "History",
-    pathName: "/equipment-loans/history",
-  },
-  {
-    itemName: "Lost/Broken Loans",
-    pathName: "/equipment-loans/lost-broken-loans",
-  },
-];
-
-const equipmentManagement = [
-  {
-    itemName: "Equipment",
-    pathName: "/equipment-management/equipment",
-  },
-  {
-    itemName: "Inventory",
-    pathName: "/equipment-management/inventory",
-  },
-  {
-    itemName: "Equipment Categories",
-    pathName: "/equipment-management/equipment-categories",
-  },
-  {
-    itemName: "Eqiuipment Status",
-    pathName: "/equipment-management/eqiupment-status",
-  },
-  {
-    itemName: "General Settings",
-    pathName: "/equipment-management/general-settings",
-  },
-];
-
-const schoolAdmin = [
-  {
-    itemName: "Staff",
-    pathName: "/school-admin/staff",
-  },
-  {
-    itemName: "Student",
-    pathName: "/school-admin/student",
-  },
-  {
-    itemName: "Years of Admission",
-    pathName: "/school-admin/years-of-admission",
-  },
-  {
-    itemName: "Courses",
-    pathName: "/school-admin/courses",
-  },
-  {
-    itemName: "Staff Types",
-    pathName: "/school-admin/staff-types",
-  },
-  {
-    itemName: "Organisation Units",
-    pathName: "/school-admin/organisation-units",
-  },
-  {
-    itemName: "Roles",
-    pathName: "/school-admin/roles",
-  },
-  {
-    itemName: "Access Rights",
-    pathName: "/school-admin/access-rights",
-  },
-  {
-    itemName: "School Details",
-    pathName: "/school-admin/school-details",
-  },
-  {
-    itemName: "Semester and Holidays",
-    pathName: "/school-admin/semester-and-holidays",
-  },
-];
-
-const loanManagement = [
-  {
-    itemName: "Preparation",
-    pathName: "/loan-management/preparation",
-  },
-  {
-    itemName: "Collection",
-    pathName: "/loan-management/collection",
-  },
-  {
-    itemName: "Return",
-    pathName: "/loan-management/return",
-  },
-  {
-    itemName: "Track Loans",
-    pathName: "/loan-management/track-loans",
-  },
-  {
-    itemName: "Lost/Broken Loans",
-    pathName: "/loan-management/lost-broken-loans",
-  },
-  {
-    itemName: "Waiver",
-    pathName: "/loan-management/waiver",
-  },
-];
-
-const SideBarContent = () => {
+const SideBarContent = ({ accessRight }: { accessRight: string[] }) => {
   const [isActiveItem, setIsActiveItem] = useState<string>(
     usePathname().split("/")[1] || "/",
   );
@@ -244,7 +124,7 @@ const SideBarContent = () => {
 
   return (
     <div className="flex flex-col space-y-2">
-      <div className="flex w-full px-5 text-2xl text-white mb-4">
+      <div className="mb-4 flex w-full px-5 text-2xl text-white">
         <span className="mr-2 font-bold">SOC</span>Loan System
       </div>
       {chceckAccessRight("/") && (
@@ -461,3 +341,119 @@ const SideBarAccordionItem = ({
 };
 
 export default PageLayout;
+
+const equipmentLoans = [
+  {
+    itemName: "Loan Request",
+    pathName: "/equipment-loans/loan-request",
+  },
+  {
+    itemName: "Loans",
+    pathName: "/equipment-loans/loans",
+  },
+  {
+    itemName: "Overdue Loans",
+    pathName: "/equipment-loans/overdue-loans",
+  },
+  {
+    itemName: "History",
+    pathName: "/equipment-loans/history",
+  },
+  {
+    itemName: "Lost/Broken Loans",
+    pathName: "/equipment-loans/lost-broken-loans",
+  },
+];
+
+const equipmentManagement = [
+  {
+    itemName: "Equipment",
+    pathName: "/equipment-management/equipment",
+  },
+  {
+    itemName: "Inventory",
+    pathName: "/equipment-management/inventory",
+  },
+  {
+    itemName: "Equipment Categories",
+    pathName: "/equipment-management/equipment-categories",
+  },
+  {
+    itemName: "Eqiuipment Status",
+    pathName: "/equipment-management/eqiupment-status",
+  },
+  {
+    itemName: "General Settings",
+    pathName: "/equipment-management/general-settings",
+  },
+];
+
+const schoolAdmin = [
+  {
+    itemName: "Staff",
+    pathName: "/school-admin/staff",
+  },
+  {
+    itemName: "Student",
+    pathName: "/school-admin/student",
+  },
+  {
+    itemName: "Years of Admission",
+    pathName: "/school-admin/years-of-admission",
+  },
+  {
+    itemName: "Courses",
+    pathName: "/school-admin/courses",
+  },
+  {
+    itemName: "Staff Types",
+    pathName: "/school-admin/staff-types",
+  },
+  {
+    itemName: "Organisation Units",
+    pathName: "/school-admin/organisation-units",
+  },
+  {
+    itemName: "Roles",
+    pathName: "/school-admin/roles",
+  },
+  {
+    itemName: "Access Rights",
+    pathName: "/school-admin/access-rights",
+  },
+  {
+    itemName: "School Details",
+    pathName: "/school-admin/school-details",
+  },
+  {
+    itemName: "Semester and Holidays",
+    pathName: "/school-admin/semester-and-holidays",
+  },
+];
+
+const loanManagement = [
+  {
+    itemName: "Preparation",
+    pathName: "/loan-management/preparation",
+  },
+  {
+    itemName: "Collection",
+    pathName: "/loan-management/collection",
+  },
+  {
+    itemName: "Return",
+    pathName: "/loan-management/return",
+  },
+  {
+    itemName: "Track Loans",
+    pathName: "/loan-management/track-loans",
+  },
+  {
+    itemName: "Lost/Broken Loans",
+    pathName: "/loan-management/lost-broken-loans",
+  },
+  {
+    itemName: "Waiver",
+    pathName: "/loan-management/waiver",
+  },
+];

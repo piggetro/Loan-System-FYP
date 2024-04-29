@@ -1,9 +1,6 @@
 import { verifyRequestOrigin } from "lucia";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
 
 export async function middleware(request: NextRequest): Promise<NextResponse> {
   if (request.method !== "GET") {
@@ -22,14 +19,14 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
   }
   const cookieHeader = request.headers.get("Cookie");
   if (cookieHeader?.includes("auth_session")) {
-    console.log("Pathname", request.nextUrl.pathname);
 
-    const session = await prisma.session.findUnique({
-      where: {
-        id: request.cookies.get("auth_session")?.value,
-      },
+    const checkAuthorisation = await fetch(`${process.env.DOMAIN}/api/prisma`, {
+      method: "POST",
+      headers: request.headers,
+      body: JSON.stringify({ url: request.nextUrl.pathname }),
     });
-    
+
+    if (checkAuthorisation.status !== 200) return NextResponse.redirect(new URL("/not-found", request.url));
 
     return NextResponse.next();
   }
@@ -48,6 +45,6 @@ export const config = {
      * - Login
      * - Register
      */
-    "/((?!api|_next/static|_next/image|login|register|favicon.ico).*)",
+    "/((?!api|_next/static|_next/image|login|register|not-found|favicon.ico).*)",
   ],
 };

@@ -5,6 +5,7 @@ import { TRPCReactProvider } from "@/trpc/react";
 import { MantineProvider } from "@mantine/core";
 import { Toaster } from "@/app/_components/ui/toaster";
 import PageLayout from "../_components/PageLayout";
+import { api } from "@/trpc/server";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -21,6 +22,9 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+
+  const data = await api.user.getAllAccessRights();
+
   return (
     <html lang="en">
       <body
@@ -30,7 +34,7 @@ export default async function RootLayout({
           <MantineProvider>
             <Toaster />
             <div className="relative min-h-screen">
-              <PageLayout>{children}</PageLayout>
+              <PageLayout accessRight={data!}>{children}</PageLayout>
             </div>
           </MantineProvider>
         </TRPCReactProvider>
