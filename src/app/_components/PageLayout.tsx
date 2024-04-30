@@ -82,7 +82,9 @@ const PageLayout = ({
               </Sheet>
             </span>
             <span>
-              <p className="text-xl font-medium">{topBarContent(pathName)}</p>
+              <p className="leading-7 [&:not(:first-child)]:mt-6">
+                {topBarContent(pathName)}
+              </p>
             </span>
           </div>
           <span>

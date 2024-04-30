@@ -1,23 +1,16 @@
-"use client";
-
 import React, { useState } from "react";
-import { AccessRights } from "./Columns";
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
 } from "@/app/_components/ui/tabs";
-import AddAccessRight from "./AddAccessRight";
-import AccessRightTable from "./AccessRightTable";
 
-interface AccessRightProps {
-  data: AccessRights[];
+interface RolesProps {
+  roles: RolesProps[];
 }
 
-const AccessRight = ({ data }: AccessRightProps) => {
-  const [accessRights, setAccessRights] = useState<AccessRights[]>(data);
-
+const Roles = ({}: RolesProps) => {
   return (
     <Tabs defaultValue="AccessRightTable" className="mt-4">
       <div className="mt-2 rounded-md bg-white px-6 py-4">
@@ -39,4 +32,4 @@ const AccessRight = ({ data }: AccessRightProps) => {
   );
 };
 
-export default AccessRight;
+export default Roles;
