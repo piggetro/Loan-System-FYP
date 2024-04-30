@@ -24,7 +24,9 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
     const checkAuthorisation = await fetch(`${process.env.DOMAIN}/api/prisma`, {
       method: "POST",
       headers: request.headers,
-      body: JSON.stringify({ url: request.nextUrl.pathname }),
+      body: JSON.stringify({
+        url: "/" + request.nextUrl.pathname.split("/").slice(1, 3).join("/"),
+      }),
     });
 
     if (checkAuthorisation.status !== 200)

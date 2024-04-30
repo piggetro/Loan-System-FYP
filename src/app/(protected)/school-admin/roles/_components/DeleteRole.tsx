@@ -10,35 +10,32 @@ import {
   AlertDialogAction,
 } from "@/app/_components/ui/alert-dialog";
 import { useToast } from "@/app/_components/ui/use-toast";
-import { AccessRights } from "./Columns";
+import { type Roles } from "./RolesColumns";
 import { api } from "@/trpc/react";
 import { Loader2 } from "lucide-react";
 
-// In DeleteAccessRight.tsx
-interface DeleteAccessRightProps {
+interface DeleteRoleProps {
   isDeleteDialogOpen: boolean;
   setIsDeleteDialogOpen: (value: boolean) => void;
-  accessRight: AccessRights | null;
-  setAccessRights: React.Dispatch<React.SetStateAction<AccessRights[]>>;
+  role: Roles | null;
+  setRoles: React.Dispatch<React.SetStateAction<Roles[]>>;
 }
 
-const DeleteAccessRight = ({
+const DeleteRole = ({
   isDeleteDialogOpen,
   setIsDeleteDialogOpen,
-  accessRight,
-  setAccessRights,
-}: DeleteAccessRightProps) => {
+  role,
+  setRoles,
+}: DeleteRoleProps) => {
   const { toast } = useToast();
 
-  const { mutate: deleteAccessRight, isPending } =
-    api.schoolAdmin.deleteAccessRight.useMutation({
+  const { mutate: deleteRole, isPending } =
+    api.schoolAdmin.deleteRole.useMutation({
       onSuccess: () => {
-        setAccessRights((prev) =>
-          prev.filter((item) => item.id !== accessRight?.id),
-        );
+        setRoles((prev) => prev.filter((item) => item.id !== role?.id));
         toast({
-          title: "Access Right Deleted",
-          description: "The access right has been deleted successfully",
+          title: "Role Deleted",
+          description: "The role has been deleted successfully",
         });
         setIsDeleteDialogOpen(false);
       },
@@ -46,7 +43,7 @@ const DeleteAccessRight = ({
         console.log(err);
         toast({
           title: "Error",
-          description: "An error occurred while deleting the access right",
+          description: "An error occurred while deleting the role",
           variant: "destructive",
         });
       },
@@ -73,7 +70,7 @@ const DeleteAccessRight = ({
           <AlertDialogAction
             disabled={isPending}
             onClick={() => {
-              deleteAccessRight({ id: accessRight?.id! });
+              deleteRole({ id: role?.id! });
             }}
           >
             {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -85,4 +82,4 @@ const DeleteAccessRight = ({
   );
 };
 
-export default DeleteAccessRight;
+export default DeleteRole;

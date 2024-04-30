@@ -1,9 +1,11 @@
 import React from "react";
 import { api } from "@/trpc/server";
+import Roles from "./_components/Roles";
 
 const page = async () => {
 
   const data = await api.schoolAdmin.getAllRoles();
+  const accessRights = await api.schoolAdmin.getAccessRights();
 
   return (
     <div>
@@ -11,7 +13,7 @@ const page = async () => {
         Roles
       </h3>
       <div>
-
+        <Roles roles={data} accessRights={accessRights} />
       </div>
     </div>
   );

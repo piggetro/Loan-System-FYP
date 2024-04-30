@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState } from "react";
 import {
   Tabs,
@@ -5,27 +7,31 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/app/_components/ui/tabs";
+import { type Roles } from "./RolesColumns";
+import RolesTable from "./RolesTable";
+import { AccessRights } from "./AccessRightColumns";
+import AddRole from "./AddRole";
 
 interface RolesProps {
-  roles: RolesProps[];
+  roles: Roles[];
+  accessRights: AccessRights[];
 }
 
-const Roles = ({}: RolesProps) => {
+const Roles = ({ roles: data, accessRights }: RolesProps) => {
+  const [roles, setRoles] = useState<Roles[]>(data);
+
   return (
-    <Tabs defaultValue="AccessRightTable" className="mt-4">
+    <Tabs defaultValue="roles" className="mt-4">
       <div className="mt-2 rounded-md bg-white px-6 py-4">
         <TabsList className="mb-2">
-          <TabsTrigger value="AccessRightTable">Access Rights</TabsTrigger>
-          <TabsTrigger value="AddAccessRight">Add Access Right</TabsTrigger>
+          <TabsTrigger value="roles">Roles</TabsTrigger>
+          <TabsTrigger value="addRoles">Add Roles</TabsTrigger>
         </TabsList>
-        <TabsContent value="AccessRightTable">
-          <AccessRightTable
-            accessRights={accessRights}
-            setAccessRights={setAccessRights}
-          />
+        <TabsContent value="roles">
+          <RolesTable roles={roles} setRoles={setRoles} />
         </TabsContent>
-        <TabsContent value="AddAccessRight" className="flex-1">
-          <AddAccessRight setAccessRights={setAccessRights} />
+        <TabsContent value="addRoles" className="flex-1">
+          <AddRole setRoles={setRoles} accessRights={accessRights} />
         </TabsContent>
       </div>
     </Tabs>

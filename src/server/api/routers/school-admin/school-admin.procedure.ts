@@ -91,4 +91,47 @@ export const schoolAdminRouter = createTRPCRouter({
       throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
     }
   }),
+  deleteRole: protectedProcedure
+    .input(z.object({ id: z.string().min(1) }))
+    .mutation(async ({ ctx, input }) => {
+      try {
+        return await ctx.db.role.delete({
+          where: {
+            id: input.id,
+          },
+        });
+      } catch (err) {
+        console.log(err);
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      }
+    }),
+  addRole: protectedProcedure
+    .input(
+      z.object({
+        role: z.string().min(1),
+        accessRights: z.array(z.string().min(1)),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const role = await ctx.db.role.create({
+        data: {
+          role: input.role,
+          accessRights: {
+            create: input.accessRights.map((accessRight) => ({
+              accessRight: {
+                connect: {
+                  id: accessRight,
+                },
+              },
+            })),
+          },
+        },
+      });
+      return {
+        id: role.id,
+        role: role.role,
+        accessRightsCount: input.accessRights.length,
+        usersCount: 0,
+      };
+    }),
 });
