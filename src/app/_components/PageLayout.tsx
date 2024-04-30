@@ -82,9 +82,7 @@ const PageLayout = ({
               </Sheet>
             </span>
             <span>
-              <p className="text-sm text-muted-foreground">
-                {topBarContent(pathName)}
-              </p>
+              <p className="text-xl font-medium">{topBarContent(pathName)}</p>
             </span>
           </div>
           <span>
