@@ -87,7 +87,7 @@ model Equipment {
 
 model Inventory {
     id             String          @id @default(cuid())
-    assetNumber    String
+    assetNumber    String          @unique
     datePurchased  DateTime?
     warrantyExpiry DateTime?
     cost           Decimal
