@@ -42,6 +42,7 @@ const DataTableRowActions = <TData,>({
           onClick={() => {
             onDelete(row.original);
           }}
+          className="text-red-500 focus:bg-red-100 focus:text-red-500"
         >
           Delete Access Right
         </DropdownMenuItem>
