@@ -1,6 +1,7 @@
 import { TRPCError } from "@trpc/server";
 import { protectedProcedure, createTRPCRouter } from "../../trpc";
 import { z } from "zod";
+import page from "@/app/(protected)/page";
 
 export const schoolAdminRouter = createTRPCRouter({
   getAccessRights: protectedProcedure.query(async ({ ctx }) => {
@@ -263,15 +264,81 @@ export const schoolAdminRouter = createTRPCRouter({
             role: {
               select: {
                 role: true,
+                accessRights: {
+                  select: {
+                    accessRightId: true,
+                  },
+                },
               },
             },
           },
+        });
+        await ctx.db.userAccessRights.createMany({
+          data: data.role?.accessRights.map((accessRight) => ({
+            accessRightId: accessRight.accessRightId,
+            grantedUserId: input.id,
+            grantedById: ctx.user.id,
+          })) as any,
         });
         return {
           ...data,
           organizationUnit: data.organizationUnit?.name!,
           staffType: data.staffType?.name!,
           role: data.role?.role!,
+        };
+      } catch (err) {
+        console.log(err);
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      }
+    }),
+  getStaff: protectedProcedure
+    .input(z.object({ id: z.string().min(1) }))
+    .query(async ({ ctx, input }) => {
+      try {
+        const data = await ctx.db.user.findUnique({
+          where: {
+            id: input.id,
+          },
+          select: {
+            id: true,
+            email: true,
+            mobile: true,
+            name: true,
+            organizationUnit: {
+              select: {
+                name: true,
+              },
+            },
+            staffType: {
+              select: {
+                name: true,
+              },
+            },
+            role: {
+              select: {
+                role: true,
+              },
+            },
+            accessRightsGranted: {
+              select: {
+                accessRight: true,
+              },
+            },
+          },
+        });
+        return {
+          id: data?.id!,
+          email: data?.email!,
+          mobile: data?.mobile!,
+          name: data?.name!,
+          organizationUnit: data?.organizationUnit?.name!,
+          staffType: data?.staffType?.name!,
+          role: data?.role?.role!,
+          accessRightsGranted: data?.accessRightsGranted.map((accessRight) => ({
+            id: accessRight.accessRight.id,
+            pageName: accessRight.accessRight.pageName,
+            pageLink: accessRight.accessRight.pageLink,
+          }))!,
         };
       } catch (err) {
         console.log(err);

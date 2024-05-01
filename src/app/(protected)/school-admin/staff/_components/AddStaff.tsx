@@ -61,15 +61,21 @@ const formSchema = z.object({
     .string()
     .min(1, { message: "Name must be at least 1 character long" })
     .max(255, { message: "Name must be at most 255 characters long" }),
-  organizationUnit: z.string({
-    required_error: "Please select an organization unit",
-  }),
-  staffType: z.string({
-    required_error: "Please select a staff type",
-  }),
-  role: z.string({
-    required_error: "Please select a role",
-  }),
+  organizationUnit: z
+    .string({
+      required_error: "Please select an organization unit",
+    })
+    .min(1),
+  staffType: z
+    .string({
+      required_error: "Please select a staff type",
+    })
+    .min(1),
+  role: z
+    .string({
+      required_error: "Please select a role",
+    })
+    .min(1),
 });
 
 const AddStaff = ({
@@ -241,7 +247,7 @@ const AddStaff = ({
                 >
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select an Role" />
+                      <SelectValue placeholder="Select a Role" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>

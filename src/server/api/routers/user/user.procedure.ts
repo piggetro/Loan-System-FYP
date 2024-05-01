@@ -8,22 +8,9 @@ export const userRouter = createTRPCRouter({
         where: {
           id: ctx.session.id,
         },
-        include: {
+        select: {
           user: {
             select: {
-              role: {
-                select: {
-                  accessRights: {
-                    select: {
-                      accessRight: {
-                        select: {
-                          pageLink: true,
-                        },
-                      },
-                    },
-                  },
-                },
-              },
               accessRightsGranted: {
                 select: {
                   accessRight: {
@@ -37,23 +24,10 @@ export const userRouter = createTRPCRouter({
           },
         },
       });
-      const accessRightsGrantedPageLinks =
-        data &&
-        data.user.accessRightsGranted.map(
-          (access) => access.accessRight.pageLink,
-        );
-      const roleAccessRightsPageLinks =
-        data?.user.role &&
-        data.user.role.accessRights.map(
-          (access) => access.accessRight.pageLink,
-        );
 
-      const combinedPageLinks =
-        accessRightsGrantedPageLinks &&
-        roleAccessRightsPageLinks &&
-        accessRightsGrantedPageLinks.concat(roleAccessRightsPageLinks);
-
-      return combinedPageLinks;
+      return data?.user.accessRightsGranted.map(
+        (accessRight) => accessRight.accessRight.pageLink,
+      );
     } catch (err) {
       console.log(err);
       throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
