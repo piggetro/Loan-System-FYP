@@ -52,9 +52,10 @@ const formSchema = z.object({
     .min(1, { message: "Id must be at least 1 character long" })
     .max(255, { message: "Id must be at most 255 characters long" }),
   mobile: z
-    .number()
-    .min(8, { message: "Mobile number must be at least 8 numbers long" })
-    .positive({ message: "Mobile number must be a positive integer" }),
+    .string()
+    .min(8, { message: "Mobile number must be at least 8 digits long" })
+    .max(8, { message: "Mobile number must be no more than 8 digits long" })
+    .regex(/^\d+$/, { message: "Mobile number must be numeric" }),
   email: z.string().email({ message: "Invalid email" }),
   name: z
     .string()
@@ -82,7 +83,7 @@ const AddStaff = ({
     defaultValues: {
       id: "",
       email: "",
-      mobile: undefined,
+      mobile: "",
       name: "",
       organizationUnit: "",
       staffType: "",
@@ -93,7 +94,7 @@ const AddStaff = ({
 
   const { toast } = useToast();
 
-  const {mutate: addStaff} = api.schoolAdmin.addStaff.useMutation({
+  const { mutate: addStaff, isPending } = api.schoolAdmin.addStaff.useMutation({
     onSuccess: (data) => {
       setStaff((prev) => [...prev, data]);
       toast({
@@ -115,7 +116,7 @@ const AddStaff = ({
   const onSubmit: SubmitHandler<z.infer<typeof formSchema>> = (
     values: z.infer<typeof formSchema>,
   ) => {
-   
+    addStaff({ ...values, mobile: parseInt(values.mobile) });
   };
 
   return (
@@ -123,14 +124,132 @@ const AddStaff = ({
       <Form {...form}>
         <form className="mb-4 space-y-4">
           <FormField
-            name="role"
+            name="id"
             control={form.control}
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Role Name</FormLabel>
+                <FormLabel>Staff ID</FormLabel>
                 <FormControl>
-                  <Input placeholder="Role Name" {...field} />
+                  <Input placeholder="Staff ID" {...field} />
                 </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            name="name"
+            control={form.control}
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Name</FormLabel>
+                <FormControl>
+                  <Input placeholder="Name" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            name="mobile"
+            control={form.control}
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Mobile Number</FormLabel>
+                <FormControl>
+                  <Input type="tel" placeholder="Mobile Number" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            name="email"
+            control={form.control}
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Email</FormLabel>
+                <FormControl>
+                  <Input placeholder="example@ichat.edu.sg" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="staffType"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Staff Type</FormLabel>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select Staff Type" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {staffTypes.map((staffType) => (
+                      <SelectItem value={staffType.id}>
+                        {staffType.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="organizationUnit"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Organization Unit</FormLabel>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select an Organization Unit" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {organizationUnits.map((organizationUnit) => (
+                      <SelectItem value={organizationUnit.id}>
+                        {organizationUnit.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="role"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Role</FormLabel>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select an Role" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {roles.map((role) => (
+                      <SelectItem value={role.id}>{role.role}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <FormMessage />
               </FormItem>
             )}
