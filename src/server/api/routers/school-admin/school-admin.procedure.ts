@@ -2,6 +2,7 @@ import { TRPCError } from "@trpc/server";
 import { protectedProcedure, createTRPCRouter } from "../../trpc";
 import { z } from "zod";
 import page from "@/app/(protected)/page";
+import { Argon2id } from "oslo/password";
 
 export const schoolAdminRouter = createTRPCRouter({
   getAccessRights: protectedProcedure.query(async ({ ctx }) => {
@@ -216,7 +217,6 @@ export const schoolAdminRouter = createTRPCRouter({
       z.object({
         id: z.string().min(1),
         email: z.string().email(),
-        mobile: z.number().min(8).positive(),
         name: z.string().min(1),
         organizationUnit: z.string().min(1),
         staffType: z.string().min(1),
@@ -229,7 +229,6 @@ export const schoolAdminRouter = createTRPCRouter({
           data: {
             id: input.id,
             email: input.email,
-            mobile: input.mobile,
             name: input.name,
             organizationUnit: {
               connect: {
@@ -306,17 +305,17 @@ export const schoolAdminRouter = createTRPCRouter({
             name: true,
             organizationUnit: {
               select: {
-                name: true,
+                id: true,
               },
             },
             staffType: {
               select: {
-                name: true,
+                id: true,
               },
             },
             role: {
               select: {
-                role: true,
+                id: true,
               },
             },
             accessRightsGranted: {
@@ -329,16 +328,96 @@ export const schoolAdminRouter = createTRPCRouter({
         return {
           id: data?.id!,
           email: data?.email!,
-          mobile: data?.mobile!,
+          mobile: data?.mobile || "",
           name: data?.name!,
-          organizationUnit: data?.organizationUnit?.name!,
-          staffType: data?.staffType?.name!,
-          role: data?.role?.role!,
+          organizationUnit: data?.organizationUnit?.id!,
+          staffType: data?.staffType?.id!,
+          role: data?.role?.id!,
           accessRightsGranted: data?.accessRightsGranted.map((accessRight) => ({
             id: accessRight.accessRight.id,
             pageName: accessRight.accessRight.pageName,
             pageLink: accessRight.accessRight.pageLink,
           }))!,
+        };
+      } catch (err) {
+        console.log(err);
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      }
+    }),
+  updateStaff: protectedProcedure
+    .input(
+      z.object({
+        id: z.string().min(1),
+        name: z.string().min(1),
+        email: z.string().email(),
+        mobile: z.string().optional().nullable(),
+        password: z.string().optional().nullable(),
+        organizationUnit: z.string().min(1),
+        staffType: z.string().min(1),
+        role: z.string().min(1),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      try {
+        const hashed_password =
+          input.password && (await new Argon2id().hash(input.password));
+        const data = {
+          id: input.id,
+          email: input.email,
+          mobile: input.mobile,
+          ...(hashed_password && { hashed_password }),
+          name: input.name,
+          organizationUnit: {
+            connect: {
+              id: input.organizationUnit,
+            },
+          },
+          staffType: {
+            connect: {
+              id: input.staffType,
+            },
+          },
+          role: {
+            connect: {
+              id: input.role,
+            },
+          },
+        };
+        const staff = await ctx.db.user.update({
+          where: {
+            id: input.id,
+          },
+          data,
+          select: {
+            id: true,
+            email: true,
+            mobile: true,
+            name: true,
+            organizationUnit: {
+              select: {
+                id: true,
+              },
+            },
+            staffType: {
+              select: {
+                id: true,
+              },
+            },
+            role: {
+              select: {
+                id: true,
+              },
+            },
+          },
+        });
+        return {
+          id: staff?.id!,
+          email: staff?.email!,
+          mobile: staff?.mobile || "",
+          name: staff?.name!,
+          organizationUnit: staff?.organizationUnit?.id!,
+          staffType: staff?.staffType?.id!,
+          role: staff?.role?.id!,
         };
       } catch (err) {
         console.log(err);

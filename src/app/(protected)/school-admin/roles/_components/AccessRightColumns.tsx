@@ -31,10 +31,6 @@ export const accessRightColumns = (): ColumnDef<AccessRights>[] => [
     ),
   },
   {
-    accessorKey: "id",
-    header: "ID",
-  },
-  {
     accessorKey: "pageName",
     header: "Page Name",
   },

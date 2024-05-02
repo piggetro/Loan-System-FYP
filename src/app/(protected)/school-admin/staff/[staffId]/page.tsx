@@ -8,6 +8,9 @@ interface pageProps {
 
 const page = async ({ params }: pageProps) => {
   const staff = await api.schoolAdmin.getStaff({ id: params.staffId });
+  const organizationUnits = await api.schoolAdmin.getAllOrganizationUnits();
+  const staffTypes = await api.schoolAdmin.getAllStaffTypes();
+  const roles = await api.schoolAdmin.getAllRoles();
 
   return (
     <div>
@@ -15,7 +18,12 @@ const page = async ({ params }: pageProps) => {
         Staff Details
       </h3>
       <div>
-        <StaffDetails staff={staff} />
+        <StaffDetails
+          staff={staff}
+          organizationUnits={organizationUnits}
+          staffTypes={staffTypes}
+          roles={roles}
+        />
       </div>
     </div>
   );

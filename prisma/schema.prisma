@@ -25,7 +25,7 @@ model User {
     id                    String             @id
     email                 String             @unique
     name                  String
-    mobile                Int?
+    mobile                String?
     hashed_password       String?
     batch                 Int?
     graduationDate        DateTime?

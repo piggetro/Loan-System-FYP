@@ -20,10 +20,6 @@ export const roleColumns = ({
   onDelete,
 }: roleColumnProps): ColumnDef<Roles>[] => [
   {
-    accessorKey: "id",
-    header: "ID",
-  },
-  {
     accessorKey: "role",
     header: "Role",
   },
