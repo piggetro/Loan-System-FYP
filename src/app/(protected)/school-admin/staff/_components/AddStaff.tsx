@@ -177,8 +177,11 @@ const AddStaff = ({
                 <FormItem>
                   <FormLabel>Staff Type</FormLabel>
                   <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
+                    onValueChange={(value) => {
+                      field.onChange(value);
+                      form.setValue(field.name, value);
+                    }}
+                    value={field.value}
                   >
                     <FormControl>
                       <SelectTrigger>
@@ -204,8 +207,11 @@ const AddStaff = ({
                 <FormItem>
                   <FormLabel>Organization Unit</FormLabel>
                   <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
+                    onValueChange={(value) => {
+                      field.onChange(value);
+                      form.setValue(field.name, value);
+                    }}
+                    value={field.value}
                   >
                     <FormControl>
                       <SelectTrigger>
@@ -234,8 +240,11 @@ const AddStaff = ({
                 <FormItem>
                   <FormLabel>Role</FormLabel>
                   <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
+                    onValueChange={(value) => {
+                      field.onChange(value);
+                      form.setValue(field.name, value);
+                    }}
+                    value={field.value}
                   >
                     <FormControl>
                       <SelectTrigger>

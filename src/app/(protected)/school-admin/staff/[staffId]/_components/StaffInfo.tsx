@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
   Form,
   FormField,
@@ -63,7 +63,7 @@ const formSchema = z.object({
     .max(255, { message: "Id must be at most 255 characters long" }),
   mobile: z
     .string()
-    .regex(/^\d{1,8}$/, { message: "Mobile number must be 1 to 8 digits long" })
+    .regex(/^\d{8}$/, { message: "Mobile number must be 8 digits long" })
     .optional()
     .or(z.literal("")),
   password: z.string().optional().or(z.literal("")),
@@ -118,11 +118,15 @@ const StaffInfo = ({
     api.schoolAdmin.updateStaff.useMutation({
       onSuccess: (data) => {
         setStaff(data);
+        setDisabled(true);
         toast({
           title: "Success",
           description: "Staff updated successfully",
         });
-        form.reset();
+        form.reset({
+          ...data,
+          password: "",
+        });
       },
       onError: (err) => {
         console.log(err);
@@ -227,8 +231,11 @@ const StaffInfo = ({
                   <FormLabel>Organization Unit</FormLabel>
                   <Select
                     disabled={disabled}
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
+                    onValueChange={(value) => {
+                      field.onChange(value);
+                      form.setValue(field.name, value);
+                    }}
+                    value={field.value}
                   >
                     <FormControl>
                       <SelectTrigger>
@@ -258,8 +265,11 @@ const StaffInfo = ({
                   <FormLabel>Staff Type</FormLabel>
                   <Select
                     disabled={disabled}
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
+                    onValueChange={(value) => {
+                      field.onChange(value);
+                      form.setValue(field.name, value);
+                    }}
+                    value={field.value}
                   >
                     <FormControl>
                       <SelectTrigger>
@@ -285,8 +295,11 @@ const StaffInfo = ({
                 <FormItem>
                   <FormLabel>Role</FormLabel>
                   <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
+                    onValueChange={(value) => {
+                      field.onChange(value);
+                      form.setValue(field.name, value);
+                    }}
+                    value={field.value}
                     disabled={disabled}
                   >
                     <FormControl>
@@ -312,16 +325,25 @@ const StaffInfo = ({
       <div className="flex justify-end">
         <Button
           type="button"
-          disabled={!form.formState.isValid || isPending}
           onClick={() => {
+            !disabled && form.reset();
             setDisabled(!disabled);
-            form.handleSubmit(onSubmit);
           }}
           className="mt-2"
         >
-          {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          Confirm
+          {disabled ? "Edit" : "Cancel"}
         </Button>
+        {!disabled && (
+          <Button
+            type="button"
+            disabled={!form.formState.isValid || isPending}
+            onClick={form.handleSubmit(onSubmit)}
+            className="ms-2 mt-2"
+          >
+            {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Confirm
+          </Button>
+        )}
       </div>
     </div>
   );

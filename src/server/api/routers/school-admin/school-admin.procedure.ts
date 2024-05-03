@@ -350,8 +350,12 @@ export const schoolAdminRouter = createTRPCRouter({
         id: z.string().min(1),
         name: z.string().min(1),
         email: z.string().email(),
-        mobile: z.string().optional().nullable(),
-        password: z.string().optional().nullable(),
+        mobile: z
+          .string()
+          .regex(/^\d{8}$/)
+          .optional()
+          .or(z.literal("")),
+        password: z.string().optional().or(z.literal("")),
         organizationUnit: z.string().min(1),
         staffType: z.string().min(1),
         role: z.string().min(1),
@@ -360,34 +364,44 @@ export const schoolAdminRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       try {
         const hashed_password =
-          input.password && (await new Argon2id().hash(input.password));
-        const data = {
-          id: input.id,
-          email: input.email,
-          mobile: input.mobile,
-          ...(hashed_password && { hashed_password }),
-          name: input.name,
-          organizationUnit: {
-            connect: {
-              id: input.organizationUnit,
-            },
+          input.password &&
+          input.password.trim() &&
+          (await new Argon2id().hash(input.password));
+
+        const role = await ctx.db.user.findUnique({
+          where: {
+            id: input.id,
           },
-          staffType: {
-            connect: {
-              id: input.staffType,
-            },
+          select: {
+            roleId: true,
           },
-          role: {
-            connect: {
-              id: input.role,
-            },
-          },
-        };
+        });
         const staff = await ctx.db.user.update({
           where: {
             id: input.id,
           },
-          data,
+          data: {
+            id: input.id,
+            name: input.name,
+            email: input.email,
+            mobile: input.mobile?.trim() === "" ? null : input.mobile,
+            ...(hashed_password && { hashed_password }),
+            organizationUnit: {
+              connect: {
+                id: input.organizationUnit,
+              },
+            },
+            staffType: {
+              connect: {
+                id: input.staffType,
+              },
+            },
+            role: {
+              connect: {
+                id: input.role,
+              },
+            },
+          },
           select: {
             id: true,
             email: true,
@@ -410,6 +424,32 @@ export const schoolAdminRouter = createTRPCRouter({
             },
           },
         });
+        if (role?.roleId !== input.role) {
+          await ctx.db.userAccessRights.deleteMany({
+            where: {
+              grantedUserId: input.id,
+            },
+          });
+          const roleData = await ctx.db.role.findUnique({
+            where: {
+              id: input.role,
+            },
+            select: {
+              accessRights: {
+                select: {
+                  accessRightId: true,
+                },
+              },
+            },
+          });
+          await ctx.db.userAccessRights.createMany({
+            data: roleData?.accessRights.map((accessRight) => ({
+              accessRightId: accessRight.accessRightId,
+              grantedUserId: input.id,
+              grantedById: ctx.user.id,
+            })) as any,
+          });
+        }
         return {
           id: staff?.id!,
           email: staff?.email!,
