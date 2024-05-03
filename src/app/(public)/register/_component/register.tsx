@@ -13,7 +13,7 @@ const RegisterComponent = () => {
   const router = useRouter();
   const [isLoading] = useState<boolean>(false);
   const [adminId, setAdminId] = useState<string>("");
-  const [mobile, setMobile] = useState<string>("");
+  const [mobile, setMobile] = useState<string>();
   const { toast } = useToast();
 
   const performRegister = () => {
@@ -25,7 +25,8 @@ const RegisterComponent = () => {
       });
       return;
     }
-    if (mobile.length != 8) {
+    //todo fix
+    if (mobile == undefined) {
       toast({
         title: "Invalid Phone Number",
         description: "Please enter Singapore phone number without +65 prefix",
