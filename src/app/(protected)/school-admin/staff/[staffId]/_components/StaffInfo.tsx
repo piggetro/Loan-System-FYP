@@ -22,10 +22,12 @@ import { Input } from "@/app/_components/ui/input";
 import { Loader2 } from "lucide-react";
 import { api } from "@/trpc/react";
 import { useToast } from "@/app/_components/ui/use-toast";
+import { AccessRights } from "./AccessRightColumns";
 
 interface StaffInfoProps {
   staff: Staff;
   setStaff: React.Dispatch<React.SetStateAction<Staff>>;
+  setAccessRights: React.Dispatch<React.SetStateAction<AccessRights[]>>;
   organizationUnits: OrganizationUnit[];
   staffTypes: StaffType[];
   roles: Role[];
@@ -92,6 +94,7 @@ const formSchema = z.object({
 const StaffInfo = ({
   staff,
   setStaff,
+  setAccessRights,
   organizationUnits,
   roles,
   staffTypes,
@@ -117,7 +120,16 @@ const StaffInfo = ({
   const { mutate: updateStaff, isPending } =
     api.schoolAdmin.updateStaff.useMutation({
       onSuccess: (data) => {
-        setStaff(data);
+        setStaff({
+          id: data.id,
+          email: data.email,
+          name: data.name,
+          organizationUnit: data.organizationUnit,
+          staffType: data.staffType,
+          role: data.role,
+          mobile: data.mobile,
+        });
+        setAccessRights(data.accessRights);
         setDisabled(true);
         toast({
           title: "Success",

@@ -3,10 +3,12 @@ import { api } from "@/trpc/server";
 import Staff from "./_components/Staff";
 
 const page = async () => {
-  const staff = await api.schoolAdmin.getAllStaff();
-  const organizationUnits = await api.schoolAdmin.getAllOrganizationUnits();
-  const staffTypes = await api.schoolAdmin.getAllStaffTypes();
-  const roles = await api.schoolAdmin.getAllRoles();
+  const [staff, organizationUnits, staffTypes, roles] = await Promise.all([
+    api.schoolAdmin.getAllStaff(),
+    api.schoolAdmin.getAllOrganizationUnits(),
+    api.schoolAdmin.getAllStaffTypes(),
+    api.schoolAdmin.getAllRoles(),
+  ]);
 
   return (
     <div>

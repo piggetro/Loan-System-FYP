@@ -3,9 +3,10 @@ import { api } from "@/trpc/server";
 import Roles from "./_components/Roles";
 
 const page = async () => {
-
-  const data = await api.schoolAdmin.getAllRoles();
-  const accessRights = await api.schoolAdmin.getAccessRights();
+  const [data, accessRights] = await Promise.all([
+    api.schoolAdmin.getAllRoles(),
+    api.schoolAdmin.getAccessRights(),
+  ]);
 
   return (
     <div>

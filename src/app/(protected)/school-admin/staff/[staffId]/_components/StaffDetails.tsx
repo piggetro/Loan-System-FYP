@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { AccessRights } from "./AccessRightColumns";
 import StaffInfo, {
   OrganizationUnit,
@@ -9,19 +9,17 @@ import StaffInfo, {
   StaffType,
 } from "./StaffInfo";
 
-export type StaffDetails = Staff & {
-  accessRightsGranted: AccessRights[];
-};
-
 interface StaffDetailsProps {
-  staff: StaffDetails;
+  staff: Staff;
   organizationUnits: OrganizationUnit[];
   staffTypes: StaffType[];
   roles: Role[];
+  accessRights: AccessRights[];
 }
 
 const StaffDetails = ({
   staff: data,
+  accessRights: dataAccessRights,
   organizationUnits,
   staffTypes,
   roles,
@@ -35,12 +33,15 @@ const StaffDetails = ({
     staffType: data.staffType,
     role: data.role,
   });
-  console.log(staff);
+  const [accessRights, setAccessRights] =
+    useState<AccessRights[]>(dataAccessRights);
+
   return (
     <div className="mt-6 rounded-md bg-white px-6 py-4">
       <StaffInfo
         staff={staff}
         setStaff={setStaff}
+        setAccessRights={setAccessRights}
         organizationUnits={organizationUnits}
         staffTypes={staffTypes}
         roles={roles}

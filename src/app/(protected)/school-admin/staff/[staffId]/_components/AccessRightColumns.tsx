@@ -7,6 +7,7 @@ export type AccessRights = {
   id: string;
   pageName: string;
   pageLink: string;
+  grantedBy: string;
 };
 
 interface AccessRightColumnProps {
@@ -29,7 +30,13 @@ export const accessRightColumns = ({
     header: "Page Link",
   },
   {
+    accessorKey: "grantedBy",
+    header: "Granted By",
+  },
+  {
     id: "actions",
-    cell: ({ row }) => <AccessRightDataTableRowActions row={row} onDelete={onDelete} />,
+    cell: ({ row }) => (
+      <AccessRightDataTableRowActions row={row} onDelete={onDelete} />
+    ),
   },
 ];

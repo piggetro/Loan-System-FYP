@@ -344,6 +344,38 @@ export const schoolAdminRouter = createTRPCRouter({
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
       }
     }),
+  getStaffAccessRights: protectedProcedure
+    .input(z.object({ id: z.string().min(1) }))
+    .query(async ({ ctx, input }) => {
+      try {
+        const data = await ctx.db.user.findUnique({
+          where: {
+            id: input.id,
+          },
+          select: {
+            accessRightsGranted: {
+              select: {
+                accessRight: true,
+                grantedBy: {
+                  select: {
+                    name: true,
+                  },
+                },
+              },
+            },
+          },
+        });
+        return data?.accessRightsGranted.map((accessRight) => ({
+          id: accessRight.accessRight.id,
+          pageName: accessRight.accessRight.pageName,
+          pageLink: accessRight.accessRight.pageLink,
+          grantedBy: accessRight.grantedBy.name,
+        }))!;
+      } catch (err) {
+        console.log(err);
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      }
+    }),
   updateStaff: protectedProcedure
     .input(
       z.object({
@@ -376,6 +408,59 @@ export const schoolAdminRouter = createTRPCRouter({
             roleId: true,
           },
         });
+
+        if (role?.roleId !== input.role) {
+          const [existingAccessRights, oldAccessRights, newAccessRights] =
+            await Promise.all([
+              ctx.db.userAccessRights.findMany({
+                where: { grantedUserId: input.id },
+                select: { accessRightId: true },
+              }),
+              ctx.db.accessRightsOnRoles.findMany({
+                where: { roleId: role?.roleId! },
+                select: { accessRightId: true },
+              }),
+              ctx.db.accessRightsOnRoles.findMany({
+                where: { roleId: input.role },
+                select: { accessRightId: true },
+              }),
+            ]);
+
+          const independentAccessRights = existingAccessRights.filter(
+            (existing) =>
+              !oldAccessRights.some(
+                (old) => old.accessRightId === existing.accessRightId,
+              ),
+          );
+
+          const accessRightsToBeAdded = newAccessRights.filter(
+            (newAccess) =>
+              !independentAccessRights.some(
+                (independent) =>
+                  independent.accessRightId === newAccess.accessRightId,
+              ),
+          );
+
+          await ctx.db.$transaction([
+            ctx.db.userAccessRights.deleteMany({
+              where: {
+                grantedUserId: input.id,
+                accessRightId: {
+                  in: oldAccessRights.map(
+                    (accessRight) => accessRight.accessRightId,
+                  ),
+                },
+              },
+            }),
+            ctx.db.userAccessRights.createMany({
+              data: accessRightsToBeAdded.map((accessRight) => ({
+                accessRightId: accessRight.accessRightId,
+                grantedUserId: input.id,
+                grantedById: ctx.user.id,
+              })),
+            }),
+          ]);
+        }
         const staff = await ctx.db.user.update({
           where: {
             id: input.id,
@@ -422,34 +507,18 @@ export const schoolAdminRouter = createTRPCRouter({
                 id: true,
               },
             },
-          },
-        });
-        if (role?.roleId !== input.role) {
-          await ctx.db.userAccessRights.deleteMany({
-            where: {
-              grantedUserId: input.id,
-            },
-          });
-          const roleData = await ctx.db.role.findUnique({
-            where: {
-              id: input.role,
-            },
-            select: {
-              accessRights: {
-                select: {
-                  accessRightId: true,
+            accessRightsGranted: {
+              select: {
+                accessRight: true,
+                grantedBy: {
+                  select: {
+                    name: true,
+                  },
                 },
               },
             },
-          });
-          await ctx.db.userAccessRights.createMany({
-            data: roleData?.accessRights.map((accessRight) => ({
-              accessRightId: accessRight.accessRightId,
-              grantedUserId: input.id,
-              grantedById: ctx.user.id,
-            })) as any,
-          });
-        }
+          },
+        });
         return {
           id: staff?.id!,
           email: staff?.email!,
@@ -458,6 +527,12 @@ export const schoolAdminRouter = createTRPCRouter({
           organizationUnit: staff?.organizationUnit?.id!,
           staffType: staff?.staffType?.id!,
           role: staff?.role?.id!,
+          accessRights: staff?.accessRightsGranted.map((accessRight) => ({
+            id: accessRight.accessRight.id,
+            pageName: accessRight.accessRight.pageName,
+            pageLink: accessRight.accessRight.pageLink,
+            grantedBy: accessRight.grantedBy.name,
+          }))!,
         };
       } catch (err) {
         console.log(err);
