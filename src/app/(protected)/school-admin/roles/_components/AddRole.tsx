@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
   Form,
   FormField,
@@ -18,8 +18,8 @@ import { Loader2 } from "lucide-react";
 import { api } from "@/trpc/react";
 import { Roles } from "./RolesColumns";
 import { useToast } from "@/app/_components/ui/use-toast";
-import { AccessRights, accessRightColumns } from "./AccessRightColumns";
-import { AccessRightDataTable } from "./AccessRightDataTable";
+import { AccessRights, accessRightColumns } from "../../../../_components/AddAccessRightColumns";
+import { AccessRightDataTable } from "../../../../_components/AddAccessRightDataTable";
 
 interface AddRoleProps {
   setRoles: React.Dispatch<React.SetStateAction<Roles[]>>;

@@ -539,4 +539,242 @@ export const schoolAdminRouter = createTRPCRouter({
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
       }
     }),
+  deleteAccessRightFromStaff: protectedProcedure
+    .input(z.object({ id: z.string().min(1), staffId: z.string().min(1) }))
+    .mutation(async ({ ctx, input }) => {
+      try {
+        const userAccessRight = await ctx.db.userAccessRights.findFirst({
+          where: {
+            accessRightId: input.id,
+            grantedUserId: input.staffId,
+          },
+          select: {
+            id: true,
+          },
+        });
+        return await ctx.db.userAccessRights.delete({
+          where: {
+            id: userAccessRight?.id,
+          },
+        });
+      } catch (err) {
+        console.log(err);
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      }
+    }),
+  getStaffAvailableAccessRights: protectedProcedure
+    .input(z.object({ id: z.string().min(1) }))
+    .query(async ({ ctx, input }) => {
+      try {
+        const [allAccessRights, userAccessRights] = await Promise.all([
+          ctx.db.accessRights.findMany(),
+          ctx.db.userAccessRights.findMany({
+            where: {
+              grantedUserId: input.id,
+            },
+            select: {
+              accessRightId: true,
+            },
+          }),
+        ]);
+
+        return allAccessRights.filter(
+          (accessRight) =>
+            !userAccessRights.some(
+              (userAccessRight) =>
+                userAccessRight.accessRightId === accessRight.id,
+            ),
+        );
+      } catch (err) {
+        console.log(err);
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      }
+    }),
+  addAcccessRightToStaff: protectedProcedure
+    .input(
+      z.object({
+        id: z.string().min(1),
+        accessRights: z.array(z.string().min(1)),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      try {
+        await ctx.db.userAccessRights.createMany({
+          data: input.accessRights.map((accessRight) => ({
+            accessRightId: accessRight,
+            grantedUserId: input.id,
+            grantedById: ctx.user.id,
+          })),
+        });
+        const data = await ctx.db.userAccessRights.findMany({
+          where: {
+            grantedUserId: input.id,
+          },
+          select: {
+            grantedBy: {
+              select: {
+                name: true,
+              },
+            },
+            accessRight: {
+              select: {
+                id: true,
+                pageName: true,
+                pageLink: true,
+              },
+            },
+          },
+        });
+        return data.map((accessRight) => ({
+          id: accessRight.accessRight.id,
+          pageName: accessRight.accessRight.pageName,
+          pageLink: accessRight.accessRight.pageLink,
+          grantedBy: accessRight.grantedBy.name,
+        }));
+      } catch (err) {
+        console.log(err);
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      }
+    }),
+  getRoleDetails: protectedProcedure
+    .input(z.object({ roleId: z.string().min(1) }))
+    .query(async ({ ctx, input }) => {
+      try {
+        const role = await ctx.db.role.findUnique({
+          where: {
+            id: input.roleId,
+          },
+          select: {
+            id: true,
+            role: true,
+            accessRights: {
+              select: {
+                accessRight: {
+                  select: {
+                    id: true,
+                    pageName: true,
+                    pageLink: true,
+                  },
+                },
+              },
+            },
+          },
+        });
+        return {
+          id: role?.id!,
+          role: role?.role!,
+          accessRights: role?.accessRights.map((accessRight) => ({
+            id: accessRight.accessRight.id,
+            pageName: accessRight.accessRight.pageName,
+            pageLink: accessRight.accessRight.pageLink,
+          }))!,
+        };
+      } catch (err) {
+        console.log(err);
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      }
+    }),
+  updateRoleDetails: protectedProcedure
+    .input(z.object({ id: z.string().min(1), role: z.string().min(1) }))
+    .mutation(async ({ ctx, input }) => {
+      try {
+        return await ctx.db.role.update({
+          where: {
+            id: input.id,
+          },
+          data: {
+            role: input.role,
+          },
+        });
+      } catch (err) {
+        console.log(err);
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      }
+    }),
+  deleteAccessRightFromRole: protectedProcedure
+    .input(
+      z.object({ roleId: z.string().min(1), accessRightId: z.string().min(1) }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      try {
+        return await ctx.db.accessRightsOnRoles.delete({
+          where: {
+            accessRightId_roleId: {
+              accessRightId: input.accessRightId,
+              roleId: input.roleId,
+            },
+          },
+        });
+      } catch (err) {
+        console.log(err);
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      }
+    }),
+  getRoleAvailableAccessRights: protectedProcedure
+    .input(z.object({ roleId: z.string().min(1) }))
+    .query(async ({ ctx, input }) => {
+      try {
+        const [allAccessRights, roleAccessRights] = await Promise.all([
+          ctx.db.accessRights.findMany(),
+          ctx.db.accessRightsOnRoles.findMany({
+            where: {
+              roleId: input.roleId,
+            },
+            select: {
+              accessRightId: true,
+            },
+          }),
+        ]);
+
+        return allAccessRights.filter(
+          (accessRight) =>
+            !roleAccessRights.some(
+              (roleAccessRight) =>
+                roleAccessRight.accessRightId === accessRight.id,
+            ),
+        );
+      } catch (err) {
+        console.log(err);
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      }
+    }),
+  addAccessRightsToRole: protectedProcedure
+    .input(
+      z.object({
+        roleId: z.string().min(1),
+        accessRights: z.array(z.string().min(1)),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      try {
+        await ctx.db.accessRightsOnRoles.createMany({
+          data: input.accessRights.map((accessRight) => ({
+            accessRightId: accessRight,
+            roleId: input.roleId,
+          })),
+        });
+        const data = await ctx.db.accessRightsOnRoles.findMany({
+          where: {
+            roleId: input.roleId,
+          },
+          select: {
+            accessRight: {
+              select: {
+                id: true,
+                pageName: true,
+                pageLink: true,
+              },
+            },
+          },
+        });
+        return data.map((accessRight) => ({
+          id: accessRight.accessRight.id,
+          pageName: accessRight.accessRight.pageName,
+          pageLink: accessRight.accessRight.pageLink,
+        }));
+      } catch (err) {
+        console.log(err);
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      }
+    }),
 });

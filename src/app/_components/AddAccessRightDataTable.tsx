@@ -20,7 +20,7 @@ import {
 import { Button } from "@/app/_components/ui/button";
 import { Input } from "@/app/_components/ui/input";
 import { useEffect, useState } from "react";
-import { AccessRights } from "./AccessRightColumns";
+import { AccessRights } from "./AddAccessRightColumns";
 
 interface AccessRightDataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];

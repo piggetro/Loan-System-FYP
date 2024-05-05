@@ -7,7 +7,6 @@ export type AccessRights = {
   id: string;
   pageName: string;
   pageLink: string;
-  grantedBy?: string;
 };
 
 interface AccessRightColumnProps {
@@ -24,10 +23,6 @@ export const accessRightColumns = ({
   {
     accessorKey: "pageLink",
     header: "Page Link",
-  },
-  {
-    accessorKey: "grantedBy",
-    header: "Granted By",
   },
   {
     id: "actions",
