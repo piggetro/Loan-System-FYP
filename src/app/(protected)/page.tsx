@@ -1,11 +1,15 @@
-import React from "react";
-import { lucia } from "@/lib/auth";
-import { cookies } from "next/headers";
+import React from 'react';
 
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
-interface pageProps {}
-const page = async ({}: pageProps) => {
-  return <div>page</div>;
-};
+interface pageProps {
+ 
+}
+
+const page = ({}: pageProps) => {
+  return (
+    <div>
+      page
+    </div>
+  );
+}
 
 export default page;
