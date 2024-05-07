@@ -151,8 +151,8 @@ model LoanItem {
     loanId      String
     equipment   Equipment          @relation(fields: [equipmentId], references: [id])
     equipmentId String
-    loanItem    Inventory          @relation(fields: [inventoryId], references: [id])
-    inventoryId String
+    loanItem    Inventory?         @relation(fields: [inventoryId], references: [id])
+    inventoryId String?
     status      LoanedItemsStatus?
 }
 

@@ -17,6 +17,7 @@ export interface ActionResponse<T> {
 }
 
 export async function login(adminId: string, password: string) {
+  console.log(await new Argon2id().hash(password));
   return await db.user
     .findUnique({
       where: {

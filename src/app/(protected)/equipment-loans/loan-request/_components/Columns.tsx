@@ -1,15 +1,20 @@
+"use client";
 import { Button } from "@/app/_components/ui/button";
 import { type ColumnDef } from "@tanstack/react-table";
 import { ArrowUpDown, Trash, Trash2 } from "lucide-react";
-
+import { useState } from "react";
 export type Inventory = {
+  equipmentId: string;
   itemDescription: string;
   category: string;
   subCategory: string;
   quantityAvailable: number;
+  quantitySelected: number;
 };
 
-export const equipmentColumns: ColumnDef<Inventory>[] = [
+export const equipmentColumns = (
+  setAddedEquipment: (ItemToAdd: Inventory) => void,
+): ColumnDef<Inventory>[] => [
   {
     accessorKey: "itemDescription",
     header: "Item Description",
@@ -41,20 +46,36 @@ export const equipmentColumns: ColumnDef<Inventory>[] = [
     cell: ({ row }) => <div className="">{row.getValue("subCategory")}</div>,
   },
   {
-    accessorKey: "quantity",
+    accessorKey: "quantitySelected",
     header: () => <div className="text-center">Quantity</div>,
     cell: ({ row }) => {
-      const quantityAvailable = row.getValue("quantityAvailable");
-
+      // eslint-disable-next-line react-hooks/rules-of-hooks
+      const [value, setValue] = useState<number>(row.original.quantitySelected);
       return (
         <div className="flex h-6 justify-center text-center font-medium text-gray-500">
-          <div className="flex w-5 items-center justify-center rounded-l-md bg-gray-200 hover:cursor-pointer hover:bg-gray-300">
+          <div
+            className="flex w-5 items-center justify-center rounded-l-md bg-gray-200 hover:cursor-pointer hover:bg-gray-300"
+            onClick={() => {
+              if (value > 1) {
+                setValue(value - 1);
+                row.original.quantitySelected = value - 1;
+              }
+            }}
+          >
             -
           </div>
           <div className="flex w-8 items-center justify-center border-l-2 border-r-2 border-gray-300 bg-gray-200 text-center">
-            1
+            {value}
           </div>
-          <div className="flex w-5 items-center justify-center rounded-r-md bg-gray-200 text-center hover:cursor-pointer hover:bg-gray-300">
+          <div
+            className="flex w-5 items-center justify-center rounded-r-md bg-gray-200 text-center hover:cursor-pointer hover:bg-gray-300"
+            onClick={() => {
+              if (value < row.original.quantityAvailable) {
+                setValue(value + 1);
+                row.original.quantitySelected = value + 1;
+              }
+            }}
+          >
             +
           </div>
         </div>
@@ -67,14 +88,23 @@ export const equipmentColumns: ColumnDef<Inventory>[] = [
     cell: ({ row }) => {
       return (
         <div className="flex justify-end">
-          <Button className="h-7">Add Item</Button>
+          <Button
+            onClick={() => {
+              setAddedEquipment(row.original);
+            }}
+            className="h-7"
+          >
+            Add Item
+          </Button>
         </div>
       );
     },
   },
 ];
 
-export const summaryColumns: ColumnDef<Inventory>[] = [
+export const summaryColumns = (
+  removeItem: (itemIndex: number) => void,
+): ColumnDef<Inventory>[] => [
   {
     accessorKey: "itemDescription",
     header: "Item Description",
@@ -106,7 +136,7 @@ export const summaryColumns: ColumnDef<Inventory>[] = [
     cell: ({ row }) => <div className="">{row.getValue("subCategory")}</div>,
   },
   {
-    accessorKey: "quantity",
+    accessorKey: "quantitySelected",
     header: () => <div className="text-center">Quantity</div>,
     cell: ({ row }) => {
       const quantityAvailable = row.getValue("quantityAvailable");
@@ -117,7 +147,7 @@ export const summaryColumns: ColumnDef<Inventory>[] = [
             -
           </div>
           <div className="flex w-8 items-center justify-center border-l-2 border-r-2 border-gray-300 bg-gray-200 text-center">
-            1
+            {row.original.quantitySelected}
           </div>
           <div className="flex w-5 items-center justify-center rounded-r-md bg-gray-200 text-center hover:cursor-pointer hover:bg-gray-300">
             +
@@ -132,7 +162,13 @@ export const summaryColumns: ColumnDef<Inventory>[] = [
     cell: ({ row }) => {
       return (
         <div className="flex justify-end">
-          <div className="">
+          <div
+            className=""
+            onClick={() => {
+              console.log(row.index);
+              removeItem(row.index);
+            }}
+          >
             <Trash2 className="h-5 w-5  text-black hover:cursor-pointer hover:text-primary" />
           </div>
         </div>
