@@ -129,6 +129,7 @@ model Loan {
     loanItems           LoanItem[]
     waiveRequest        WaiveRequest[]
     approvingLecturerId String
+    dateCreated         DateTime       @default(now())
 }
 
 enum LoanStatus {
