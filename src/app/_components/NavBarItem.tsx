@@ -39,8 +39,12 @@ const NavBarItem = ({ navBarItems }: NavBarItemProps) => {
               </DropdownMenuTrigger>
               <DropdownMenuContent>
                 {navBarItem.children.map((child) => (
-                  <Link href={child.path!} className="block w-full text-left">
-                    <DropdownMenuItem key={child.title} >
+                  <Link
+                    href={child.path!}
+                    className="block w-full text-left"
+                    key={child.title}
+                  >
+                    <DropdownMenuItem>
                       <span className="flex h-full w-full items-center">
                         {child.title}
                       </span>

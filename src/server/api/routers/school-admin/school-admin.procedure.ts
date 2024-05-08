@@ -1,7 +1,6 @@
 import { TRPCError } from "@trpc/server";
 import { protectedProcedure, createTRPCRouter } from "../../trpc";
 import { z } from "zod";
-import page from "@/app/(protected)/page";
 import { Argon2id } from "oslo/password";
 
 export const schoolAdminRouter = createTRPCRouter({
