@@ -74,12 +74,12 @@ const LoginComponent = () => {
                 Password
               </Label>
               <div
-                className="flex w-1/2 justify-end font-medium hover:cursor-pointer"
+                className="flex w-1/2 justify-end font-medium hover:cursor-pointer hover:text-cyan-700"
                 onClick={() => {
                   setShowPassword(!showPassword);
                 }}
               >
-                Show Password
+                {showPassword ? "Hide Password" : "Show Password"}
               </div>
             </div>
             <Input

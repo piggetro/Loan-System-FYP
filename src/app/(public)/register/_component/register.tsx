@@ -52,7 +52,7 @@ const RegisterComponent = () => {
   return (
     <div className="mx-auto w-1/3 min-w-96">
       <div className="mb-4 rounded-xl bg-white px-8 pb-8 pt-6 shadow-lg">
-        <h1 className="mb-4 text-2xl tracking-tight">Welcome</h1>
+        <h1 className="mb-4 text-2xl tracking-tight">Register Account</h1>
 
         <form
           onSubmit={(e) => {
@@ -96,7 +96,7 @@ const RegisterComponent = () => {
                 setMobile(e.target.value);
               }}
               id="mobileNumber"
-              placeholder="Password Input"
+              placeholder="Mobile Number Input"
               minLength={1}
               type="number"
               autoCapitalize="none"
