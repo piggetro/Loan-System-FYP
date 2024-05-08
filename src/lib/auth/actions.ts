@@ -56,6 +56,7 @@ export async function login(adminId: string, password: string) {
           variant: "destructive",
         };
       }
+      console.log(error);
     });
 }
 

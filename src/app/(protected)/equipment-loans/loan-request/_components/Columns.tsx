@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/rules-of-hooks */
 "use client";
 import { Button } from "@/app/_components/ui/button";
 import { type ColumnDef } from "@tanstack/react-table";
@@ -49,7 +50,6 @@ export const equipmentColumns = (
     accessorKey: "quantitySelected",
     header: () => <div className="text-center">Quantity</div>,
     cell: ({ row }) => {
-      // eslint-disable-next-line react-hooks/rules-of-hooks
       const [value, setValue] = useState<number>(row.original.quantitySelected);
       return (
         <div className="flex h-6 justify-center text-center font-medium text-gray-500">
@@ -104,6 +104,7 @@ export const equipmentColumns = (
 
 export const summaryColumns = (
   removeItem: (itemIndex: number) => void,
+  adjustQuantity: (equipmentData: Inventory) => void,
 ): ColumnDef<Inventory>[] => [
   {
     accessorKey: "itemDescription",
@@ -136,20 +137,39 @@ export const summaryColumns = (
     cell: ({ row }) => <div className="">{row.getValue("subCategory")}</div>,
   },
   {
-    accessorKey: "quantitySelected",
+    accessorKey: "quantityAvailable",
     header: () => <div className="text-center">Quantity</div>,
     cell: ({ row }) => {
       const quantityAvailable = row.getValue("quantityAvailable");
+      const [value, setValue] = useState<number>(row.original.quantitySelected);
 
       return (
         <div className="flex h-6 justify-center text-center font-medium text-gray-500">
-          <div className="flex w-5 items-center justify-center rounded-l-md bg-gray-200 hover:cursor-pointer hover:bg-gray-300">
+          <div
+            className="flex w-5 items-center justify-center rounded-l-md bg-gray-200 hover:cursor-pointer hover:bg-gray-300"
+            onClick={() => {
+              if (value > 1) {
+                setValue(value - 1);
+                row.original.quantitySelected = value - 1;
+                adjustQuantity(row.original);
+              }
+            }}
+          >
             -
           </div>
           <div className="flex w-8 items-center justify-center border-l-2 border-r-2 border-gray-300 bg-gray-200 text-center">
-            {row.original.quantitySelected}
+            {value}
           </div>
-          <div className="flex w-5 items-center justify-center rounded-r-md bg-gray-200 text-center hover:cursor-pointer hover:bg-gray-300">
+          <div
+            className="flex w-5 items-center justify-center rounded-r-md bg-gray-200 text-center hover:cursor-pointer hover:bg-gray-300"
+            onClick={() => {
+              if (value < row.original.quantityAvailable) {
+                setValue(value + 1);
+                row.original.quantitySelected = value + 1;
+                adjustQuantity(row.original);
+              }
+            }}
+          >
             +
           </div>
         </div>
