@@ -31,6 +31,7 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
 
     if (checkAuthorisation.status !== 200)
       return NextResponse.redirect(new URL("/not-found", request.url));
+    //should change to login redirect and clear cookies
 
     return NextResponse.next();
   }
