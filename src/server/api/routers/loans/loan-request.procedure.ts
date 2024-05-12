@@ -43,6 +43,7 @@ export const loanRequestRouter = createTRPCRouter({
 
         where: {
           accessRight: { pageName: "Approval Management" },
+          grantedUserId: { not: ctx.user.id },
         },
       });
 
@@ -73,7 +74,7 @@ export const loanRequestRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const loanItems: { equipmentId: string }[] = [];
       //
-      const loanId = "AY24/25-422";
+      const loanId = "AY24/25-4222";
 
       input.equipment.forEach((equipment) => {
         for (let i = 0; i < equipment.quantitySelected; i++) {
@@ -85,8 +86,10 @@ export const loanRequestRouter = createTRPCRouter({
 
       const dueDateFormatted = new Date(input.dueDate);
       const approvingEmail = input.approvingLecturerEmail;
+      const todayDate = new Date();
 
       try {
+        //Get Lecturer ID
         const approvingLecturerId = await ctx.db.user.findUnique({
           select: {
             id: true,
@@ -96,6 +99,34 @@ export const loanRequestRouter = createTRPCRouter({
         if (approvingLecturerId == null) {
           return { title: "Error" };
         }
+        //Get Semester
+        const semester = await ctx.db.semesters.findFirst({
+          select: { name: true },
+          where: {
+            startDate: {
+              lt: todayDate,
+            },
+            endDate: {
+              gt: todayDate,
+            },
+          },
+        });
+        //Handle Error
+        if (semester == null) {
+          console.log("semester is Invalid");
+          throw Error();
+        }
+        const loanIdCount = await ctx.db.loan.count({
+          where: {
+            loanId: {
+              startsWith: semester?.name,
+            },
+          },
+        });
+
+        const loanId = semester.name + "/" + (loanIdCount + 1);
+
+        // Create Loan Request
         const equipment = await ctx.db.loan.create({
           data: {
             loanId: loanId,
@@ -109,6 +140,93 @@ export const loanRequestRouter = createTRPCRouter({
         });
 
         return equipment;
+      } catch (err) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      }
+    }),
+  getUserApprovalManagementLoanRequests: protectedProcedure.query(
+    async ({ ctx }) => {
+      try {
+        const userApprovalManagementLoanRequests = await ctx.db.loan.findMany({
+          where: {
+            approvingLecturerId: ctx.user.id,
+            status: "PENDING_APPROVAL",
+          },
+          include: {
+            loanedBy: {
+              select: {
+                name: true,
+              },
+            },
+            approvingLecturer: { select: { name: true } },
+            loanItems: {
+              select: {
+                equipment: {
+                  select: {
+                    name: true,
+                  },
+                },
+              },
+            },
+          },
+        });
+
+        return userApprovalManagementLoanRequests;
+      } catch (err) {
+        console.log(err);
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      }
+    },
+  ),
+  getUserApprovalManagementLoanHistory: protectedProcedure.query(
+    async ({ ctx }) => {
+      try {
+        const userApprovalManagementLoanRequests = await ctx.db.loan.findMany({
+          where: {
+            approvingLecturerId: ctx.user.id,
+            status: { not: "PENDING_APPROVAL" },
+          },
+          include: {
+            loanedBy: {
+              select: {
+                name: true,
+              },
+            },
+            approvingLecturer: { select: { name: true } },
+            loanItems: {
+              select: {
+                equipment: {
+                  select: {
+                    name: true,
+                  },
+                },
+              },
+            },
+          },
+        });
+
+        return userApprovalManagementLoanRequests;
+      } catch (err) {
+        console.log(err);
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      }
+    },
+  ),
+  approveLoanRequest: protectedProcedure
+    .input(z.object({ loanId: z.string().min(1) }))
+    .mutation(async ({ ctx, input }) => {
+      try {
+        const approveLoanRequest = await ctx.db.loan.update({
+          data: {
+            status: "APPROVED",
+          },
+          where: {
+            loanId: input.loanId,
+            approvingLecturerId: ctx.user.id,
+          },
+        });
+
+        return "Approved";
       } catch (err) {
         console.log(err);
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
