@@ -52,6 +52,7 @@ const ApprovalManagementComponent: React.FC<{
   const onView = useCallback((loanDetails: ApprovalManagementType) => {
     router.push("/approval-management/hello");
   }, []);
+
   const onApprove = useCallback((loanDetails: ApprovalManagementType) => {
     approveRequest
       .mutateAsync({
@@ -64,6 +65,8 @@ const ApprovalManagementComponent: React.FC<{
         });
 
         removeLoan(loanDetails.loanId);
+        loanDetails.status = "APPROVED";
+        setApproveRequestHistoryData((prev) => [...prev, loanDetails]);
       })
       .catch((error) => {
         console.log(error);

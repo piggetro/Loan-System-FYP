@@ -9,6 +9,7 @@ import {
 } from "@/app/_components/ui/dropdown-menu";
 import { Button } from "@/app/_components/ui/button";
 import { MoreHorizontal } from "lucide-react";
+import { api } from "@/trpc/react";
 
 interface ApprovalManagementTableRowActionsProps<TData> {
   row: Row<TData>;
