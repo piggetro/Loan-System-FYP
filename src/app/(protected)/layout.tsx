@@ -84,12 +84,12 @@ export default async function RootLayout({
                         Loan System
                       </span>
                     </Link>
-                    <nav className="hidden items-center gap-4 text-sm md:flex lg:gap-8">
+                    <nav className="hidden items-center gap-2 text-sm md:flex lg:gap-3">
                       <NavBarItem navBarItems={filteredNavItems} />
                     </nav>
                   </div>
                   <div className="flex items-center">
-                    <span className="text-l flex h-full w-full items-center justify-start font-semibold">
+                    <span className="text-sm flex h-full w-full items-center justify-start font-semibold">
                       <NavProfile name={user?.name || "Default Name"} />
                     </span>
                   </div>
