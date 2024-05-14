@@ -29,16 +29,7 @@ export const ApprovalManagementColumns = ({
     accessorKey: "loanedBy.name",
     id: "name",
     header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          className="pl-0"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Name
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      );
+      return <p>Name</p>;
     },
     cell: ({ row }) => <div className="">{row.getValue("name")}</div>,
   },
