@@ -54,7 +54,7 @@ const LoanDetailsTable: React.FC<{
 
       //   console.log(processedLoanData);
     } else {
-      if (processedLoanData[index] !== undefined) {
+      if (processedLoanData[index] != undefined) {
         processedLoanData[index].quantityRequested =
           processedLoanData[index].quantityRequested + 1;
         if (loanData.approvedById != null) {

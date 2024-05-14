@@ -9,9 +9,15 @@ import { useCallback } from "react";
 import { useToast } from "@/app/_components/ui/use-toast";
 
 const LoanDetails: React.FC<{
-  userAccessRights: string[];
   id: string;
-}> = ({ userAccessRights, id }) => {
+}> = ({ id }) => {
+  const {
+    refetch: userAccessRightsRefetch,
+    isLoading: userAccessRightsIsLoading,
+    data: userAccessRights,
+  } = api.loan.getUsersLoanAccess.useQuery({
+    id: id,
+  });
   const approveRequest = api.loanRequest.approveLoanRequestWithId.useMutation();
   const { toast } = useToast();
   const { isFetching, refetch, data } = api.loan.getLoanById.useQuery({
@@ -36,6 +42,9 @@ const LoanDetails: React.FC<{
         // });
 
         //Updating frontend for UX
+        userAccessRightsRefetch().catch((error) => {
+          console.log(error);
+        });
         refresh();
       })
       .catch((error) => {
@@ -97,11 +106,15 @@ const LoanDetails: React.FC<{
         <LoanDetailsTable loanData={data} />
       </div>
       <div className="mt-10">
-        <LoanActions
-          userAccessRights={userAccessRights}
-          approveLoan={onApprove}
-          rejectLoan={onReject}
-        />
+        {userAccessRightsIsLoading || userAccessRights == undefined ? (
+          <Skeleton className="h-10 w-1/6" />
+        ) : (
+          <LoanActions
+            userAccessRights={userAccessRights}
+            approveLoan={onApprove}
+            rejectLoan={onReject}
+          />
+        )}
       </div>
     </div>
   );
