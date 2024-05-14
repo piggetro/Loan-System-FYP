@@ -84,6 +84,7 @@ model Equipment {
     subCategoryId String
     inventory     Inventory[]
     loanItems     LoanItem[]
+    checklist     String?
 }
 
 model Inventory {
