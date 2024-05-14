@@ -50,7 +50,7 @@ export const ApprovalManagementColumns = ({
     cell: ({ row }) => {
       const dateCreated = new Date(
         row.getValue("dateCreated"),
-      ).toLocaleDateString();
+      ).toLocaleDateString("en-SG");
       return (
         <div className="" suppressHydrationWarning>
           {dateCreated}
@@ -64,7 +64,7 @@ export const ApprovalManagementColumns = ({
       return <p>Return Date</p>;
     },
     cell: ({ row }) => {
-      const dueDate = new Date(row.getValue("dueDate")).toLocaleDateString();
+      const dueDate = new Date(row.getValue("dueDate")).toLocaleDateString("en-SG");
       return (
         <div className="" suppressHydrationWarning>
           {dueDate}
@@ -122,7 +122,7 @@ export const ApprovalManagementHistoryColumns = ({
     cell: ({ row }) => {
       const dateRequested = new Date(
         row.getValue("dateCreated"),
-      ).toLocaleDateString();
+      ).toLocaleDateString("en-SG");
       return (
         <div className="" suppressHydrationWarning>
           {dateRequested}
@@ -136,7 +136,7 @@ export const ApprovalManagementHistoryColumns = ({
       return <p>Return Date</p>;
     },
     cell: ({ row }) => {
-      const dueDate = new Date(row.getValue("dueDate")).toLocaleDateString();
+      const dueDate = new Date(row.getValue("dueDate")).toLocaleDateString("en-SG");
       return (
         <div className="" suppressHydrationWarning>
           {dueDate}
