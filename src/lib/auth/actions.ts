@@ -163,6 +163,13 @@ export async function resetPassword(adminId: string, email: string) {
           variant: "destructive",
         };
       }
+      if (results.hashed_password == null) {
+        return {
+          title: "Password Reset Failed",
+          description: "Admin ID is not registered",
+          variant: "destructive",
+        };
+      }
       if (results.email == undefined) {
         return {
           title: "Password Reset Failed",
