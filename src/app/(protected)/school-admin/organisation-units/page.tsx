@@ -1,3 +1,4 @@
+import TopHeaderComponent from "@/app/_components/TopHeader";
 import React from 'react';
 import { api } from "@/trpc/server";
 import OrganizationUnit from "./_components/OrganizationUnit";
@@ -7,12 +8,11 @@ const page = async () => {
 
   return (
     <div>
-      <h3 className="scroll-m-20 text-2xl font-semibold tracking-tight">
-        Organization Units
-      </h3>
-      <div>
-        <OrganizationUnit data={data} />
-      </div>
+      <TopHeaderComponent
+        pathName="School Admin / Organization Units"
+        pageName="Organization Units"
+      />
+      <OrganizationUnit data={data} />
     </div>
   );
 };
