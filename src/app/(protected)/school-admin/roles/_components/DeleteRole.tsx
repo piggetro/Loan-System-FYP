@@ -55,8 +55,8 @@ const DeleteRole = ({
         <AlertDialogHeader>
           <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
           <AlertDialogDescription>
-            This action cannot be undone. This will permanently delete the
-            data and remove the data from our servers.
+            This action cannot be undone. This will permanently delete the data
+            and remove the data from our servers.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
@@ -68,9 +68,12 @@ const DeleteRole = ({
             Cancel
           </AlertDialogCancel>
           <AlertDialogAction
-            disabled={isPending}
+            disabled={isPending || role?.id === undefined} // Disable if pending or id is undefined
             onClick={() => {
-              deleteRole({ id: role?.id! });
+              if (role?.id !== undefined) {
+                // Check for undefined before calling deleteRole
+                deleteRole({ id: role.id });
+              }
             }}
           >
             {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

@@ -58,8 +58,8 @@ const DeleteAccessRight = ({
         <AlertDialogHeader>
           <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
           <AlertDialogDescription>
-            This action cannot be undone. This will permanently delete the
-            data and remove the data from our servers.
+            This action cannot be undone. This will permanently delete the data
+            and remove the data from our servers.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
@@ -73,7 +73,11 @@ const DeleteAccessRight = ({
           <AlertDialogAction
             disabled={isPending}
             onClick={() => {
-              deleteAccessRight({ id: accessRight?.id! });
+              if (accessRight?.id !== undefined) {
+                deleteAccessRight({ id: accessRight.id });
+              } else {
+                console.error("No ID found for accessRight");
+              }
             }}
           >
             {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

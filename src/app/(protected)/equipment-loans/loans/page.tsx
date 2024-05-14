@@ -1,12 +1,12 @@
-import React from 'react';
-
+import TopHeaderComponent from "@/app/_components/TopHeader";
+import React from "react";
 
 const page = () => {
   return (
     <div>
-      Loans Page
+      <TopHeaderComponent pageName="Loans" pathName="Equipment Loans / Loans" />
     </div>
   );
-}
+};
 
 export default page;

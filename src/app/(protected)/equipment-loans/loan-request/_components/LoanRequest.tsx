@@ -70,6 +70,15 @@ const LoanRequestComponent: React.FC<{
       equipment.filter((s, i) => i != itemIndex),
     );
   }
+
+  function adjustQuantity(equipmentData: Inventory) {
+    const index = selectedEquipment.findIndex(
+      (equipment) => equipment.equipmentId === equipmentData.equipmentId,
+    );
+
+    selectedEquipment.splice(index, 1, equipmentData);
+    console.log(selectedEquipment);
+  }
   const closeDialog = (successMessage?: {
     title: string | undefined;
     description: string | undefined;
@@ -179,7 +188,7 @@ const LoanRequestComponent: React.FC<{
           <div className="rounded-md border">
             <SummaryDataTable
               data={selectedEquipment}
-              columns={summaryColumns(removeItem)}
+              columns={summaryColumns(removeItem, adjustQuantity)}
             />
           </div>
         </div>

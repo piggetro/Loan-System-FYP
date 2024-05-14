@@ -46,6 +46,12 @@ export async function login(adminId: string, password: string) {
           sessionCookie.value,
           sessionCookie.attributes,
         );
+      } else {
+        return {
+          title: "Login Failed",
+          description: "Admin ID or Password is wrong",
+          variant: "destructive",
+        };
       }
     })
     .catch((error) => {
@@ -56,6 +62,7 @@ export async function login(adminId: string, password: string) {
           variant: "destructive",
         };
       }
+      console.log(error);
     });
 }
 

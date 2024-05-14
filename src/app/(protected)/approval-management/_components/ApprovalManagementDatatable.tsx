@@ -18,45 +18,21 @@ import {
   TableHeader,
   TableRow,
 } from "@/app/_components/ui/table";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectTrigger,
-  SelectValue,
-} from "@/app/_components/ui/select";
-
 import { useState } from "react";
-import { Input } from "@/app/_components/ui/input";
 import React from "react";
-import { type Category, type SubCategory } from "@prisma/client";
-import { Button } from "@/app/_components/ui/button";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
-  categoriesAndSubCategories: {
-    categories: Category[];
-    subCategories: SubCategory[];
-  };
 }
 
-interface DataTablePropsSummary<TData, TValue> {
-  columns: ColumnDef<TData, TValue>[];
-  data: TData[];
-}
-
-export function EquipmentDataTable<TData, TValue>({
+export function ApprovalManagementTable<TData, TValue>({
   columns,
   data,
-  categoriesAndSubCategories,
 }: DataTableProps<TData, TValue>) {
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [rowSelection, setRowSelection] = useState({});
   const [sorting, setSorting] = React.useState<SortingState>([]);
-  const [selectedCategoryId, setSelectedCategoryId] = useState<string>("1");
 
   const table = useReactTable({
     data,
@@ -75,9 +51,9 @@ export function EquipmentDataTable<TData, TValue>({
   });
 
   return (
-    <div className="my-3 w-full rounded-lg bg-white px-5 py-2 shadow-md">
+    <div>
       <h1 className="font-semibold">Search For Item</h1>
-      <div className="my-2 flex gap-3">
+      {/* <div className="my-2 flex gap-3">
         <Input
           placeholder="Search"
           className="h-7"
@@ -154,7 +130,7 @@ export function EquipmentDataTable<TData, TValue>({
             </SelectGroup>
           </SelectContent>
         </Select>
-      </div>
+      </div> */}
       <div className="my-3 w-full ">
         <div className="rounded-md border">
           <Table>
@@ -200,94 +176,175 @@ export function EquipmentDataTable<TData, TValue>({
                     colSpan={columns.length}
                     className="h-24 text-center"
                   >
-                    No results.
+                    No Active Loan Requests
                   </TableCell>
                 </TableRow>
               )}
             </TableBody>
           </Table>
         </div>
-        <div className="flex items-center justify-end space-x-2 py-4">
-          <Button
-            variant="default"
-            size="sm"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
-          >
-            Previous
-          </Button>
-          <Button
-            variant="default"
-            size="sm"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
-          >
-            Next
-          </Button>
-        </div>
       </div>
     </div>
   );
 }
-
-export function SummaryDataTable<TData, TValue>({
+export function ApprovalManagementHistoryTable<TData, TValue>({
   columns,
   data,
-}: DataTablePropsSummary<TData, TValue>) {
+}: DataTableProps<TData, TValue>) {
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+  const [rowSelection, setRowSelection] = useState({});
+  const [sorting, setSorting] = React.useState<SortingState>([]);
 
   const table = useReactTable({
     data,
     columns,
+    onSortingChange: setSorting,
+    onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
-    onColumnFiltersChange: setColumnFilters,
     getFilteredRowModel: getFilteredRowModel(),
+    onRowSelectionChange: setRowSelection,
+    state: {
+      sorting,
+      columnFilters,
+      rowSelection,
+    },
   });
 
   return (
-    <Table>
-      <TableHeader>
-        {table.getHeaderGroups().map((headerGroup) => (
-          <TableRow key={headerGroup.id}>
-            {headerGroup.headers.map((header) => {
-              return (
-                <TableHead key={header.id}>
-                  {header.isPlaceholder
-                    ? null
-                    : flexRender(
-                        header.column.columnDef.header,
-                        header.getContext(),
-                      )}
-                </TableHead>
-              );
-            })}
-          </TableRow>
-        ))}
-      </TableHeader>
-      <TableBody>
-        {table.getRowModel().rows?.length ? (
-          table.getRowModel().rows.map((row) => (
-            <TableRow
-              key={row.id}
-              data-state={row.getIsSelected() && "selected"}
-              className="p-0"
-            >
-              {row.getVisibleCells().map((cell) => (
-                <TableCell key={cell.id}>
-                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                </TableCell>
+    <div>
+      <h1 className="font-semibold">Search For Item</h1>
+      {/* <div className="my-2 flex gap-3">
+        <Input
+          placeholder="Search"
+          className="h-7"
+          value={
+            (table.getColumn("itemDescription")?.getFilterValue() as string) ??
+            ""
+          }
+          onChange={(event) =>
+            table
+              .getColumn("itemDescription")
+              ?.setFilterValue(event.target.value)
+          }
+        />
+        <Select
+          onValueChange={(key) => {
+            if (key === "All") {
+              setSelectedCategoryId("");
+              table.getColumn("category")?.setFilterValue("");
+            } else {
+              setSelectedCategoryId(key);
+              table
+                .getColumn("category")
+                ?.setFilterValue(
+                  categoriesAndSubCategories.categories.at(parseInt(key) - 1)
+                    ?.name,
+                );
+            }
+          }}
+        >
+          <SelectTrigger className="h-7 w-1/4  min-w-44">
+            <SelectValue placeholder="Category" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectGroup>
+              <SelectLabel>Category</SelectLabel>
+              <SelectItem key={"All"} value={"All"}>
+                All
+              </SelectItem>
+              {categoriesAndSubCategories.categories.map((category) => (
+                <SelectItem key={category.id} value={category.id}>
+                  {category.name}
+                </SelectItem>
               ))}
-            </TableRow>
-          ))
-        ) : (
-          <TableRow>
-            <TableCell colSpan={columns.length} className="h-24 text-center">
-              No results.
-            </TableCell>
-          </TableRow>
-        )}
-      </TableBody>
-    </Table>
+            </SelectGroup>
+          </SelectContent>
+        </Select>
+        <Select
+          onValueChange={(key) => {
+            if (key === "All") {
+              setSelectedCategoryId("");
+              table.getColumn("subCategory")?.setFilterValue("");
+            } else {
+              setSelectedCategoryId(key);
+              table.getColumn("subCategory")?.setFilterValue(key);
+            }
+          }}
+        >
+          <SelectTrigger className="h-7 w-1/4 min-w-44">
+            <SelectValue placeholder="Sub-Category" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectGroup>
+              <SelectLabel>Sub Category</SelectLabel>
+              <SelectItem key={"All"} value={"All"}>
+                All
+              </SelectItem>
+              {categoriesAndSubCategories.subCategories.map((subCategory) =>
+                selectedCategoryId == subCategory.categoryId ? (
+                  <SelectItem key={subCategory.name} value={subCategory.name}>
+                    {subCategory.name}
+                  </SelectItem>
+                ) : null,
+              )}
+            </SelectGroup>
+          </SelectContent>
+        </Select>
+      </div> */}
+      <div className="my-3 w-full ">
+        <div className="rounded-md border">
+          <Table>
+            <TableHeader>
+              {table.getHeaderGroups().map((headerGroup) => (
+                <TableRow key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => {
+                    return (
+                      <TableHead key={header.id}>
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(
+                              header.column.columnDef.header,
+                              header.getContext(),
+                            )}
+                      </TableHead>
+                    );
+                  })}
+                </TableRow>
+              ))}
+            </TableHeader>
+            <TableBody>
+              {table.getRowModel().rows?.length ? (
+                table.getRowModel().rows.map((row) => (
+                  <TableRow
+                    key={row.id}
+                    data-state={row.getIsSelected() && "selected"}
+                    className="p-0"
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id}>
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext(),
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell
+                    colSpan={columns.length}
+                    className="h-24 text-center"
+                  >
+                    No Active Loan Requests
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      </div>
+    </div>
   );
 }
