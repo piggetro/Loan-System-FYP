@@ -48,9 +48,14 @@ export const ApprovalManagementColumns = ({
       return <p>Date Requested</p>;
     },
     cell: ({ row }) => {
-      console.log(row.getValue("dateCreated"));
-      const dateCreated = new Date(row.getValue("dateCreated"));
-      return <div className="">{dateCreated.toLocaleDateString()}</div>;
+      const dateCreated = new Date(
+        row.getValue("dateCreated"),
+      ).toLocaleDateString();
+      return (
+        <div className="" suppressHydrationWarning>
+          {dateCreated}
+        </div>
+      );
     },
   },
   {
@@ -59,8 +64,12 @@ export const ApprovalManagementColumns = ({
       return <p>Return Date</p>;
     },
     cell: ({ row }) => {
-      const dueDate = new Date(row.getValue("dueDate"));
-      return <div className="">{dueDate.toLocaleDateString()}</div>;
+      const dueDate = new Date(row.getValue("dueDate")).toLocaleDateString();
+      return (
+        <div className="" suppressHydrationWarning>
+          {dueDate}
+        </div>
+      );
     },
   },
   {
@@ -111,9 +120,14 @@ export const ApprovalManagementHistoryColumns = ({
       return <p>Date Requested</p>;
     },
     cell: ({ row }) => {
-      console.log(row.getValue("dateCreated"));
-      const dateCreated = new Date(row.getValue("dateCreated"));
-      return <div className="">{dateCreated.toLocaleDateString()}</div>;
+      const dateRequested = new Date(
+        row.getValue("dateCreated"),
+      ).toLocaleDateString();
+      return (
+        <div className="" suppressHydrationWarning>
+          {dateRequested}
+        </div>
+      );
     },
   },
   {
@@ -122,8 +136,12 @@ export const ApprovalManagementHistoryColumns = ({
       return <p>Return Date</p>;
     },
     cell: ({ row }) => {
-      const dueDate = new Date(row.getValue("dueDate"));
-      return <div className="">{dueDate.toLocaleDateString()}</div>;
+      const dueDate = new Date(row.getValue("dueDate")).toLocaleDateString();
+      return (
+        <div className="" suppressHydrationWarning>
+          {dueDate}
+        </div>
+      );
     },
   },
   {

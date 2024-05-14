@@ -18,20 +18,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/app/_components/ui/table";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectTrigger,
-  SelectValue,
-} from "@/app/_components/ui/select";
-
 import { useState } from "react";
-import { Input } from "@/app/_components/ui/input";
 import React from "react";
-import { ApprovalManagementType } from "../page";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];

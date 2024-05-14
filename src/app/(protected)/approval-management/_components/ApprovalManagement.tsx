@@ -38,7 +38,8 @@ const ApprovalManagementComponent: React.FC<{
     useState<ApprovalManagementType[]>(loanRequests);
   const router = useRouter();
   const { toast } = useToast();
-  const approveRequest = api.loanRequest.approveLoanRequest.useMutation();
+  const approveRequest =
+    api.loanRequest.approveLoanRequestWithLoanId.useMutation();
 
   const [approveRequestHistoryData, setApproveRequestHistoryData] =
     useState<ApprovalManagementType[]>(loanRequestHistory);
@@ -50,7 +51,7 @@ const ApprovalManagementComponent: React.FC<{
   }
 
   const onView = useCallback((loanDetails: ApprovalManagementType) => {
-    router.push("/approval-management/hello");
+    router.push(`/equipment-loans/loans/${loanDetails.id}`);
   }, []);
 
   const onApprove = useCallback((loanDetails: ApprovalManagementType) => {
@@ -64,6 +65,7 @@ const ApprovalManagementComponent: React.FC<{
           description: `Loan ${loanDetails.loanId} has been approved`,
         });
 
+        //Updating frontend for UX
         removeLoan(loanDetails.loanId);
         loanDetails.status = "APPROVED";
         setApproveRequestHistoryData((prev) => [...prev, loanDetails]);
@@ -73,6 +75,7 @@ const ApprovalManagementComponent: React.FC<{
       });
   }, []);
   const onReject = useCallback((loanDetails: ApprovalManagementType) => {
+    //Derricks part, use api.loanRequest.rejectLoanRequest
     console.log("onreject");
   }, []);
 

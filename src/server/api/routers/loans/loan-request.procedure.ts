@@ -1,7 +1,6 @@
 import { TRPCError } from "@trpc/server";
 import { protectedProcedure, createTRPCRouter } from "../../trpc";
 import { z } from "zod";
-import { equal } from "assert";
 
 export const loanRequestRouter = createTRPCRouter({
   getCategories: protectedProcedure.query(async ({ ctx }) => {
@@ -212,13 +211,14 @@ export const loanRequestRouter = createTRPCRouter({
       }
     },
   ),
-  approveLoanRequest: protectedProcedure
+  approveLoanRequestWithLoanId: protectedProcedure
     .input(z.object({ loanId: z.string().min(1) }))
     .mutation(async ({ ctx, input }) => {
       try {
-        const approveLoanRequest = await ctx.db.loan.update({
+        await ctx.db.loan.update({
           data: {
             status: "APPROVED",
+            approvedById: ctx.user.id,
           },
           where: {
             loanId: input.loanId,
@@ -227,6 +227,47 @@ export const loanRequestRouter = createTRPCRouter({
         });
 
         return "Approved";
+      } catch (err) {
+        console.log(err);
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      }
+    }),
+  approveLoanRequestWithId: protectedProcedure
+    .input(z.object({ id: z.string().min(1) }))
+    .mutation(async ({ ctx, input }) => {
+      try {
+        const data = await ctx.db.loan.update({
+          data: {
+            status: "APPROVED",
+            approvedById: ctx.user.id,
+          },
+          where: {
+            id: input.id,
+            approvingLecturerId: ctx.user.id,
+          },
+        });
+
+        return data.loanId;
+      } catch (err) {
+        console.log(err);
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      }
+    }),
+  rejectLoanRequest: protectedProcedure
+    .input(z.object({ loanId: z.string().min(1) }))
+    .mutation(async ({ ctx, input }) => {
+      try {
+        await ctx.db.loan.update({
+          data: {
+            status: "REJECTED",
+          },
+          where: {
+            loanId: input.loanId,
+            approvingLecturerId: ctx.user.id,
+          },
+        });
+
+        return "Rejected";
       } catch (err) {
         console.log(err);
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
