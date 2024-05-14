@@ -129,7 +129,7 @@ export async function register(adminId: string, mobile: string) {
         });
         return {
           title: "Registration Successful",
-          description: "You may now login",
+          description: "An email has been sent to your iChat email address containing your password. You may log in.",
         };
       } catch (error) {
         return {
@@ -142,6 +142,71 @@ export async function register(adminId: string, mobile: string) {
     .catch(() => {
       throw {
         title: "Registration Failed",
+        description: "Please contact service desk",
+        variant: "destructive",
+      };
+    });
+}
+
+export async function resetPassword(adminId: string, email: string) {
+  return await db.user
+    .findUnique({
+      where: {
+        id: adminId,
+      },
+    })
+    .then(async (results) => {
+      if (results == null) {
+        return {
+          title: "Password Reset Failed",
+          description: "Admin ID is invalid",
+          variant: "destructive",
+        };
+      }
+      if (results.email == undefined) {
+        return {
+          title: "Password Reset Failed",
+          description: "Account issue, please contact service desk.",
+          variant: "destructive",
+        };
+      }
+      if (results.email != email) {
+        return {
+          title: "Password Reset Failed",
+          description: "Incorrect email address",
+          variant: "destructive",
+        };
+      }
+      const password = generate({
+        length: 10,
+        numbers: true,
+        symbols: true,
+      });
+      sendRegistrationEmail(results?.email, password).catch((error) => {
+        console.log(error);
+      });
+      //Email Verification
+      const hashed_password = await new Argon2id().hash(password);
+      try {
+        await db.user.update({
+          where: { id: adminId },
+          data: { hashed_password: hashed_password },
+        });
+        return {
+          title: "Password Reset",
+          description: "An email has been sent to your iChat email address containing the new password.",
+        };
+      } catch (error) {
+        return {
+          title: "Password Reset Failed",
+          description: "An error occurred in resetting your password.",
+          variant: "destructive",
+        };
+      }
+    })
+    .catch(() => {
+      throw {
+        title: "Password Reset Failed",
         description: "Please contact service desk",
         variant: "destructive",
       };
