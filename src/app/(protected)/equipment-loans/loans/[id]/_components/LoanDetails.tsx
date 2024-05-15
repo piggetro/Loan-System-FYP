@@ -55,6 +55,14 @@ const LoanDetails: React.FC<{
     //Derricks part, use api.loanRequest.rejectLoanRequest
     console.log("onreject");
   }, []);
+  const onRequestForCollectionLoan = useCallback(() => {
+    //Derricks part, use api.loanRequest.rejectLoanRequest
+    console.log("onreject");
+  }, []);
+  const onPrepareLoan = useCallback(() => {
+    //Derricks part, use api.loanRequest.rejectLoanRequest
+    console.log("onreject");
+  }, []);
 
   if (isFetching || !data) {
     return (
@@ -113,6 +121,9 @@ const LoanDetails: React.FC<{
             userAccessRights={userAccessRights}
             approveLoan={onApprove}
             rejectLoan={onReject}
+            status={data.status}
+            requestForCollectionLoan={onRequestForCollectionLoan}
+            prepareLoan={onPrepareLoan}
           />
         )}
       </div>

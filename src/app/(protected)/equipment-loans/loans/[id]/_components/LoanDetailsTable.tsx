@@ -51,8 +51,6 @@ const LoanDetailsTable: React.FC<{
         tempEquipmentObject.quantityApproved = 1;
       }
       processedLoanData.push(tempEquipmentObject);
-
-      //   console.log(processedLoanData);
     } else {
       if (processedLoanData[index] != undefined) {
         processedLoanData[index].quantityRequested =

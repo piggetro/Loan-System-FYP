@@ -5,10 +5,19 @@ import { Equipment, Loan } from "@prisma/client";
 import { useState } from "react";
 
 const LoanActions: React.FC<{
+  status: string;
   userAccessRights: string[];
   approveLoan: () => void;
   rejectLoan: () => void;
-}> = ({ userAccessRights, approveLoan }) => {
+  requestForCollectionLoan: () => void;
+  prepareLoan: () => void;
+}> = ({
+  userAccessRights,
+  approveLoan,
+  status,
+  requestForCollectionLoan,
+  prepareLoan,
+}) => {
   if (userAccessRights.includes("userAllowedToApproveLoan")) {
     return (
       <div className="flex justify-center gap-4">
@@ -19,6 +28,35 @@ const LoanActions: React.FC<{
           }}
         >
           Approve
+        </Button>
+      </div>
+    );
+  }
+  if (
+    userAccessRights.includes("usersOwnLoan") &&
+    status === "REQUEST_COLLECTION"
+  ) {
+    return (
+      <div className="flex justify-center gap-4">
+        <Button
+          onClick={() => {
+            requestForCollectionLoan();
+          }}
+        >
+          Request For Collection
+        </Button>
+      </div>
+    );
+  }
+  if (userAccessRights.includes("Preparation") && status === "PREPARING") {
+    return (
+      <div className="flex justify-center gap-4">
+        <Button
+          onClick={() => {
+            prepareLoan();
+          }}
+        >
+          Prepare Loan
         </Button>
       </div>
     );
