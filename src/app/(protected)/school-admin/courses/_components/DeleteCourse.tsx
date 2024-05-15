@@ -30,7 +30,7 @@ const DeleteCourse = ({
 }:DeleteCourseProps) => {
     const { toast } = useToast();
     const {mutate: deleteCourse,isPending} =
-    api.schoolAdmin.deleteCourse.useMutatuion({
+    api.schoolAdmin.deleteCourse.useMutation({
         onSuccess: () => {
             setCourse((prev)=> prev.filter((item)=> item.id !==course?.id));
         toast({
@@ -83,3 +83,4 @@ const DeleteCourse = ({
       </AlertDialog>
     );
 }
+export default DeleteCourse;
