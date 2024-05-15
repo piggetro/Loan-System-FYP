@@ -1,27 +1,33 @@
 /* eslint-disable react-hooks/rules-of-hooks */
 "use client";
 import { Button } from "@/app/_components/ui/button";
+import { Loan } from "@prisma/client";
 import { type ColumnDef } from "@tanstack/react-table";
 import { ArrowUpDown } from "lucide-react";
-import { LoanTableDataType } from "../page";
-import { LoanTablePendingApprovalRowActionsProps } from "./LoanRowAction";
+import { PreparationRowActionsProps } from "./LoanRowAction";
+import { PreparationLoanType } from "./Preparation";
 
 interface LoanProps {
-  onView: (value: LoanTableDataType) => void;
-  onCancel: (value: LoanTableDataType) => void;
-  onRequestCollection: (value: LoanTableDataType) => void;
+  onView: (value: PreparationLoanType) => void;
+  onPreparation: (value: PreparationLoanType) => void;
 }
 
-export const LoanPendingApprovalColumns = ({
+export const PreparationColumns = ({
   onView,
-  onCancel,
-  onRequestCollection,
-}: LoanProps): ColumnDef<LoanTableDataType>[] => [
+  onPreparation,
+}: LoanProps): ColumnDef<Loan>[] => [
   {
     accessorKey: "loanId",
     header: "Loan ID",
     cell: ({ row }) => <div className="w-96">{row.getValue("loanId")}</div>,
   },
+  {
+    accessorKey: "loanedBy.name",
+    id: "name",
+    header: "Name",
+    cell: ({ row }) => <div className="">{row.getValue("name")}</div>,
+  },
+
   {
     accessorKey: "dateCreated",
     header: "Date Requested",
@@ -46,19 +52,12 @@ export const LoanPendingApprovalColumns = ({
     cell: ({ row }) => <div className="">{row.getValue("status")}</div>,
   },
   {
-    accessorKey: "approvingLecturer.name",
-    id: "name",
-    header: "Approving Lecturer",
-    cell: ({ row }) => <div className="">{row.getValue("name")}</div>,
-  },
-  {
     id: "actions",
     cell: ({ row }) => (
-      <LoanTablePendingApprovalRowActionsProps
+      <PreparationRowActionsProps
         row={row}
         onView={onView}
-        onCancel={onCancel}
-        onRequestCollection={onRequestCollection}
+        onPreparation={onPreparation}
       />
     ),
   },

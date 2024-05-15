@@ -11,6 +11,10 @@ interface pageProps {
 
 const loanPage = async ({ params }: pageProps) => {
   const loanExist = await api.loan.verifyLoanById({ id: params.id });
+  const userAccessRight = await api.loan.getUsersLoanAccess({ id: params.id });
+  if (userAccessRight.length === 0) {
+    redirect("/equipment-loans/loans");
+  }
 
   if (!loanExist) {
     redirect("/equipment-loans/loans");

@@ -11,19 +11,17 @@ import { Button } from "@/app/_components/ui/button";
 import { MoreHorizontal } from "lucide-react";
 import { api } from "@/trpc/react";
 
-interface LoanTableRowActionsProps<TData> {
+interface PreparationRowActionsProps<TData> {
   row: Row<TData>;
   onView: (id: TData) => void;
-  onCancel: (id: TData) => void;
-  onRequestCollection: (id: TData) => void;
+  onPreparation: (id: TData) => void;
 }
 
-export const LoanTablePendingApprovalRowActionsProps = <TData,>({
+export const PreparationRowActionsProps = <TData,>({
   row,
   onView,
-  onCancel,
-  onRequestCollection,
-}: LoanTableRowActionsProps<TData>) => {
+  onPreparation,
+}: PreparationRowActionsProps<TData>) => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -42,27 +40,14 @@ export const LoanTablePendingApprovalRowActionsProps = <TData,>({
           View Loan
         </DropdownMenuItem>
 
-        {row.getValue("status") == "REQUEST_COLLECTION" ? (
-          <DropdownMenuItem
-            onClick={() => {
-              onRequestCollection(row.original);
-            }}
-            className=""
-          >
-            Request Collection
-          </DropdownMenuItem>
-        ) : null}
-        {row.getValue("status") == "PENDING_APPROVAL" ||
-        row.getValue("status") == "APPROVED" ? (
-          <DropdownMenuItem
-            onClick={() => {
-              onCancel(row.original);
-            }}
-            className="text-primary text-red-500"
-          >
-            Cancel Request
-          </DropdownMenuItem>
-        ) : null}
+        <DropdownMenuItem
+          onClick={() => {
+            onPreparation(row.original);
+          }}
+          className=""
+        >
+          Prepare Loan
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
