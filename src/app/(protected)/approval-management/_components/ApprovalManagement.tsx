@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 "use client";
 
@@ -22,9 +23,6 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/app/_components/ui/tabs";
-import AddStaff from "../../school-admin/staff/_components/AddStaff";
-import StaffTable from "../../school-admin/staff/_components/StaffTable";
-
 const formSchema = z.object({
   remarks: z.string().min(2).max(50),
   returnDate: z.string().date(),
@@ -33,7 +31,8 @@ const formSchema = z.object({
 const ApprovalManagementComponent: React.FC<{
   loanRequests: ApprovalManagementType[];
   loanRequestHistory: ApprovalManagementType[];
-}> = ({ loanRequests, loanRequestHistory }) => {
+  allSemesters: { name: string }[];
+}> = ({ loanRequests, loanRequestHistory, allSemesters }) => {
   const [loanRequestsData, setLoanRequestsData] =
     useState<ApprovalManagementType[]>(loanRequests);
   const router = useRouter();
@@ -46,7 +45,7 @@ const ApprovalManagementComponent: React.FC<{
 
   function removeLoan(loanId: string) {
     setLoanRequestsData((loanData) =>
-      loanData.filter((s, i) => s.loanId != loanId),
+      loanData.filter((s) => s.loanId != loanId),
     );
   }
 
@@ -59,7 +58,7 @@ const ApprovalManagementComponent: React.FC<{
       .mutateAsync({
         loanId: loanDetails.loanId,
       })
-      .then((results) => {
+      .then(() => {
         toast({
           title: "Loan has been approved",
           description: `Loan ${loanDetails.loanId} has been approved`,
@@ -99,12 +98,14 @@ const ApprovalManagementComponent: React.FC<{
             <ApprovalManagementTable
               data={loanRequestsData}
               columns={TableColumns}
+              allSemesters={allSemesters}
             />
           </TabsContent>
           <TabsContent value="approvalHistory" className="flex-1">
             <ApprovalManagementHistoryTable
               data={approveRequestHistoryData}
               columns={TableColumnsHistory}
+              allSemesters={allSemesters}
             />
           </TabsContent>
         </div>

@@ -96,7 +96,38 @@ export const loanRouter = createTRPCRouter({
         approvingLecturer: loan.approvingLecturer?.name,
         status: loan.status,
       }));
+    } catch (err) {
+      console.log(err);
+      throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+    }
+  }),
+  getUsersLoans: protectedProcedure.query(async ({ ctx }) => {
+    try {
+      const usersLoanDetails = await ctx.db.loan.findMany({
+        where: { loanedById: ctx.user.id },
+        include: {
+          // loanedBy: { select: { name: true } },
+          approvingLecturer: { select: { name: true } },
+          // preparedBy: { select: { name: true } },
+          // issuedBy: { select: { name: true } },
+          // returnedTo: { select: { name: true } },
+          // loanItems: { select: { equipment: true } },
+        },
+      });
 
+      return usersLoanDetails;
+    } catch (err) {
+      console.log(err);
+      throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+    }
+  }),
+  getSemesters: protectedProcedure.query(async ({ ctx }) => {
+    try {
+      const allSemesters = await ctx.db.semesters.findMany({
+        select: { name: true },
+      });
+
+      return allSemesters;
     } catch (err) {
       console.log(err);
       throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });

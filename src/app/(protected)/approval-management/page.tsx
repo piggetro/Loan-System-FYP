@@ -25,6 +25,8 @@ const ApprovalManagementPage = async () => {
   const loanRequestsHistory =
     await api.loanRequest.getUserApprovalManagementLoanHistory();
 
+  const allSemesters = await api.loan.getSemesters();
+
   return (
     <div>
       <TopHeaderComponent
@@ -34,6 +36,7 @@ const ApprovalManagementPage = async () => {
       <ApprovalManagementComponent
         loanRequests={loanRequests}
         loanRequestHistory={loanRequestsHistory}
+        allSemesters={allSemesters}
       />
     </div>
   );
