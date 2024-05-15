@@ -74,10 +74,12 @@ const DeleteAccessRight = ({
           <AlertDialogAction
             disabled={isPending}
             onClick={() => {
-              deleteAccessRightFromStaff({
-                id: accessRight?.id!,
-                staffId: staffId,
-              });
+              if (accessRight && accessRight.id) {
+                deleteAccessRightFromStaff({
+                  id: accessRight.id,
+                  staffId: staffId,
+                });
+              }
             }}
           >
             {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

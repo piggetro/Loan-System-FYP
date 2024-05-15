@@ -2,7 +2,7 @@
 "use client";
 import { Button } from "@/app/_components/ui/button";
 import { type ColumnDef } from "@tanstack/react-table";
-import { ArrowUpDown, Trash, Trash2 } from "lucide-react";
+import { ArrowUpDown, Trash2 } from "lucide-react";
 import { useState } from "react";
 export type Inventory = {
   equipmentId: string;
@@ -41,7 +41,7 @@ export const equipmentColumns = (
   },
   {
     accessorKey: "subCategory",
-    header: ({ column }) => {
+    header: () => {
       return <p>Sub Category</p>;
     },
     cell: ({ row }) => <div className="">{row.getValue("subCategory")}</div>,
@@ -131,7 +131,7 @@ export const summaryColumns = (
   },
   {
     accessorKey: "subCategory",
-    header: ({ column }) => {
+    header: () => {
       return <p>Sub Category</p>;
     },
     cell: ({ row }) => <div className="">{row.getValue("subCategory")}</div>,
@@ -140,7 +140,7 @@ export const summaryColumns = (
     accessorKey: "quantityAvailable",
     header: () => <div className="text-center">Quantity</div>,
     cell: ({ row }) => {
-      const quantityAvailable = row.getValue("quantityAvailable");
+      // const quantityAvailable = row.getValue("quantityAvailable");
       const [value, setValue] = useState<number>(row.original.quantitySelected);
 
       return (

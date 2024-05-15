@@ -84,6 +84,7 @@ model Equipment {
     subCategoryId String
     inventory     Inventory[]
     loanItems     LoanItem[]
+    checklist     String?
 }
 
 model Inventory {
@@ -129,6 +130,7 @@ model Loan {
     loanItems           LoanItem[]
     waiveRequest        WaiveRequest[]
     approvingLecturerId String
+    dateCreated         DateTime       @default(now())
 }
 
 enum LoanStatus {
@@ -164,6 +166,7 @@ enum LoanedItemsStatus {
     RETURNED
     BROKEN
     LOST
+    CANCELLED
 }
 
 model WaiveRequest {

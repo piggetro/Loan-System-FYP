@@ -25,6 +25,10 @@ const LoginComponent = () => {
           toast({
             title: result.title,
             description: result.description,
+            variant:
+              result.variant == "destructive" || result.variant == "default"
+                ? result.variant
+                : null,
           });
         }
       })

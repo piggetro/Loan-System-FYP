@@ -32,6 +32,7 @@ import { useState } from "react";
 import { Input } from "@/app/_components/ui/input";
 import React from "react";
 import { type Category, type SubCategory } from "@prisma/client";
+import { Button } from "@/app/_components/ui/button";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -205,6 +206,24 @@ export function EquipmentDataTable<TData, TValue>({
               )}
             </TableBody>
           </Table>
+        </div>
+        <div className="flex items-center justify-end space-x-2 py-4">
+          <Button
+            variant="default"
+            size="sm"
+            onClick={() => table.previousPage()}
+            disabled={!table.getCanPreviousPage()}
+          >
+            Previous
+          </Button>
+          <Button
+            variant="default"
+            size="sm"
+            onClick={() => table.nextPage()}
+            disabled={!table.getCanNextPage()}
+          >
+            Next
+          </Button>
         </div>
       </div>
     </div>

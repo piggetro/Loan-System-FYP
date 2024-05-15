@@ -1,10 +1,7 @@
 import React from 'react';
 
-interface pageProps {
- 
-}
 
-const page = ({}: pageProps) => {
+const page = () => {
   return (
     <div>
       page

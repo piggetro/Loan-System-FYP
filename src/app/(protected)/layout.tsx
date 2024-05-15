@@ -7,7 +7,7 @@ import { Toaster } from "@/app/_components/ui/toaster";
 import dynamic from "next/dynamic";
 import { api } from "@/trpc/server";
 import Link from "next/link";
-import { NAVBAR_NAV_ITEMS, NavbarNavItem } from "@/path";
+import { NAVBAR_NAV_ITEMS, type NavbarNavItem } from "@/path";
 import { validateRequest } from "@/lib/auth/validate-request";
 import NavProfile from "../_components/NavProfile";
 
@@ -90,7 +90,7 @@ export default async function RootLayout({
                   </div>
                   <div className="flex items-center">
                     <span className="text-l flex h-full w-full items-center justify-start font-semibold">
-                      <NavProfile name={user?.name!} />
+                      <NavProfile name={user?.name || "Default Name"} />
                     </span>
                   </div>
                 </div>

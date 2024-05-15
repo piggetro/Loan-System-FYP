@@ -67,7 +67,16 @@ const AddAccessRight = ({
     });
 
   useEffect(() => {
-    isDialogOpen && refetch();
+    async function fetchData() {
+      if (isDialogOpen) {
+        try {
+          await refetch();
+        } catch (error) {
+          console.error("Failed to refetch data:", error);
+        }
+      }
+    }
+    fetchData();
   }, [isDialogOpen]);
 
   const onSubmit = () => {
@@ -88,7 +97,7 @@ const AddAccessRight = ({
         ) : (
           <AccessRightDataTable
             columns={accessRightColumns()}
-            data={data || []}
+            data={data ?? []}
             setSelectedAccessRights={setSelectedAccessRights}
           />
         )}
