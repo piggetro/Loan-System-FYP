@@ -12,7 +12,7 @@ import {
 import { useToast } from "@/app/_components/ui/use-toast";
 import { api } from "@/trpc/react";
 import { Loader2 } from "lucide-react";
-import { AccessRights } from "./AccessRightColumns";
+import type { AccessRights } from "./AccessRightColumns";
 
 interface DeleteAccessRightProps {
   isDeleteDialogOpen: boolean;
@@ -74,7 +74,7 @@ const DeleteAccessRight = ({
           <AlertDialogAction
             disabled={isPending}
             onClick={() => {
-              if (accessRight && accessRight.id) {
+              if (accessRight?.id) {
                 deleteAccessRightFromStaff({
                   id: accessRight.id,
                   staffId: staffId,
