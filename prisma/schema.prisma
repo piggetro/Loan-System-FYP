@@ -136,7 +136,6 @@ model Loan {
 
 enum LoanStatus {
     PENDING_APPROVAL
-    APPROVED
     REJECTED
     REQUEST_COLLECTION
     PREPARING
