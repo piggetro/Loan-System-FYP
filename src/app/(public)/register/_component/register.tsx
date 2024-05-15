@@ -13,7 +13,7 @@ const RegisterComponent = () => {
   const router = useRouter();
   const [isLoading] = useState<boolean>(false);
   const [adminId, setAdminId] = useState<string>("");
-  const [mobile, setMobile] = useState<string>();
+  const [mobile, setMobile] = useState<string>("");
   const { toast } = useToast();
 
   const performRegister = () => {
@@ -25,8 +25,17 @@ const RegisterComponent = () => {
       });
       return;
     }
-    //todo fix
-    if (mobile == undefined) {
+    if (mobile == undefined || mobile == "") {
+      toast({
+        title: "Mobile number not entered",
+        description: "Please enter mobile number",
+        variant: "destructive",
+      });
+      return;
+    }
+    //todo fix - fixed by franc
+    if (mobile.length != 8 || isNaN(parseInt(mobile))) {
+      // Made it so that it will not accept non-number values or non 8 digit values.
       toast({
         title: "Invalid Phone Number",
         description: "Please enter Singapore phone number without +65 prefix",
@@ -52,7 +61,7 @@ const RegisterComponent = () => {
   return (
     <div className="mx-auto w-1/3 min-w-96">
       <div className="mb-4 rounded-xl bg-white px-8 pb-8 pt-6 shadow-lg">
-        <h1 className="mb-4 text-2xl tracking-tight">Welcome</h1>
+        <h1 className="mb-4 text-2xl tracking-tight">Register Account</h1>
 
         <form
           onSubmit={(e) => {
@@ -75,7 +84,7 @@ const RegisterComponent = () => {
               id="adminId"
               placeholder="Admin ID Input"
               minLength={1}
-              type="number"
+              type="text"
               autoCapitalize="none"
               autoComplete="Admin Number"
               autoCorrect="off"
@@ -96,9 +105,9 @@ const RegisterComponent = () => {
                 setMobile(e.target.value);
               }}
               id="mobileNumber"
-              placeholder="Password Input"
+              placeholder="Mobile Number Input"
               minLength={1}
-              type="number"
+              type="text"
               autoCapitalize="none"
               autoComplete="tel"
               autoCorrect="off"
@@ -110,10 +119,10 @@ const RegisterComponent = () => {
             Register
           </Button>
         </form>
-        <span className="mt-2 flex  text-sm font-medium">
+        <span className="mt-2 flex  text-sm font-regular">
           Have an account?
           <div
-            className="ml-1 hover:cursor-pointer hover:text-cyan-700"
+            className="ml-1 hover:cursor-pointer hover:text-cyan-700 font-medium"
             onClick={() => {
               router.push("login");
             }}

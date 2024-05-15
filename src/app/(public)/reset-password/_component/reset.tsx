@@ -6,29 +6,40 @@ import { Button } from "@/app/_components/ui/button";
 import { Label } from "@/app/_components/ui/label";
 import { Input } from "@/app/_components/ui/input";
 import { useToast } from "@/app/_components/ui/use-toast";
-import { login } from "@/lib/auth/actions";
+import { register, resetPassword } from "@/lib/auth/actions";
 import { useRouter } from "next/navigation";
 
-const LoginComponent = () => {
+const ResetComponent = () => {
   const router = useRouter();
   const [isLoading] = useState<boolean>(false);
   const [adminId, setAdminId] = useState<string>("");
-  const [password, setPassword] = useState<string>("");
-  const [showPassword, setShowPassword] = useState<boolean>(false);
-
+  const [email, setEmail] = useState<string>("");
   const { toast } = useToast();
 
-  const performLogin = () => {
-    login(adminId, password)
+  const performReset = () => {
+    if (adminId.length == 0) {
+      toast({
+        title: "Admin ID not entered",
+        description: "Please enter Admin ID",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (email.length == 0) {
+      toast({
+        title: "Email not entered",
+        description: "Please enter email address",
+        variant: "destructive",
+      });
+      return;
+    }
+    resetPassword(adminId, email)
       .then((result) => {
         if (result?.title != undefined) {
           toast({
             title: result.title,
             description: result.description,
-            variant:
-              result.variant == "destructive" || result.variant == "default"
-                ? result.variant
-                : null,
+            variant: result.variant ? "destructive" : "default",
           });
         }
       })
@@ -40,12 +51,12 @@ const LoginComponent = () => {
   return (
     <div className="mx-auto w-1/3 min-w-96">
       <div className="mb-4 rounded-xl bg-white px-8 pb-8 pt-6 shadow-lg">
-        <h1 className="mb-4 text-2xl tracking-tight">Welcome</h1>
+        <h1 className="mb-4 text-2xl tracking-tight">Reset Password</h1>
 
         <form
           onSubmit={(e) => {
             e.preventDefault();
-            performLogin();
+            performReset();
           }}
         >
           <div className="">
@@ -70,64 +81,45 @@ const LoginComponent = () => {
               disabled={isLoading}
               className="mb-3"
             />
-            <div className="mb-2 flex items-center text-sm">
-              <Label
-                className="block w-1/2 font-bold text-gray-700"
-                htmlFor="email"
-              >
-                Password
-              </Label>
-              <div
-                className="flex w-1/2 justify-end font-medium hover:cursor-pointer hover:text-cyan-700"
-                onClick={() => {
-                  setShowPassword(!showPassword);
-                }}
-              >
-                {showPassword ? "Hide Password" : "Show Password"}
-              </div>
-            </div>
+            <Label
+              className="mb-2 block text-sm font-bold text-gray-700"
+              htmlFor="email"
+            >
+              Email
+            </Label>
             <Input
-              value={password}
+              value={email}
               onChange={(e) => {
-                setPassword(e.target.value);
+                setEmail(e.target.value);
               }}
-              id="password"
-              placeholder="Password Input"
+              id="email"
+              placeholder="Email Input"
               minLength={1}
-              type={showPassword ? "text" : "password"}
+              type="email"
               autoCapitalize="none"
-              autoComplete="Password"
+              autoComplete="Admin Number"
               autoCorrect="off"
               disabled={isLoading}
-              className="mb-5"
+              className="mb-3"
             />
           </div>
           <Button disabled={isLoading} className="w-full">
-            Sign In
+            Reset Password
           </Button>
         </form>
-        <span className="mt-2 flex text-sm font-regular">
-          Forgot your password?
-          <div className="ml-1 hover:cursor-pointer hover:text-cyan-700 font-medium"
+        <br />
+        <div
           onClick={() => {
-            router.push("reset-password");
-          }}>Reset Password
+            router.push("login");
+          }}
+        >
+          <Button className="w-full">
+            Back
+          </Button>
         </div>
-        </span>
-        <span className="mt-2 flex text-sm font-regular">
-          Need to register?
-          <div
-            className="ml-1 hover:cursor-pointer hover:text-cyan-700 font-medium"
-            onClick={() => {
-              router.push("register");
-            }}
-          >
-            Register Here
-          </div>
-        </span>
       </div>
     </div>
   );
 };
 
-export default LoginComponent;
+export default ResetComponent;

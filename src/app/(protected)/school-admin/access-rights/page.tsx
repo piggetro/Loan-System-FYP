@@ -1,3 +1,4 @@
+import TopHeaderComponent from "@/app/_components/TopHeader";
 import React from "react";
 import { api } from "@/trpc/server";
 import AccessRight from "./_components/AccessRight";
@@ -7,12 +8,11 @@ const page = async () => {
 
   return (
     <div>
-      <h3 className="scroll-m-20 text-2xl font-semibold tracking-tight">
-        Access Rights
-      </h3>
-      <div>
-        <AccessRight data={data} />
-      </div>
+      <TopHeaderComponent
+        pathName="School Admin / Access Rights"
+        pageName="Access Rights"
+      />
+      <AccessRight data={data} />
     </div>
   );
 };
