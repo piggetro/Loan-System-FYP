@@ -53,11 +53,11 @@ const LoanDetailsTable: React.FC<{
       processedLoanData.push(tempEquipmentObject);
     } else {
       if (processedLoanData[index] != undefined) {
-        processedLoanData[index].quantityRequested =
-          processedLoanData[index].quantityRequested + 1;
+        // @ts-expect-error Quantity requested needs to be incremented.
+        processedLoanData[index].quantityRequested = processedLoanData[index].quantityRequested + 1;
         if (loanData.approvedById != null) {
-          processedLoanData[index].quantityApproved =
-            processedLoanData[index].quantityApproved + 1;
+          // @ts-expect-error Quantity approved needs to be incremented.
+          processedLoanData[index].quantityApproved = processedLoanData[index].quantityApproved + 1;
         }
       }
     }
