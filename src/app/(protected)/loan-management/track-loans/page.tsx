@@ -5,6 +5,7 @@ import TrackLoans from "./_components/TrackLoans";
 import { Loan, LoanItem } from "@prisma/client";
 
 export interface TrackLoansType {
+  id: string;
   loanId: string;
   dateRequested: Date;
   dateCollected: Date | null;

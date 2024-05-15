@@ -75,6 +75,7 @@ export const loanRouter = createTRPCRouter({
     try {
       const data = await ctx.db.loan.findMany({
         select: {
+          id: true,
           loanId: true,
           dateCreated: true,
           collectionDate: true,
@@ -89,6 +90,7 @@ export const loanRouter = createTRPCRouter({
       });
 
       return data.map((loan) => ({
+        id: loan.id,
         loanId: loan.loanId,
         dateRequested: loan.dateCreated,
         dateCollected: loan.collectionDate,
