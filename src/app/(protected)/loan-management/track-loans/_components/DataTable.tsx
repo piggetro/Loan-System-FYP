@@ -20,15 +20,26 @@ import {
 import { Button } from "@/app/_components/ui/button";
 import { Input } from "@/app/_components/ui/input";
 import { useState } from "react";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/app/_components/ui/select";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
+  allSemesters: { name: string }[];
 }
 
 export function DataTable<TData, TValue>({
   columns,
   data,
+  allSemesters,
 }: DataTableProps<TData, TValue>) {
 
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -47,18 +58,44 @@ export function DataTable<TData, TValue>({
 
   return (
     <div>
-      <div className="flex items-center">
+      <h1 className="mb-3 font-semibold">Search For Loan</h1>
+      <div className="mb-2 flex">
         <Input
-          placeholder="Loan ID"
-          value={
-            (table.getColumn("loanId")?.getFilterValue() as string) ?? ""
-          }
+          placeholder="Search Loan ID"
+          className="mr-4 h-7 w-1/3"
+          value={(table.getColumn("loanId")?.getFilterValue() as string) ?? ""}
           onChange={(event) =>
             table.getColumn("loanId")?.setFilterValue(event.target.value)
           }
-          className="max-w-sm"
         />
+        <Select
+          onValueChange={(key) => {
+            if (key === "All") {
+              table.getColumn("loanId")?.setFilterValue("");
+            } else {
+              table.getColumn("loanId")?.setFilterValue(key);
+            }
+          }}
+        >
+          <SelectTrigger className="h-7 w-1/4  min-w-44">
+            <SelectValue placeholder="Semester" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectGroup>
+              <SelectLabel>Semester</SelectLabel>
+              <SelectItem key={"All"} value={"All"}>
+                All
+              </SelectItem>
+              {allSemesters.map((semester) => (
+                <SelectItem key={semester.name} value={semester.name}>
+                  {semester.name}
+                </SelectItem>
+              ))}
+            </SelectGroup>
+          </SelectContent>
+        </Select>
       </div>
+      
       <div className="rounded-md border mt-4">
         <Table>
           <TableHeader>

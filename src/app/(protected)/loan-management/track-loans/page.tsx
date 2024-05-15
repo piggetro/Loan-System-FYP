@@ -15,7 +15,7 @@ export interface TrackLoansType {
 
 const page = async () => {
   const data = await api.loan.getAllLoans();
-
+  const allSemesters = await api.loan.getSemesters();
   return (
     <div>
       <TopHeaderComponent
@@ -23,7 +23,7 @@ const page = async () => {
         pageName="Track Loans"
       />
       <TrackLoans
-        data={data}
+        data={data} allSemesters={allSemesters}
       />
     </div>
   );
