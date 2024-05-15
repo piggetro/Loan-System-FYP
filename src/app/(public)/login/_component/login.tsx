@@ -78,12 +78,12 @@ const LoginComponent = () => {
                 Password
               </Label>
               <div
-                className="flex w-1/2 justify-end font-medium hover:cursor-pointer hover:text-cyan-700"
+                className="flex w-1/2 justify-end font-medium hover:cursor-pointer"
                 onClick={() => {
                   setShowPassword(!showPassword);
                 }}
               >
-                {showPassword ? "Hide Password" : "Show Password"}
+                Show Password
               </div>
             </div>
             <Input
@@ -106,18 +106,10 @@ const LoginComponent = () => {
             Sign In
           </Button>
         </form>
-        <span className="mt-2 flex text-sm font-regular">
-          Forgot your password?
-          <div className="ml-1 hover:cursor-pointer hover:text-cyan-700 font-medium"
-          onClick={() => {
-            router.push("reset-password");
-          }}>Reset Password
-        </div>
-        </span>
-        <span className="mt-2 flex text-sm font-regular">
+        <span className="mt-2 flex text-sm font-medium">
           Need to register?
           <div
-            className="ml-1 hover:cursor-pointer hover:text-cyan-700 font-medium"
+            className="ml-1 hover:cursor-pointer hover:text-cyan-700"
             onClick={() => {
               router.push("register");
             }}

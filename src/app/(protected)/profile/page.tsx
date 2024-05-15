@@ -1,16 +1,7 @@
-import TopHeaderComponent from "@/app/_components/TopHeader";
-import React from 'react';
-
+import React from "react";
 
 const page = () => {
-  return (
-    <div>
-      <TopHeaderComponent
-        pathName="My Profile"
-        pageName="My Profile"
-      />
-    </div>
-  );
-}
+  return <div>profile</div>;
+};
 
 export default page;

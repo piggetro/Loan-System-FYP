@@ -25,8 +25,8 @@ const NavProfile = ({ name }: NavProfileProps) => {
         <span className="flex h-full w-full items-center justify-start">
           <CircleUserRound
             className="mr-2"
-            height={20}
-            width={20}
+            height={24}
+            width={24}
             strokeWidth={2}
           />
           {name}
