@@ -109,28 +109,29 @@ enum EquipmentStatus {
 }
 
 model Loan {
-    id                  String         @id @default(cuid())
-    loanId              String         @unique
-    remarks             String
-    dueDate             DateTime
-    status              LoanStatus
-    collectionDate      DateTime?
-    loanedBy            User           @relation("UserLoans_LoanedBy", fields: [loanedById], references: [id])
-    approvingLecturer   User           @relation(fields: [approvingLecturerId], references: [id])
-    approvedBy          User?          @relation("UserLoans_ApprovedBy", fields: [approvedById], references: [id])
-    preparedBy          User?          @relation("UserLoans_PreparedBy", fields: [preparedById], references: [id])
-    issuedBy            User?          @relation("UserLoans_IssuedBy", fields: [issuedById], references: [id])
-    returnedTo          User?          @relation("UserLoans_ReturnedTo", fields: [returnedToId], references: [id])
-    loanedEquipment     Inventory[]
-    loanedById          String
-    approvedById        String?
-    preparedById        String?
-    issuedById          String?
-    returnedToId        String?
-    loanItems           LoanItem[]
-    waiveRequest        WaiveRequest[]
-    approvingLecturerId String
-    dateCreated         DateTime       @default(now())
+    id                        String         @id @default(cuid())
+    loanId                    String         @unique
+    remarks                   String
+    dueDate                   DateTime
+    status                    LoanStatus
+    collectionDate            DateTime?
+    loanedBy                  User           @relation("UserLoans_LoanedBy", fields: [loanedById], references: [id])
+    approvingLecturer         User           @relation(fields: [approvingLecturerId], references: [id])
+    approvedBy                User?          @relation("UserLoans_ApprovedBy", fields: [approvedById], references: [id])
+    preparedBy                User?          @relation("UserLoans_PreparedBy", fields: [preparedById], references: [id])
+    issuedBy                  User?          @relation("UserLoans_IssuedBy", fields: [issuedById], references: [id])
+    returnedTo                User?          @relation("UserLoans_ReturnedTo", fields: [returnedToId], references: [id])
+    loanedEquipment           Inventory[]
+    loanedById                String
+    approvedById              String?
+    preparedById              String?
+    issuedById                String?
+    returnedToId              String?
+    loanItems                 LoanItem[]
+    waiveRequest              WaiveRequest[]
+    approvingLecturerId       String
+    dateCreated               DateTime       @default(now())
+    collectionReferenceNumber String?
 }
 
 enum LoanStatus {
