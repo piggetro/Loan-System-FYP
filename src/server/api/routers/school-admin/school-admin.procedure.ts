@@ -790,4 +790,36 @@ export const schoolAdminRouter = createTRPCRouter({
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
       }
     }),
+   addCourse: protectedProcedure.input(
+    z.object({
+      id: z.string().min(1),
+      name: z.string().min(1),
+      code: z.string().min(1),
+      active: z.boolean(),
+    }),
+   ).mutation(async ({ ctx,input})=> {
+    try {
+      const data = await ctx.db.course.create({
+        data:{
+          id: input.id,
+          name: input.name,
+          code: input.code,
+          active: input.active,
+        },
+        select: {
+          id: true,
+          name: true,
+          code: true,
+          active:true,
+        },
+      });
+      return {
+        ...data,
+      };
+    } catch (err) {
+      console.log(err);
+      throw new TRPCError({ code:"INTERNAL_SERVER_ERROR"});
+    }
+   }),
+
 });
