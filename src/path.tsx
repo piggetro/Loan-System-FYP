@@ -106,7 +106,7 @@ export const NAVBAR_NAV_ITEMS: NavbarNavItem[] = [
         path: "/school-admin/staff-types",
       },
       {
-        title: "Organization Units",
+        title: "Organisation Units",
         path: "/school-admin/organisation-units",
       },
       {

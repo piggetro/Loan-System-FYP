@@ -107,7 +107,7 @@ const LoanDetails: React.FC<{
         </p>
         <p className="flex" suppressHydrationWarning>
           <p className="font-bold">Due Date:&nbsp;</p>
-          {new Date(data.dueDate).toLocaleDateString("en-SG")}
+          {new Date(data.dueDate).toLocaleDateString()}
         </p>
       </div>
       <div className="mt-7">

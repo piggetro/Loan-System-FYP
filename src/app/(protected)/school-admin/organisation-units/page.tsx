@@ -1,20 +1,11 @@
-import TopHeaderComponent from "@/app/_components/TopHeader";
 import React from 'react';
-import { api } from "@/trpc/server";
-import OrganizationUnit from "./_components/OrganizationUnit";
 
-const page = async () => {
-  const data = await api.schoolAdmin.getAllOrganizationUnits();
-
+const page = () => {
   return (
     <div>
-      <TopHeaderComponent
-        pathName="School Admin / Organization Units"
-        pageName="Organization Units"
-      />
-      <OrganizationUnit data={data} />
+      page
     </div>
   );
-};
+}
 
 export default page;
