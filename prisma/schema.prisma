@@ -166,6 +166,7 @@ enum LoanedItemsStatus {
     RETURNED
     BROKEN
     LOST
+    CANCELLED
 }
 
 model WaiveRequest {
