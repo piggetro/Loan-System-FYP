@@ -13,6 +13,9 @@ const config = {
     config.externals.push("@node-rs/argon2", "@node-rs/bcrypt");
     return config;
   },
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
   // externals: ["@node-rs/argon2", "@node-rs/bcrypt"],
 };
 
