@@ -90,6 +90,7 @@ const PersonalParticularForm: React.FC<PersonalParticularFormProps> = ({ user })
           value={fullName}
           onChange={(e) => setFullName(e.target.value)}
           className="w-full rounded-md border border-gray-300 px-3 py-2"
+          disabled
         />
       </div>
 
@@ -105,6 +106,7 @@ const PersonalParticularForm: React.FC<PersonalParticularFormProps> = ({ user })
           value={userID}
           onChange={(e) => setUserID(e.target.value)}
           className="w-full rounded-md border border-gray-300 px-3 py-2"
+          disabled
         />
       </div>
 
@@ -120,6 +122,7 @@ const PersonalParticularForm: React.FC<PersonalParticularFormProps> = ({ user })
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           className="w-full rounded-md border border-gray-300 px-3 py-2"
+          disabled
         />
       </div>
 
@@ -138,19 +141,22 @@ const PersonalParticularForm: React.FC<PersonalParticularFormProps> = ({ user })
         />
       </div>
 
-      {/* Course Input */}
+      {/* Course Dropdown */}
       <div className="mb-4">
         <label className="mb-1 block text-sm font-bold" htmlFor="course">
           Course
         </label>
-        <input
-          type="text"
-          id="course"
-          placeholder="Enter your course"
-          value={course ?? ''}
-          onChange={(e) => setCourse(e.target.value)}
-          className="w-full rounded-md border border-gray-300 px-3 py-2"
-        />
+        <select
+            id="course"
+            value={course ?? ''}
+            onChange={(e)=>setCourse(e.target.value)}>
+
+            <option value="" disabled>Select your course</option>
+            <option value="DIT">Diploma in Information Technology</option>
+            <option value="DAAA">Diploma in Applied AI & Analytics</option>
+            <option value="DISM">Diploma in Infocomm Security Management</option>
+            <option value="DCITP">Common ICT Programme</option>
+        </select>        
       </div>
 
       {/* Buttons */}
