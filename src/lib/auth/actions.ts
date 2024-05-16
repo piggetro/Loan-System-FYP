@@ -147,3 +147,4 @@ export async function register(adminId: string, mobile: string) {
       };
     });
 }
+
