@@ -103,7 +103,7 @@ const LoginComponent = () => {
             />
           </div>
           <Button disabled={isLoading} className="w-full">
-            Sign In
+            Login
           </Button>
         </form>
         <span className="mt-2 flex text-sm font-medium">

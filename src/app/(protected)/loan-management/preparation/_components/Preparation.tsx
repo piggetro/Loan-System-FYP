@@ -6,13 +6,13 @@ import { useToast } from "@/app/_components/ui/use-toast";
 import { Loan } from "@prisma/client";
 import { PreparationColumns } from "./PreparationColumns";
 import { PreparationDataTable } from "./PreparationDataTable";
-import { Skeleton } from "@mantine/core";
 import PreparationLoanDialog from "../../_components/PreparationLoanDialog";
 import {
   AlertDialog,
   AlertDialogContent,
 } from "@/app/_components/ui/alert-dialog";
 import { DialogContent } from "@/app/_components/ui/dialog";
+import { Skeleton } from "@/app/_components/ui/skeleton";
 
 export interface PreparationLoanType extends Loan {
   loanedBy: { name: string };
@@ -54,13 +54,24 @@ const PreparationPage: React.FC<{
           <PreparationLoanDialog
             closeDialog={() => {
               setOpenPreparationDialog(false);
+              refetch().catch(() => {
+                toast({
+                  title: "Something Unexpected Happen",
+                  description:
+                    "Please refresh your browser to view updated data",
+                });
+              });
             }}
             id={preperationId}
           />
         </AlertDialogContent>
       </AlertDialog>
       {data === undefined ? (
-        <div>Loading</div>
+        <div className="flex flex-col gap-2">
+          <Skeleton className="h-7 w-1/3" />
+          <Skeleton className="h-7 w-1/2" />
+          <Skeleton className="h-96 w-full" />
+        </div>
       ) : (
         <PreparationDataTable
           columns={PreparationTableColumns}

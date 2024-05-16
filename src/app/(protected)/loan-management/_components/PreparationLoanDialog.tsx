@@ -8,8 +8,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/app/_components/ui/table";
-import { Button } from "@/app/_components/ui/button";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   Form,
   FormControl,
@@ -19,24 +18,23 @@ import {
   FormLabel,
   FormMessage,
 } from "@/app/_components/ui/form";
-import page from "../../page";
-import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "@/app/_components/ui/input";
 import { api } from "@/trpc/react";
 import { Skeleton } from "@/app/_components/ui/skeleton";
 import { useForm } from "react-hook-form";
-import { Label } from "@/app/_components/ui/label";
 import { X } from "lucide-react";
 import { z } from "zod";
 import { useToast } from "@/app/_components/ui/use-toast";
+import { Button } from "@/app/_components/ui/button";
 
 const formSchema = z.object({
   id: z.string().min(1).max(50),
   collectionRefNum: z.string().min(1).max(50),
   loanedItem: z.array(
     z.object({
-      id: z.string().min(1).default(""),
+      loanItemId: z.string().min(1),
+      equipmentId: z.string().min(1),
       description: z.string().min(1),
       checklist: z.string().optional(),
       assetNumber: z.string().min(1),
@@ -45,7 +43,8 @@ const formSchema = z.object({
 });
 
 type PreparationDataType = {
-  id: string;
+  equipmentId: string;
+  loanItemId: string;
   description: string;
   checklist: string | undefined;
   assetNumber: string;
@@ -58,14 +57,27 @@ const PreparationLoanDialog: React.FC<{
   const { isFetching, data } = api.loan.getLoanById.useQuery({ id: id });
   const prepareLoan = api.loanRequest.prepareLoanRequest.useMutation();
   const processedLoanData: PreparationDataType[] = [];
+  // const [processedLoanData, setProcessLoanData] = useState<
+  //   PreparationDataType[]
+  // >([]);
   const { toast: preperationLoanToast } = useToast();
+
   data?.loanItems.forEach((loanItem) => {
+    // setProcessLoanData([
+    //   ...processedLoanData,
+    //   {
+    //     equipmentId: loanItem.equipment.id,
+    //     loanItemId: loanItem.id,
+    //     description: loanItem.equipment.name,
+    //     checklist: loanItem.equipment.checklist ?? "",
+    //     assetNumber: "",
+    //   },
+    // ]);
     processedLoanData.push({
-      id: loanItem.equipment.id,
+      equipmentId: loanItem.equipment.id,
+      loanItemId: loanItem.id,
       description: loanItem.equipment.name,
-      checklist: !loanItem.equipment.checklist
-        ? undefined
-        : loanItem.equipment.checklist,
+      checklist: loanItem.equipment.checklist ?? "",
       assetNumber: "",
     });
   });
@@ -80,6 +92,7 @@ const PreparationLoanDialog: React.FC<{
   });
 
   function onSubmit(values: z.infer<typeof formSchema>) {
+    console.log("hello");
     prepareLoan
       .mutateAsync(values)
       .then((results) => {
@@ -89,11 +102,11 @@ const PreparationLoanDialog: React.FC<{
           // @ts-expect-error ggg
           variant: results.variant,
         });
+        closeDialog();
       })
       .catch((error) => {
         console.log("error");
       });
-    console.log(values);
   }
 
   if (isFetching || !data) {
@@ -109,38 +122,40 @@ const PreparationLoanDialog: React.FC<{
     );
   }
   return (
-    <div className="w-7/8 h-full  overflow-scroll p-5">
+    <div className="w-7/8 h-full overflow-y-scroll p-5">
       <div className="flex">
         <div className="flex w-1/2 flex-col">
           <div className="text-xl font-bold">{data.loanId}</div>
           <div className="mt-4 text-sm">
             <p className="flex">
-              <p className="font-bold">Loaner:&nbsp;</p> {data.loanedBy.name}
+              <span className="font-bold">Loaner:&nbsp;</span>{" "}
+              {data.loanedBy.name}
             </p>
             <p className="flex">
-              <p className="font-bold">Approved By:&nbsp;</p>
+              <span className="font-bold">Approved By:&nbsp;</span>
               {data.approvedBy?.name ?? "-"}
             </p>
             <p className="flex">
-              <p className="font-bold">Remark(s):&nbsp;</p> {data.remarks}
+              <span className="font-bold">Remark(s):&nbsp;</span> {data.remarks}
             </p>
             <p className="flex">
-              <p className="font-bold">Prepared By:&nbsp;</p>
+              <span className="font-bold">Prepared By:&nbsp;</span>
               {data.preparedBy?.name ?? "-"}
             </p>
             <p className="flex">
-              <p className="font-bold">Issued By:&nbsp;</p>
+              <span className="font-bold">Issued By:&nbsp;</span>
               {data.issuedBy?.name ?? "-"}
             </p>
             <p className="flex">
-              <p className="font-bold">Returned To:&nbsp;</p>
+              <span className="font-bold">Returned To:&nbsp;</span>
               {data.returnedTo?.name ?? "-"}
             </p>
             <p className="flex">
-              <p className="font-bold">Loan Status:&nbsp;</p> {data.status}
+              <span className="font-bold">Loan Status:&nbsp;</span>{" "}
+              {data.status}
             </p>
             <p className="flex" suppressHydrationWarning>
-              <p className="font-bold">Due Date:&nbsp;</p>
+              <span className="font-bold">Due Date:&nbsp;</span>
               {new Date(data.dueDate).toLocaleDateString()}
             </p>
           </div>
@@ -168,7 +183,7 @@ const PreparationLoanDialog: React.FC<{
               </TableHeader>
               <TableBody>
                 {processedLoanData.map((loanItem, index) => (
-                  <TableRow key={loanItem.id}>
+                  <TableRow key={loanItem.equipmentId}>
                     <TableCell className="font-medium">
                       {loanItem.description}
                     </TableCell>
@@ -182,7 +197,6 @@ const PreparationLoanDialog: React.FC<{
                             <FormControl>
                               <Input placeholder="Enter Here" {...field} />
                             </FormControl>
-
                             <FormMessage />
                           </FormItem>
                         )}
@@ -218,6 +232,7 @@ const PreparationLoanDialog: React.FC<{
               onClick={() => {
                 closeDialog();
               }}
+              type="button"
             >
               Close
             </Button>
