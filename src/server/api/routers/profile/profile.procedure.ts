@@ -37,7 +37,6 @@ export const profileRouter = createTRPCRouter({
                     const isCorrectOldPassword = await new Argon2id().verify(hashedOldPassword, input.oldPassword);
 
                     if (isCorrectOldPassword) {
-
                         return await ctx.db.user.update({
                             where: {
                                 id: ctx.user.id,

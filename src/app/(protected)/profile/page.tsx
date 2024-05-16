@@ -18,6 +18,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ user }) => {
     setActiveTab(tab);
   };
 
+  // This file (the front end) is by Jing Ru.
   return (
     <div>
       <TopHeaderComponent pathName="My Profile" pageName="My Profile" />
