@@ -17,6 +17,8 @@ import { Input } from "@/app/_components/ui/input";
 import { Loader2 } from "lucide-react";
 import { api } from "@/trpc/react";
 
+// The back-end & input validation is by Franc. (Some of input validation was done by Jing Ru such as new password & confirm password comparison, but modified by Franc)
+
 const formSchema = z
   .object({
     oldPassword: z
