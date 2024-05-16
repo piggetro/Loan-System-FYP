@@ -1,6 +1,6 @@
 "use client";
 
-import { ColumnDef } from "@tanstack/react-table";
+import type { ColumnDef } from "@tanstack/react-table";
 import StaffDataTableRowActions from "./StaffDataTableRowActions";
 
 export type Staff = {

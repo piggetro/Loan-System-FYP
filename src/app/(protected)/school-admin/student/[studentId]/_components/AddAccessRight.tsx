@@ -20,14 +20,14 @@ interface AddAccessRightProps {
   setAccessRights: React.Dispatch<React.SetStateAction<AccessRights[]>>;
   isDialogOpen: boolean;
   setIsDialogOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  roleId: string;
+  studentId: string;
 }
 
 const AddAccessRight = ({
   setAccessRights,
   isDialogOpen,
   setIsDialogOpen,
-  roleId,
+  studentId,
 }: AddAccessRightProps) => {
   const { toast } = useToast();
 
@@ -39,20 +39,20 @@ const AddAccessRight = ({
     data,
     refetch,
     isFetching: isloadingData,
-  } = api.schoolAdmin.getRoleAvailableAccessRights.useQuery(
+  } = api.schoolAdmin.getStaffAvailableAccessRights.useQuery(
     {
-      roleId,
+      id: studentId,
     },
     { enabled: false },
   );
 
-  const { mutate: addAccessRightsToRole, isPending } =
-    api.schoolAdmin.addAccessRightsToRole.useMutation({
+  const { mutate: addAccessRights, isPending } =
+    api.schoolAdmin.addAccessRightToStudent.useMutation({
       onSuccess: (data) => {
         setAccessRights(data);
         toast({
           title: "Success",
-          description: "Access Rights added to role successfully",
+          description: "Access Rights added to student successfully",
         });
         setIsDialogOpen(false);
       },
@@ -60,7 +60,7 @@ const AddAccessRight = ({
         console.log(err);
         toast({
           title: "Error",
-          description: "An error occurred while adding access right to role",
+          description: "An error occurred while adding access right to student",
           variant: "destructive",
         });
       },
@@ -80,8 +80,8 @@ const AddAccessRight = ({
   }, [isDialogOpen]);
 
   const onSubmit = () => {
-    addAccessRightsToRole({
-      roleId,
+    addAccessRights({
+      id: studentId,
       accessRights: selectedAccessRights.map((accessRight) => accessRight.id),
     });
   };
@@ -90,7 +90,7 @@ const AddAccessRight = ({
     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
       <DialogContent className="sm:max-w-3xl">
         <DialogHeader>
-          <DialogTitle>Add Access Right to Role</DialogTitle>
+          <DialogTitle>Add Access Right to Student</DialogTitle>
         </DialogHeader>
         {isloadingData == true ? (
           <Loader2 className="mr-2 h-4 w-4 animate-spin" />

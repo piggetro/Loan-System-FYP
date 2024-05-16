@@ -9,7 +9,8 @@ import {
 } from "@/app/_components/ui/tabs";
 import { type Staff } from "./StaffColumns";
 import StaffTable from "./StaffTable";
-import AddStaff, { OrganizationUnit, Role, StaffType } from "./AddStaff";
+import AddStaff from "./AddStaff";
+import type { OrganizationUnit, Role, StaffType } from "./AddStaff";
 
 interface StaffProps {
   staff: Staff[];

@@ -12,30 +12,34 @@ import {
 import { useToast } from "@/app/_components/ui/use-toast";
 import { api } from "@/trpc/react";
 import { Loader2 } from "lucide-react";
-import type { Staff } from "./StaffColumns";
+import type { AccessRights } from "./AccessRightColumns";
 
-interface DeleteStaffProps {
+interface DeleteAccessRightProps {
   isDeleteDialogOpen: boolean;
   setIsDeleteDialogOpen: (value: boolean) => void;
-  staff: Staff | null;
-  setStaff: React.Dispatch<React.SetStateAction<Staff[]>>;
+  accessRight: AccessRights | null;
+  setAccessRghts: React.Dispatch<React.SetStateAction<AccessRights[]>>;
+  studentId: string;
 }
 
-const DeleteStaff = ({
+const DeleteAccessRight = ({
   isDeleteDialogOpen,
   setIsDeleteDialogOpen,
-  staff,
-  setStaff,
-}: DeleteStaffProps) => {
+  accessRight,
+  setAccessRghts,
+  studentId,
+}: DeleteAccessRightProps) => {
   const { toast } = useToast();
 
-  const { mutate: deleteStaff, isPending } =
-    api.schoolAdmin.deleteStaff.useMutation({
+  const { mutate: deleteAccessRightFromStudent, isPending } =
+    api.schoolAdmin.deleteAccessRightFromStudent.useMutation({
       onSuccess: () => {
-        setStaff((prev) => prev.filter((item) => item.id !== staff?.id));
+        setAccessRghts((prev) =>
+          prev.filter((item) => item.id !== accessRight?.id),
+        );
         toast({
-          title: "Staff Deleted",
-          description: "The staff has been deleted successfully",
+          title: "Access Right Deleted",
+          description: "The access right has been deleted successfully",
         });
         setIsDeleteDialogOpen(false);
       },
@@ -43,7 +47,7 @@ const DeleteStaff = ({
         console.log(err);
         toast({
           title: "Error",
-          description: "An error occurred while deleting the staff",
+          description: "An error occurred while deleting the access right",
           variant: "destructive",
         });
       },
@@ -70,8 +74,11 @@ const DeleteStaff = ({
           <AlertDialogAction
             disabled={isPending}
             onClick={() => {
-              if (staff?.id) {
-                deleteStaff({ id: staff.id });
+              if (accessRight?.id) {
+                deleteAccessRightFromStudent({
+                  id: accessRight.id,
+                  studentId: studentId,
+                });
               }
             }}
           >
@@ -84,4 +91,4 @@ const DeleteStaff = ({
   );
 };
 
-export default DeleteStaff;
+export default DeleteAccessRight;

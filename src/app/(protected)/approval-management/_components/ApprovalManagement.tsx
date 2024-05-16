@@ -66,7 +66,7 @@ const ApprovalManagementComponent: React.FC<{
 
         //Updating frontend for UX
         removeLoan(loanDetails.loanId);
-        loanDetails.status = "APPROVED";
+        loanDetails.status = "REQUEST_COLLECTION";
         setApproveRequestHistoryData((prev) => [...prev, loanDetails]);
       })
       .catch((error) => {

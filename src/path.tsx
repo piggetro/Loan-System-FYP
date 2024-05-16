@@ -93,10 +93,10 @@ export const NAVBAR_NAV_ITEMS: NavbarNavItem[] = [
         title: "Student",
         path: "/school-admin/student",
       },
-      {
-        title: "Years of Admission",
-        path: "/school-admin/years-of-admission",
-      },
+      // {
+      //   title: "Years of Admission",
+      //   path: "/school-admin/years-of-admission",
+      // },
       {
         title: "Courses",
         path: "/school-admin/courses",

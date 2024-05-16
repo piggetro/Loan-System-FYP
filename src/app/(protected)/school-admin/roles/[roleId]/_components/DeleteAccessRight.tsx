@@ -75,7 +75,7 @@ const DeleteAccessRight = ({
             disabled={isPending}
             onClick={() => {
               deleteAccessRightFromRole({
-                accessRightId: accessRight?.id!,
+                accessRightId: accessRight?.id ?? "",
                 roleId: roleId,
               });
             }}

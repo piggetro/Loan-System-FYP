@@ -86,6 +86,7 @@ const PreparationLoanDialog: React.FC<{
         preperationLoanToast({
           title: results.title,
           description: results.description,
+          // @ts-expect-error ggg
           variant: results.variant,
         });
       })

@@ -12,30 +12,30 @@ import {
 import { useToast } from "@/app/_components/ui/use-toast";
 import { api } from "@/trpc/react";
 import { Loader2 } from "lucide-react";
-import type { Staff } from "./StaffColumns";
+import type { Student } from "./StudentColumns";
 
-interface DeleteStaffProps {
+interface DeleteStudentProps {
   isDeleteDialogOpen: boolean;
   setIsDeleteDialogOpen: (value: boolean) => void;
-  staff: Staff | null;
-  setStaff: React.Dispatch<React.SetStateAction<Staff[]>>;
+  student: Student | null;
+  setStudent: React.Dispatch<React.SetStateAction<Student[]>>;
 }
 
-const DeleteStaff = ({
+const DeleteStudent = ({
   isDeleteDialogOpen,
   setIsDeleteDialogOpen,
-  staff,
-  setStaff,
-}: DeleteStaffProps) => {
+  student,
+  setStudent,
+}: DeleteStudentProps) => {
   const { toast } = useToast();
 
-  const { mutate: deleteStaff, isPending } =
-    api.schoolAdmin.deleteStaff.useMutation({
+  const { mutate: deleteStudent, isPending } =
+    api.schoolAdmin.deleteStudent.useMutation({
       onSuccess: () => {
-        setStaff((prev) => prev.filter((item) => item.id !== staff?.id));
+        setStudent((prev) => prev.filter((item) => item.id !== student?.id));
         toast({
-          title: "Staff Deleted",
-          description: "The staff has been deleted successfully",
+          title: "Student Deleted",
+          description: "The student has been deleted successfully",
         });
         setIsDeleteDialogOpen(false);
       },
@@ -43,7 +43,7 @@ const DeleteStaff = ({
         console.log(err);
         toast({
           title: "Error",
-          description: "An error occurred while deleting the staff",
+          description: "An error occurred while deleting the student",
           variant: "destructive",
         });
       },
@@ -70,8 +70,8 @@ const DeleteStaff = ({
           <AlertDialogAction
             disabled={isPending}
             onClick={() => {
-              if (staff?.id) {
-                deleteStaff({ id: staff.id });
+              if (student?.id) {
+                deleteStudent({ id: student.id });
               }
             }}
           >
@@ -84,4 +84,4 @@ const DeleteStaff = ({
   );
 };
 
-export default DeleteStaff;
+export default DeleteStudent;

@@ -27,7 +27,7 @@ model User {
     name                  String
     mobile                String?
     hashed_password       String?
-    batch                 Int?
+    batch                 String?
     graduationDate        DateTime?
     organizationUnit      OrganizationUnit?  @relation(fields: [organizationUnitId], references: [id])
     organizationUnitId    String?

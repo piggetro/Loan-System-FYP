@@ -10,7 +10,7 @@ import {
   AlertDialogAction,
 } from "@/app/_components/ui/alert-dialog";
 import { useToast } from "@/app/_components/ui/use-toast";
-import { AccessRights } from "./Columns";
+import type { AccessRights } from "./Columns";
 import { api } from "@/trpc/react";
 import { Loader2 } from "lucide-react";
 

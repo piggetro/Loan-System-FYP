@@ -89,8 +89,8 @@ export default async function RootLayout({
                     </nav>
                   </div>
                   <div className="flex items-center">
-                    <span className="text-sm flex h-full w-full items-center justify-start font-semibold">
-                      <NavProfile name={user?.name || "Default Name"} />
+                    <span className="text-l flex h-full w-full items-center justify-start font-semibold">
+                      <NavProfile name={user?.name ?? "Default Name"} />
                     </span>
                   </div>
                 </div>
