@@ -80,7 +80,7 @@ export const loanRouter = createTRPCRouter({
             preparedBy: { select: { name: true } },
             issuedBy: { select: { name: true } },
             returnedTo: { select: { name: true } },
-            loanItems: { select: { equipment: true } },
+            loanItems: { include: { equipment: true } },
           },
         });
 

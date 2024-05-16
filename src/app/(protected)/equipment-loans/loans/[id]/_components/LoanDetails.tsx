@@ -19,6 +19,7 @@ const LoanDetails: React.FC<{
     id: id,
   });
   const approveRequest = api.loanRequest.approveLoanRequestWithId.useMutation();
+  const requestCollection = api.loanRequest.requestForCollection.useMutation();
   const { toast } = useToast();
   const { isFetching, refetch, data } = api.loan.getLoanById.useQuery({
     id: id,
@@ -56,11 +57,17 @@ const LoanDetails: React.FC<{
     console.log("onreject");
   }, []);
   const onRequestForCollectionLoan = useCallback(() => {
-    //Derricks part, use api.loanRequest.rejectLoanRequest
+    requestCollection
+      .mutateAsync({ id: id })
+      .then(() => {
+        refresh();
+      })
+      .catch(() => {
+        //handle error
+      });
     console.log("onreject");
   }, []);
   const onPrepareLoan = useCallback(() => {
-    //Derricks part, use api.loanRequest.rejectLoanRequest
     console.log("onreject");
   }, []);
 

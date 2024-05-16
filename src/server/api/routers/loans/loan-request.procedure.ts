@@ -1,6 +1,8 @@
 import { TRPCError } from "@trpc/server";
 import { protectedProcedure, createTRPCRouter } from "../../trpc";
 import { z } from "zod";
+import { PrismaClient } from "@prisma/client";
+const prisma = new PrismaClient();
 
 export const loanRequestRouter = createTRPCRouter({
   getCategories: protectedProcedure.query(async ({ ctx }) => {
@@ -275,7 +277,7 @@ export const loanRequestRouter = createTRPCRouter({
     .input(z.object({ id: z.string().min(1) }))
     .mutation(async ({ ctx, input }) => {
       try {
-        await ctx.db.loan.update({
+        const results = await ctx.db.loan.update({
           data: {
             status: "PREPARING",
           },
@@ -284,6 +286,7 @@ export const loanRequestRouter = createTRPCRouter({
             loanedById: ctx.user.id,
           },
         });
+        console.log(results);
 
         return "PREPARING";
       } catch (err) {
@@ -337,7 +340,8 @@ export const loanRequestRouter = createTRPCRouter({
         collectionRefNum: z.string().min(1).max(50),
         loanedItem: z.array(
           z.object({
-            id: z.string().min(1).default(""),
+            loanItemId: z.string().min(1),
+            equipmentId: z.string().min(1).default(""),
             description: z.string().min(1),
             checklist: z.string().optional(),
             assetNumber: z.string().min(1),
@@ -350,11 +354,73 @@ export const loanRequestRouter = createTRPCRouter({
 
       input.loanedItem.forEach((item) => {
         assetsArray.push({
-          equipmentId: item.id,
+          equipmentId: item.equipmentId,
           assetNumber: item.assetNumber,
         });
       });
-      console.log(assetsArray);
+      return prisma.$transaction(async (tx) => {
+        const inventoryAvailability = await ctx.db.inventory.findMany({
+          where: {
+            status: "AVAILABLE",
+            OR: assetsArray,
+          },
+        });
+        if (assetsArray.length !== inventoryAvailability.length) {
+          throw new Error("Inventory Available");
+        }
+        //Link AssetNumber to LoanItem
+        // eslint-disable-next-line @typescript-eslint/no-misused-promises
+        input.loanedItem.forEach(async (loanItem) => {
+          const inventory = await ctx.db.inventory.findUnique({
+            where: {
+              assetNumber: loanItem.assetNumber,
+            },
+          });
+          await ctx.db.loanItem.update({
+            data: {
+              inventoryId: inventory?.id,
+            },
+            where: {
+              id: loanItem.loanItemId,
+            },
+          });
+        });
+        await ctx.db.inventory.updateMany({
+          data: {
+            status: "LOANED",
+          },
+          where: {
+            status: "AVAILABLE",
+            OR: assetsArray,
+          },
+        });
+
+        await Promise.all([
+          await ctx.db.inventory.updateMany({
+            data: {
+              status: "LOANED",
+            },
+            where: {
+              status: "AVAILABLE",
+              OR: assetsArray,
+            },
+          }),
+          await ctx.db.loan.update({
+            data: {
+              status: "READY",
+            },
+            where: {
+              id: input.id,
+            },
+          }),
+        ]);
+
+        return {
+          title: "Successful",
+          description: "Loan is now ready for collection",
+          variant: "default",
+        };
+      });
 
       try {
         //Check if they are still available
@@ -381,7 +447,26 @@ export const loanRequestRouter = createTRPCRouter({
             OR: assetsArray,
           },
         });
-        console.log(updateDB);
+        await Promise.all([
+          await ctx.db.inventory.updateMany({
+            data: {
+              status: "LOANED",
+            },
+            where: {
+              status: "AVAILABLE",
+              OR: assetsArray,
+            },
+          }),
+          await ctx.db.loan.update({
+            data: {
+              status: "READY",
+            },
+            where: {
+              id: input.id,
+            },
+          }),
+        ]);
+
         // const linkInventorytoLoan = await ctx.db.inventory.updateMany({
         //   data: {
         //     status: "LOANED",
