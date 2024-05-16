@@ -7,7 +7,6 @@ export const profileRouter = createTRPCRouter({
     changePassword: protectedProcedure
         .input(
             z.object({
-                id: z.string().min(1),
                 oldPassword: z.string().min(1),
                 newPassword: z.string().min(1),
                 confirmPassword: z.string().min(1),
@@ -15,7 +14,7 @@ export const profileRouter = createTRPCRouter({
         )
         .mutation(async ({ ctx, input }) => {
             try {
-                const hashed_old_password_db = await ctx.db.user.findUnique({
+                const dbPassword = await ctx.db.user.findUnique({
                     where: {
                         id: ctx.user.id,
                     },
@@ -24,27 +23,34 @@ export const profileRouter = createTRPCRouter({
                     },
                 });
 
-                console.log(hashed_old_password_db);
+                const hashedOldPassword = dbPassword?.hashed_password;
 
-                const user = await ctx.db.user.findUnique({
-                    where:{
-                        id: ctx.user.id,
-                    },
-                });
+                const hashedInputOldPassword = await new Argon2id().hash(input.oldPassword);
+                const hashedInputNewPassword = await new Argon2id().hash(input.newPassword);
 
-                const hashed_old_password = await new Argon2id().hash(input.oldPassword);
-                const hashed_new_password = await new Argon2id().hash(input.newPassword);
+                console.log(hashedOldPassword);
+                console.log(hashedInputOldPassword);
+                console.log(hashedInputNewPassword);
 
-                if (input.newPassword == input.confirmPassword) {
-                    return await ctx.db.user.update({
-                        where: {
-                            id: ctx.user.id,
-                            hashed_password: hashed_old_password
-                        },
-                        data: {
-                            hashed_password: hashed_new_password
-                        },
-                    });
+                // Check if hashed old password exists
+                if (hashedOldPassword) {
+                    const isCorrectOldPassword = await new Argon2id().verify(hashedOldPassword, input.oldPassword);
+
+                    if (isCorrectOldPassword) {
+
+                        return await ctx.db.user.update({
+                            where: {
+                                id: ctx.user.id,
+                            },
+                            data: {
+                                hashed_password: hashedInputNewPassword
+                            },
+                        });
+
+                    } else {
+                        //console.log("Incorrect password");
+                        return null;
+                    }
                 }
             } catch (err) {
                 console.log(err);

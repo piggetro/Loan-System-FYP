@@ -4,8 +4,8 @@
 import React, { useState } from 'react';
 import { User } from '@prisma/client'; // Importing User from Prisma client
 import TopHeaderComponent from 'src/app/_components/TopHeader';
-import PersonalParticularForm from './personalParticularForm';
-import PasswordForm from './password';
+import PersonalParticularForm from './_components/PersonalParticularForm';
+import PasswordForm from './_components/PasswordForm';
 
 interface ProfilePageProps {
   user: User;
