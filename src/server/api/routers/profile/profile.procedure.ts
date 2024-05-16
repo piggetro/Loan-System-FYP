@@ -15,6 +15,16 @@ export const profileRouter = createTRPCRouter({
         )
         .mutation(async ({ ctx, input }) => {
             try {
+                const hashed_old_password_db = await ctx.db.user.findUnique({
+                    where: {
+                        id: ctx.user.id,
+                    },
+                    select: {
+                        hashed_password: true,
+                    },
+                });
+
+                console.log(hashed_old_password_db);
 
                 const hashed_old_password = await new Argon2id().hash(input.oldPassword);
                 const hashed_new_password = await new Argon2id().hash(input.newPassword);

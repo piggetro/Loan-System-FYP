@@ -28,7 +28,7 @@ export async function login(adminId: string, password: string) {
       if (results == null || results.hashed_password == null) {
         return {
           title: "Login Failed",
-          description: "Admin ID or Password is wrong",
+          description: "Admin ID/Password is incorrect",
           variant: "destructive",
         };
       }
@@ -49,7 +49,7 @@ export async function login(adminId: string, password: string) {
       } else {
         return {
           title: "Login Failed",
-          description: "Admin ID or Password is wrong",
+          description: "Admin ID/Password is incorrect",
           variant: "destructive",
         };
       }
@@ -58,7 +58,7 @@ export async function login(adminId: string, password: string) {
       if (error == "Not Found") {
         throw {
           title: "Login Failed",
-          description: "Admin ID or Password is wrong",
+          description: "Admin ID/Password is incorrect",
           variant: "destructive",
         };
       }
@@ -70,7 +70,7 @@ export async function logout(): Promise<{ error: string }> {
   const { session } = await validateRequest();
   if (!session) {
     return {
-      error: "No User was Logged In",
+      error: "No user was logged in",
     };
   }
   await lucia.invalidateSession(session.id);
@@ -108,7 +108,7 @@ export async function register(adminId: string, mobile: string) {
       if (results.email == undefined) {
         return {
           title: "Registration Failed",
-          description: "Account Issue, Please contact service desk",
+          description: "Account issue, please contact service desk",
           variant: "destructive",
         };
       }
@@ -129,7 +129,7 @@ export async function register(adminId: string, mobile: string) {
         });
         return {
           title: "Registration Successful",
-          description: "You may now login",
+          description: "An email has been sent to your iChat email address containing your password. You may now log in.",
         };
       } catch (error) {
         return {
@@ -148,3 +148,74 @@ export async function register(adminId: string, mobile: string) {
     });
 }
 
+export async function resetPassword(adminId: string, email: string) {
+  return await db.user
+    .findUnique({
+      where: {
+        id: adminId,
+      },
+    })
+    .then(async (results) => {
+      if (results == null) {
+        return {
+          title: "Password Reset Failed",
+          description: "Admin ID/Email is invalid",
+          variant: "destructive",
+        };
+      }
+      if (results.hashed_password == null) {
+        return {
+          title: "Password Reset Failed",
+          description: "Admin ID/Email is invalid",
+          variant: "destructive",
+        };
+      }
+      if (results.email == undefined) {
+        return {
+          title: "Password Reset Failed",
+          description: "Account issue, please contact service desk.",
+          variant: "destructive",
+        };
+      }
+      if (results.email != email) {
+        return {
+          title: "Password Reset Failed",
+          description: "Admin ID/Email is invalid",
+          variant: "destructive",
+        };
+      }
+      const password = generate({
+        length: 10,
+        numbers: true,
+        symbols: true,
+      });
+      sendRegistrationEmail(results?.email, password).catch((error) => {
+        console.log(error);
+      });
+      //Email Verification
+      const hashed_password = await new Argon2id().hash(password);
+      try {
+        await db.user.update({
+          where: { id: adminId },
+          data: { hashed_password: hashed_password },
+        });
+        return {
+          title: "Password has been Reset",
+          description: "An email has been sent to your iChat email address containing the new password.",
+        };
+      } catch (error) {
+        return {
+          title: "Password Reset Failed",
+          description: "An error occurred in resetting your password.",
+          variant: "destructive",
+        };
+      }
+    })
+    .catch(() => {
+      throw {
+        title: "Password Reset Failed",
+        description: "Please contact service desk",
+        variant: "destructive",
+      };
+    });
+}

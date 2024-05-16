@@ -1,9 +1,14 @@
+import TopHeaderComponent from "@/app/_components/TopHeader";
 import React from 'react';
+
 
 const page = () => {
   return (
     <div>
-      page
+      <TopHeaderComponent
+        pathName="School Admin / Staff Types"
+        pageName="Staff Types"
+      />
     </div>
   );
 }

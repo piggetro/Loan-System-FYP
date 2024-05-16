@@ -410,7 +410,7 @@ const schoolAdmin = [
     pathName: "/school-admin/staff-types",
   },
   {
-    itemName: "Organisation Units",
+    itemName: "Organization Units",
     pathName: "/school-admin/organisation-units",
   },
   {
