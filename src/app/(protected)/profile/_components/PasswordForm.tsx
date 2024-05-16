@@ -34,6 +34,11 @@ const formSchema = z
     {
       message: "Passwords do not match",
       path: ["confirmPassword"],
+    })
+  .refine((value) => value.newPassword !== value.oldPassword,
+    {
+      message: "Password is the same as old password",
+      path: ["newPassword"],
     });
 
 const PasswordForm = () => {
