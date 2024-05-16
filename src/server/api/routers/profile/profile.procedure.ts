@@ -15,7 +15,6 @@ export const profileRouter = createTRPCRouter({
         )
         .mutation(async ({ ctx, input }) => {
             try {
-
                 const hashed_old_password_db = await ctx.db.user.findUnique({
                     where: {
                         id: ctx.user.id,
