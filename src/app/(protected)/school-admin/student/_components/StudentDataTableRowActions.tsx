@@ -36,7 +36,7 @@ const StudentDataTableRowActions = <TData,>({
             onView(row.original);
           }}
         >
-          View Staff
+          View Student
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={() => {
