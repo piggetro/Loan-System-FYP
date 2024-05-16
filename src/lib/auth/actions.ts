@@ -28,7 +28,7 @@ export async function login(adminId: string, password: string) {
       if (results == null || results.hashed_password == null) {
         return {
           title: "Login Failed",
-          description: "Admin ID or Password is wrong",
+          description: "Admin ID/Password is incorrect",
           variant: "destructive",
         };
       }
@@ -49,7 +49,7 @@ export async function login(adminId: string, password: string) {
       } else {
         return {
           title: "Login Failed",
-          description: "Admin ID or Password is wrong",
+          description: "Admin ID/Password is incorrect",
           variant: "destructive",
         };
       }
@@ -58,7 +58,7 @@ export async function login(adminId: string, password: string) {
       if (error == "Not Found") {
         throw {
           title: "Login Failed",
-          description: "Admin ID or Password is wrong",
+          description: "Admin ID/Password is incorrect",
           variant: "destructive",
         };
       }
@@ -70,7 +70,7 @@ export async function logout(): Promise<{ error: string }> {
   const { session } = await validateRequest();
   if (!session) {
     return {
-      error: "No User was Logged In",
+      error: "No user was logged in",
     };
   }
   await lucia.invalidateSession(session.id);
@@ -108,7 +108,7 @@ export async function register(adminId: string, mobile: string) {
       if (results.email == undefined) {
         return {
           title: "Registration Failed",
-          description: "Account Issue, Please contact service desk",
+          description: "Account issue, please contact service desk",
           variant: "destructive",
         };
       }
@@ -129,7 +129,7 @@ export async function register(adminId: string, mobile: string) {
         });
         return {
           title: "Registration Successful",
-          description: "An email has been sent to your iChat email address containing your password. You may log in.",
+          description: "An email has been sent to your iChat email address containing your password. You may now log in.",
         };
       } catch (error) {
         return {
@@ -159,14 +159,14 @@ export async function resetPassword(adminId: string, email: string) {
       if (results == null) {
         return {
           title: "Password Reset Failed",
-          description: "Admin ID is invalid",
+          description: "Admin ID/Email is invalid",
           variant: "destructive",
         };
       }
       if (results.hashed_password == null) {
         return {
           title: "Password Reset Failed",
-          description: "Admin ID is not registered",
+          description: "Admin ID/Email is invalid",
           variant: "destructive",
         };
       }
@@ -180,7 +180,7 @@ export async function resetPassword(adminId: string, email: string) {
       if (results.email != email) {
         return {
           title: "Password Reset Failed",
-          description: "Incorrect email address",
+          description: "Admin ID/Email is invalid",
           variant: "destructive",
         };
       }
@@ -200,7 +200,7 @@ export async function resetPassword(adminId: string, email: string) {
           data: { hashed_password: hashed_password },
         });
         return {
-          title: "Password Reset",
+          title: "Password has been Reset",
           description: "An email has been sent to your iChat email address containing the new password.",
         };
       } catch (error) {

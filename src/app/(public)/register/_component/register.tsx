@@ -127,7 +127,7 @@ const RegisterComponent = () => {
               router.push("login");
             }}
           >
-            Login Here
+            Login
           </div>
         </span>
       </div>

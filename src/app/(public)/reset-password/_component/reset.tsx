@@ -107,16 +107,17 @@ const ResetComponent = () => {
             Reset Password
           </Button>
         </form>
-        <br />
-        <div
-          onClick={() => {
-            router.push("login");
-          }}
-        >
-          <Button className="w-full">
-            Back
-          </Button>
-        </div>
+        <span className="mt-2 flex  text-sm font-regular">
+          Go back to login page?
+          <div
+            className="ml-1 hover:cursor-pointer hover:text-cyan-700 font-medium"
+            onClick={() => {
+              router.push("login");
+            }}
+          >
+            Login
+          </div>
+        </span>
       </div>
     </div>
   );

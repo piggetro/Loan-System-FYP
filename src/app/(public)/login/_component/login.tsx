@@ -122,7 +122,7 @@ const LoginComponent = () => {
               router.push("register");
             }}
           >
-            Register Here
+            Register Account
           </div>
         </span>
       </div>
