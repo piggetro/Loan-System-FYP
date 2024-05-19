@@ -19,7 +19,7 @@ const CourseTable = ({ course, setCourse}: CourseTableProps)=>{
     const [selectedCourse, setSelectedCoruse] = useState<Course | null>(null);
 
     const onView = useCallback((course: Course) => {
-        router.push(`/school-admin/staff/${course.id}`);
+        router.push(`/school-admin/course/${course.id}`);
     }, []);
     const onDelete = useCallback((course: Course)=> {
         setSelectedCoruse(course);

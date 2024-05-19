@@ -1,4 +1,4 @@
-import React from "react";
+import React,{ useState } from "react";
 import { Course } from "./CourseColumns"
 import {
   Form,
@@ -23,10 +23,12 @@ import { Input } from "@/app/_components/ui/input";
 import { Loader2 } from "lucide-react";
 import { api } from "@/trpc/react";
 import { useToast } from "@/app/_components/ui/use-toast";
+import { Checkbox } from "@mantine/core";
 
 
 interface AddCourseProps {
     setCourse: React.Dispatch<React.SetStateAction<Course[]>>;
+    
 }
 
 const formSchema =z.object({
@@ -41,6 +43,7 @@ const formSchema =z.object({
         .max(255, {message: "Code must be at most 255 Characters long."}),
     active: z.boolean()
 });
+
 
 const AddCourse =({
     setCourse,
@@ -57,6 +60,7 @@ const AddCourse =({
     });
 
     const { toast } =useToast();
+    const [check,setCheck] = useState(false);
 
     const { mutate: addCoruse, isPending} = api.schoolAdmin.addCourse.useMutation({
         onSuccess:(data) => {
@@ -96,6 +100,7 @@ return (
                    render = {({ field })=>(
                     <FormItem>
                         <FormLabel>Course ID</FormLabel>
+                        <br></br>
 
                         <FormControl>
                             <input placeholder="Course ID" {... field}/>
@@ -137,7 +142,10 @@ return (
                     <FormItem>
                         <FormLabel>Active</FormLabel>
                         <FormControl>
-                            <Boolean></Boolean>
+                            <Input
+                            type="checkbox"
+                            onChange={(e) => setCheck(e.target.checked)}/>
+                         
                         </FormControl>
                     </FormItem>
                    )}
