@@ -39,4 +39,4 @@ const CourseTable = ({ course, setCourse}: CourseTableProps)=>{
     );
 };
 
-export default StaffTable;
+export default CourseTable;

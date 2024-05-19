@@ -821,5 +821,26 @@ export const schoolAdminRouter = createTRPCRouter({
       throw new TRPCError({ code:"INTERNAL_SERVER_ERROR"});
     }
    }),
+   getAllCourse: protectedProcedure.query(async ({ ctx }) => {
+    try {
+      const data = await ctx.db.course.findMany({
+        select: {
+          id: true,
+          name: true,
+          code:true,
+          active:true,
+        },
+      });
+      return data.map((course) => ({
+        id: course.id,
+        name: course.name,
+        code:course.code,
+        active:course.active,
+      }));
+    } catch (err) {
+      console.log(err);
+      throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+    }
+  }),
 
 });
