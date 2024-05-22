@@ -112,7 +112,7 @@ model Loan {
     remarks                   String
     dueDate                   DateTime
     status                    LoanStatus
-    collectionDate            DateTime?
+    signature                 String?
     loanedBy                  User?          @relation("UserLoans_LoanedBy", fields: [loanedById], references: [id], onDelete: SetNull)
     approvingLecturer         User?          @relation(fields: [approvingLecturerId], references: [id], onDelete: SetNull)
     approvedBy                User?          @relation("UserLoans_ApprovedBy", fields: [approvedById], references: [id], onDelete: SetNull)
