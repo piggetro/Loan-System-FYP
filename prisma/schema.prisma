@@ -29,13 +29,13 @@ model User {
     hashed_password       String?
     batch                 String?
     graduationDate        DateTime?
-    organizationUnit      OrganizationUnit?  @relation(fields: [organizationUnitId], references: [id])
+    organizationUnit      OrganizationUnit?  @relation(fields: [organizationUnitId], references: [id], onDelete: SetNull)
     organizationUnitId    String?
-    staffType             StaffType?         @relation(fields: [staffTypeId], references: [id])
+    staffType             StaffType?         @relation(fields: [staffTypeId], references: [id], onDelete: SetNull)
     staffTypeId           String?
-    course                Course?            @relation(fields: [courseId], references: [id])
+    course                Course?            @relation(fields: [courseId], references: [id], onDelete: SetNull)
     courseId              String?
-    role                  Role?              @relation(fields: [roleId], references: [id])
+    role                  Role?              @relation(fields: [roleId], references: [id], onDelete: SetNull)
     roleId                String?
     announcement          Announcement[]
     loansLoanedBy         Loan[]             @relation("UserLoans_LoanedBy")
@@ -70,18 +70,18 @@ model Category {
 model SubCategory {
     id         String      @id @default(cuid())
     name       String
-    category   Category    @relation(fields: [categoryId], references: [id])
+    category   Category    @relation(fields: [categoryId], references: [id], onDelete: Cascade)
     categoryId String
     equipment  Equipment[]
 }
 
 model Equipment {
-    id            String      @id @default(cuid())
+    id            String       @id @default(cuid())
     name          String
     photoPath     String
-    updatedAt     DateTime    @updatedAt
-    subCategory   SubCategory @relation(fields: [subCategoryId], references: [id])
-    subCategoryId String
+    updatedAt     DateTime     @updatedAt
+    subCategory   SubCategory? @relation(fields: [subCategoryId], references: [id], onDelete: SetNull)
+    subCategoryId String?
     inventory     Inventory[]
     loanItems     LoanItem[]
     checklist     String?
@@ -94,7 +94,7 @@ model Inventory {
     warrantyExpiry DateTime?
     cost           Decimal
     status         EquipmentStatus
-    equipment      Equipment?      @relation(fields: [equipmentId], references: [id])
+    equipment      Equipment?      @relation(fields: [equipmentId], references: [id], onDelete: Cascade)
     equipmentId    String?
     loanItems      LoanItem[]
 }
@@ -113,20 +113,20 @@ model Loan {
     dueDate                   DateTime
     status                    LoanStatus
     collectionDate            DateTime?
-    loanedBy                  User           @relation("UserLoans_LoanedBy", fields: [loanedById], references: [id])
-    approvingLecturer         User           @relation(fields: [approvingLecturerId], references: [id])
-    approvedBy                User?          @relation("UserLoans_ApprovedBy", fields: [approvedById], references: [id])
-    preparedBy                User?          @relation("UserLoans_PreparedBy", fields: [preparedById], references: [id])
-    issuedBy                  User?          @relation("UserLoans_IssuedBy", fields: [issuedById], references: [id])
-    returnedTo                User?          @relation("UserLoans_ReturnedTo", fields: [returnedToId], references: [id])
-    loanedById                String
+    loanedBy                  User?          @relation("UserLoans_LoanedBy", fields: [loanedById], references: [id], onDelete: SetNull)
+    approvingLecturer         User?          @relation(fields: [approvingLecturerId], references: [id], onDelete: SetNull)
+    approvedBy                User?          @relation("UserLoans_ApprovedBy", fields: [approvedById], references: [id], onDelete: SetNull)
+    preparedBy                User?          @relation("UserLoans_PreparedBy", fields: [preparedById], references: [id], onDelete: SetNull)
+    issuedBy                  User?          @relation("UserLoans_IssuedBy", fields: [issuedById], references: [id], onDelete: SetNull)
+    returnedTo                User?          @relation("UserLoans_ReturnedTo", fields: [returnedToId], references: [id], onDelete: SetNull)
+    loanedById                String?
     approvedById              String?
     preparedById              String?
     issuedById                String?
     returnedToId              String?
+    approvingLecturerId       String?
     loanItems                 LoanItem[]
     waiveRequest              WaiveRequest[]
-    approvingLecturerId       String
     dateCreated               DateTime       @default(now())
     collectionReferenceNumber String?
     datePrepared              DateTime?
@@ -149,11 +149,11 @@ enum LoanStatus {
 
 model LoanItem {
     id              String             @id @default(cuid())
-    loan            Loan               @relation(fields: [loanId], references: [id])
+    loan            Loan               @relation(fields: [loanId], references: [id], onDelete: Cascade)
     loanId          String
-    equipment       Equipment          @relation(fields: [equipmentId], references: [id])
-    equipmentId     String
-    loanedInventory Inventory?         @relation(fields: [inventoryId], references: [id])
+    equipment       Equipment?         @relation(fields: [equipmentId], references: [id], onDelete: SetNull)
+    equipmentId     String?
+    loanedInventory Inventory?         @relation(fields: [inventoryId], references: [id], onDelete: SetNull)
     inventoryId     String?
     status          LoanedItemsStatus?
 }
@@ -174,8 +174,8 @@ model WaiveRequest {
     loan             Loan               @relation(fields: [loanId], references: [id])
     loanId           String
     status           WaiveRequestStatus
-    approvedBy       User               @relation(fields: [approvedByUserId], references: [id])
-    approvedByUserId String
+    approvedBy       User?              @relation(fields: [approvedByUserId], references: [id], onDelete: SetNull)
+    approvedByUserId String?
 }
 
 enum WaiveRequestStatus {
@@ -193,9 +193,9 @@ model AccessRights {
 }
 
 model AccessRightsOnRoles {
-    accessRight   AccessRights @relation(fields: [accessRightId], references: [id])
+    accessRight   AccessRights @relation(fields: [accessRightId], references: [id], onDelete: Cascade)
     accessRightId String
-    role          Role         @relation(fields: [roleId], references: [id])
+    role          Role         @relation(fields: [roleId], references: [id], onDelete: Cascade)
     roleId        String
 
     @@id([accessRightId, roleId])
@@ -210,11 +210,11 @@ model Role {
 
 model UserAccessRights {
     id            String       @id @default(cuid())
-    accessRight   AccessRights @relation(fields: [accessRightId], references: [id])
+    accessRight   AccessRights @relation(fields: [accessRightId], references: [id], onDelete: Cascade)
     accessRightId String
-    grantedUser   User         @relation("UserAccessRights_GrantedUser", fields: [grantedUserId], references: [id])
+    grantedUser   User         @relation("UserAccessRights_GrantedUser", fields: [grantedUserId], references: [id], onDelete: Cascade)
     grantedUserId String
-    grantedBy     User         @relation("UserAccessRights_GrantedBy", fields: [grantedById], references: [id])
+    grantedBy     User         @relation("UserAccessRights_GrantedBy", fields: [grantedById], references: [id], onDelete: Cascade)
     grantedById   String
     grantedAt     DateTime     @default(now())
 }
@@ -267,17 +267,17 @@ model SchoolDetails {
 model Announcement {
     id           String   @id @default(cuid())
     announcement String
-    createdBy    User     @relation(fields: [userId], references: [id])
+    createdBy    User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
     createdAt    DateTime @default(now())
     updatedAt    DateTime @updatedAt
-    userId       String
+    userId       String?
 }
 
 model Alert {
-    id           String @id @default(cuid())
+    id           String  @id @default(cuid())
     alert        String
-    issuedBy     User   @relation("UserAlert_IssuedBy", fields: [issuedById], references: [id])
-    receivedBy   User   @relation("UserAlert_ReceivedBy", fields: [receivedById], references: [id])
-    issuedById   String
+    issuedBy     User?   @relation("UserAlert_IssuedBy", fields: [issuedById], references: [id], onDelete: SetNull)
+    receivedBy   User    @relation("UserAlert_ReceivedBy", fields: [receivedById], references: [id], onDelete: Cascade)
+    issuedById   String?
     receivedById String
 }
