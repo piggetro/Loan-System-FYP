@@ -26,7 +26,7 @@ import { useToast } from "@/app/_components/ui/use-toast";
 
 type LoanRequestType = {
   remarks: string;
-  returnDate: string;
+  returnDate: Date;
   approvingLecturer: string;
   approvingLecturerEmail: string;
   equipments: Inventory[];
@@ -88,7 +88,6 @@ const ReviewLoanRequest: React.FC<LoanRequestType> = ({
           </div>
           <div className="mr-3 w-1/2 ">
             <div className="flex items-center justify-end">
-              {" "}
               <Label className=" mr-8 text-base">Return Date</Label>
               <Input
                 readOnly={true}

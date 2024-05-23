@@ -837,9 +837,7 @@ export const schoolAdminRouter = createTRPCRouter({
     try {
       const data = await ctx.db.user.findMany({
         where: {
-          NOT: {
-            course: null,
-          },
+          staffType: null,
         },
         select: {
           id: true,

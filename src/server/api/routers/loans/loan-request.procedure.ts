@@ -58,7 +58,7 @@ export const loanRequestRouter = createTRPCRouter({
     .input(
       z.object({
         remarks: z.string().min(1),
-        dueDate: z.string().date(),
+        dueDate: z.date(),
         equipment: z.array(
           z.object({
             equipmentId: z.string().min(1),
@@ -83,7 +83,7 @@ export const loanRequestRouter = createTRPCRouter({
         }
       });
 
-      const dueDateFormatted = new Date(input.dueDate);
+      const dueDateFormatted = input.dueDate;
       const approvingEmail = input.approvingLecturerEmail;
       const todayDate = new Date();
 

@@ -226,14 +226,14 @@ const AddStaff = ({ setStudent, courses, batches }: AddStaffProps) => {
               name="graduationDate"
               render={({ field }) => (
                 <FormItem className="flex flex-col">
-                  <FormLabel>Graduation Date</FormLabel>
+                  <FormLabel className="mb-2">Graduation Date</FormLabel>
                   <Popover>
                     <PopoverTrigger asChild>
                       <FormControl>
                         <Button
                           variant={"outline"}
                           className={cn(
-                            "w-[240px] pl-3 text-left font-normal",
+                            "w-full pl-3 text-left font-normal",
                             !field.value && "text-muted-foreground",
                           )}
                         >
