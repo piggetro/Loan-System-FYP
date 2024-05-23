@@ -1,10 +1,14 @@
+import TopHeaderComponent from "@/app/_components/TopHeader";
 import React from 'react';
 
 
 const page = () => {
   return (
     <div>
-      Lost/Broken Page
+      <TopHeaderComponent
+        pathName="Equipment Loans / Lost/Broken Loans"
+        pageName="Lost/Broken Loans"
+      />
     </div>
   );
 }
