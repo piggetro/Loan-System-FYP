@@ -112,11 +112,21 @@ export async function register(adminId: string, mobile: string) {
           variant: "destructive",
         };
       }
-      const password = generate({
-        length: 10,
-        numbers: true,
-        symbols: true,
-      });
+      // This fixes the password issue and no longer generates angled brackets.
+      var tempPassword = null;
+
+      do {
+        tempPassword = generate({
+          length: 10,
+          numbers: true,
+          symbols: true,
+        });
+        console.log(tempPassword);
+      } while (tempPassword.includes("<") || tempPassword.includes(">"));
+
+      // Then only assign it to password when safe.
+      const password = tempPassword;
+      
       sendRegistrationEmail(results?.email, password).catch((error) => {
         console.log(error);
       });
@@ -184,11 +194,22 @@ export async function resetPassword(adminId: string, email: string) {
           variant: "destructive",
         };
       }
-      const password = generate({
-        length: 10,
-        numbers: true,
-        symbols: true,
-      });
+
+      // This fixes the password issue and no longer generates angled brackets.
+      var tempPassword = null;
+
+      do {
+        tempPassword = generate({
+          length: 10,
+          numbers: true,
+          symbols: true,
+        });
+        console.log(tempPassword);
+      } while (tempPassword.includes("<") || tempPassword.includes(">"));
+
+      // Then only assign it to password when safe.
+      const password = tempPassword;
+
       sendRegistrationEmail(results?.email, password).catch((error) => {
         console.log(error);
       });
