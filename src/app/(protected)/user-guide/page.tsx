@@ -1,9 +1,14 @@
+import TopHeaderComponent from "@/app/_components/TopHeader";
 import React from 'react';
+
 
 const page = () => {
   return (
     <div>
-      User Guide Page
+      <TopHeaderComponent
+        pathName="User Guide"
+        pageName="User Guide"
+      />
     </div>
   );
 }

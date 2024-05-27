@@ -32,7 +32,7 @@ const LoanRequestPage = async () => {
   return (
     <div>
       <TopHeaderComponent
-        pathName="Equipment Loans / Loans Request"
+        pathName="Equipment Loans / Loan Request"
         pageName="Loan Request"
       />
       <LoanRequestComponent
