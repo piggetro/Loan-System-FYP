@@ -2,15 +2,12 @@
 import {
   Table,
   TableBody,
-  TableCaption,
   TableCell,
-  TableFooter,
   TableHead,
   TableHeader,
   TableRow,
 } from "@/app/_components/ui/table";
-import { Equipment, Loan } from "@prisma/client";
-import { useState } from "react";
+import { type Equipment, type Loan } from "@prisma/client";
 interface LoanDetailsData extends Loan {
   loanItems: { equipment: Equipment }[];
 }
@@ -47,17 +44,31 @@ const LoanDetailsTable: React.FC<{
         quantityReturned: 0,
       };
 
-      if (loanData.approvedById != null) {
+      if (loanData.approvedById !== null) {
         tempEquipmentObject.quantityApproved = 1;
+      }
+      if (loanData.preparedById !== null) {
+        tempEquipmentObject.quantityPrepared = 1;
+      }
+      if (loanData.issuedById !== null) {
+        tempEquipmentObject.quantityCollected = 1;
       }
       processedLoanData.push(tempEquipmentObject);
     } else {
       if (processedLoanData[index] != undefined) {
-        // @ts-expect-error Quantity requested needs to be incremented.
-        processedLoanData[index].quantityRequested = processedLoanData[index].quantityRequested + 1;
+        processedLoanData[index]!.quantityRequested =
+          processedLoanData[index]!.quantityRequested + 1;
         if (loanData.approvedById != null) {
-          // @ts-expect-error Quantity approved needs to be incremented.
-          processedLoanData[index].quantityApproved = processedLoanData[index].quantityApproved + 1;
+          processedLoanData[index]!.quantityApproved =
+            processedLoanData[index]!.quantityApproved + 1;
+        }
+        if (loanData.preparedById != null) {
+          processedLoanData[index]!.quantityPrepared =
+            processedLoanData[index]!.quantityPrepared + 1;
+        }
+        if (loanData.issuedById !== null) {
+          processedLoanData[index]!.quantityCollected =
+            processedLoanData[index]!.quantityCollected + 1;
         }
       }
     }
@@ -84,8 +95,8 @@ const LoanDetailsTable: React.FC<{
             <TableCell>{loanItem.checklist}</TableCell>
             <TableCell>{loanItem.quantityRequested}</TableCell>
             <TableCell>{loanItem.quantityApproved}</TableCell>
-            <TableCell>0</TableCell>
-            <TableCell>0</TableCell>
+            <TableCell>{loanItem.quantityPrepared}</TableCell>
+            <TableCell>{loanItem.quantityCollected}</TableCell>
             <TableCell>0</TableCell>
           </TableRow>
         ))}

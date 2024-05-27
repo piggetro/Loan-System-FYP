@@ -24,7 +24,7 @@ export const loanRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       try {
         //Access Rights to check
-        const accessRightsToCheck = ["Preparation"];
+        const accessRightsToCheck = ["Preparation", "Collection", "Return"];
         //This array to contain the strings of allowed access
 
         const accessRightsArray = [];

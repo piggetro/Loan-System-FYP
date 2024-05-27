@@ -1,4 +1,4 @@
-import { Row } from "@tanstack/react-table";
+import { type Row } from "@tanstack/react-table";
 import React from "react";
 import {
   DropdownMenu,
@@ -9,19 +9,18 @@ import {
 } from "@/app/_components/ui/dropdown-menu";
 import { Button } from "@/app/_components/ui/button";
 import { MoreHorizontal } from "lucide-react";
-import { api } from "@/trpc/react";
 
-interface PreparationRowActionsProps<TData> {
+interface LoanTableRowActionsProps<TData> {
   row: Row<TData>;
   onView: (id: TData) => void;
-  onPreparation: (id: TData) => void;
+  onCollect: (id: TData) => void;
 }
 
-export const PreparationRowActionsProps = <TData,>({
+export const LoanTableCollectionRowActionsProps = <TData,>({
   row,
   onView,
-  onPreparation,
-}: PreparationRowActionsProps<TData>) => {
+  onCollect,
+}: LoanTableRowActionsProps<TData>) => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -42,11 +41,11 @@ export const PreparationRowActionsProps = <TData,>({
 
         <DropdownMenuItem
           onClick={() => {
-            onPreparation(row.original);
+            onCollect(row.original);
           }}
           className=""
         >
-          Prepare Loan
+          Proccess Collection
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

@@ -1,18 +1,15 @@
 import {
   Table,
   TableBody,
-  TableCaption,
   TableCell,
-  TableFooter,
   TableHead,
   TableHeader,
   TableRow,
 } from "@/app/_components/ui/table";
-import React, { useEffect, useState } from "react";
+import React from "react";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -74,10 +71,10 @@ const PreparationLoanDialog: React.FC<{
     //   },
     // ]);
     processedLoanData.push({
-      equipmentId: loanItem.equipment.id,
+      equipmentId: loanItem.equipment!.id,
       loanItemId: loanItem.id,
-      description: loanItem.equipment.name,
-      checklist: loanItem.equipment.checklist ?? "",
+      description: loanItem.equipment!.name,
+      checklist: loanItem.equipment!.checklist ?? "",
       assetNumber: "",
     });
   });
@@ -105,7 +102,7 @@ const PreparationLoanDialog: React.FC<{
         closeDialog();
       })
       .catch((error) => {
-        console.log("error");
+        console.log(error);
       });
   }
 
@@ -129,7 +126,7 @@ const PreparationLoanDialog: React.FC<{
           <div className="mt-4 text-sm">
             <p className="flex">
               <span className="font-bold">Loaner:&nbsp;</span>{" "}
-              {data.loanedBy.name}
+              {data.loanedBy === null ? "Deleted User" : data.loanedBy.name}
             </p>
             <p className="flex">
               <span className="font-bold">Approved By:&nbsp;</span>

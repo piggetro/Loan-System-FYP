@@ -1,18 +1,21 @@
 "use client";
 import { api } from "@/trpc/react";
 import React, { useCallback, useMemo, useState } from "react";
+
 import { useRouter } from "next/navigation";
+
 import { useToast } from "@/app/_components/ui/use-toast";
 import { Loan } from "@prisma/client";
-import { PreparationColumns } from "./PreparationColumns";
-import { PreparationDataTable } from "./PreparationDataTable";
-import PreparationLoanDialog from "../../_components/PreparationLoanDialog";
+import { LoanPendingApprovalColumns } from "@/app/(protected)/equipment-loans/loans/_components/LoanColumns";
+import { PreparationColumns } from "./ReturnColumns";
+import { PreparationDataTable } from "./ReturnDataTable";
+import { Skeleton } from "@/app/_components/ui/skeleton";
+import { Divide } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogContent,
 } from "@/app/_components/ui/alert-dialog";
-import { DialogContent } from "@/app/_components/ui/dialog";
-import { Skeleton } from "@/app/_components/ui/skeleton";
+import ReturnLoanDialog from "../../_components/ReturnLoanDialog";
 
 export interface PreparationLoanType extends Loan {
   loanedBy: { name: string };
@@ -22,35 +25,35 @@ const PreparationPage: React.FC<{
   allSemesters: { name: string }[];
 }> = ({ allSemesters }) => {
   const { isLoading, data, refetch } =
-    api.loanRequest.getLoansToPrepare.useQuery();
+    api.loanRequest.getLoansForReturn.useQuery();
 
   const { toast } = useToast();
   const router = useRouter();
-  const [openPreparationDialog, setOpenPreparationDialog] =
-    useState<boolean>(false);
-  const [preperationId, setPreparationId] = useState<string>("");
+  const [openReturnDialog, setOpenReturnDialog] = useState<boolean>(false);
+  const [returnId, setReturnId] = useState<string>("");
+
   // const [loanPendingApprovalData, setLoanPendingApprovalData] = useState()
 
   const onView = useCallback((loanDetails: Loan) => {
     router.push(`/equipment-loans/loans/${loanDetails.id}`);
   }, []);
-  const onPreparation = useCallback((loanDetails: Loan) => {
-    setPreparationId(loanDetails.id);
-    setOpenPreparationDialog(true);
+  const onReturn = useCallback((loanDetails: Loan) => {
+    setReturnId(loanDetails.id);
+    setOpenReturnDialog(true);
   }, []);
 
   const PreparationTableColumns = useMemo(
-    () => PreparationColumns({ onView, onPreparation }),
+    () => PreparationColumns({ onView, onReturn }),
     [],
   );
 
   return (
     <div className="rounded-lg bg-white p-5 shadow-lg">
-      <AlertDialog open={openPreparationDialog}>
+      <AlertDialog open={openReturnDialog}>
         <AlertDialogContent className=" h-3/4 w-11/12 max-w-none">
-          <PreparationLoanDialog
+          <ReturnLoanDialog
             closeDialog={() => {
-              setOpenPreparationDialog(false);
+              setOpenReturnDialog(false);
               refetch().catch(() => {
                 toast({
                   title: "Something Unexpected Happen",
@@ -59,7 +62,7 @@ const PreparationPage: React.FC<{
                 });
               });
             }}
-            id={preperationId}
+            id={returnId}
           />
         </AlertDialogContent>
       </AlertDialog>

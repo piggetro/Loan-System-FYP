@@ -112,7 +112,7 @@ model Loan {
     remarks                   String
     dueDate                   DateTime
     status                    LoanStatus
-    signature                 String?
+    signature                 String?        @db.Text
     loanedBy                  User?          @relation("UserLoans_LoanedBy", fields: [loanedById], references: [id], onDelete: SetNull)
     approvingLecturer         User?          @relation(fields: [approvingLecturerId], references: [id], onDelete: SetNull)
     approvedBy                User?          @relation("UserLoans_ApprovedBy", fields: [approvedById], references: [id], onDelete: SetNull)
@@ -132,6 +132,7 @@ model Loan {
     datePrepared              DateTime?
     dateIssued                DateTime?
     dateCollected             DateTime?
+    dateReturned              DateTime?
 }
 
 enum LoanStatus {

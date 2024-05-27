@@ -14,13 +14,13 @@ import { api } from "@/trpc/react";
 interface PreparationRowActionsProps<TData> {
   row: Row<TData>;
   onView: (id: TData) => void;
-  onPreparation: (id: TData) => void;
+  onReturn: (id: TData) => void;
 }
 
 export const PreparationRowActionsProps = <TData,>({
   row,
   onView,
-  onPreparation,
+  onReturn,
 }: PreparationRowActionsProps<TData>) => {
   return (
     <DropdownMenu>
@@ -42,11 +42,11 @@ export const PreparationRowActionsProps = <TData,>({
 
         <DropdownMenuItem
           onClick={() => {
-            onPreparation(row.original);
+            onReturn(row.original);
           }}
           className=""
         >
-          Prepare Loan
+          Return Loan
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

@@ -1,0 +1,255 @@
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/app/_components/ui/table";
+import React, {
+  useEffect,
+  useRef,
+  useState,
+  type MouseEvent,
+  type TouchEvent,
+} from "react";
+import { api } from "@/trpc/react";
+import { Skeleton } from "@/app/_components/ui/skeleton";
+import { X } from "lucide-react";
+import { useToast } from "@/app/_components/ui/use-toast";
+import { Button } from "@/app/_components/ui/button";
+import Image from "next/image";
+import { Input } from "@/app/_components/ui/input";
+
+type ReturnDataType = {
+  equipmentId: string;
+  loanItemId: string;
+  description: string;
+  checklist: string | undefined;
+  assetNumber: string;
+  returned: boolean;
+};
+
+const ReturnLoanDialog: React.FC<{
+  closeDialog: () => void;
+  id: string;
+}> = ({ closeDialog, id }) => {
+  const { isFetching, data, isFetched } =
+    api.loanRequest.getReadyLoanById.useQuery({
+      id: id,
+    });
+  const processLoanCollection = api.loanRequest.processLoanReturn.useMutation();
+  // const processedLoanData: ReturnDataType[] = [];
+  const [processedLoanData, setProcessLoanData] = useState<ReturnDataType[]>(
+    [],
+  );
+  const [returnedInventoryAssetNum, setReturnedInventoryAssetNum] =
+    useState<string>("");
+  const [returnedItemLength, setReturnedItemLength] = useState<number>(0);
+
+  const { toast: collectionLoanToast } = useToast();
+
+  useEffect(() => {
+    data?.loanItems.forEach((loanItem) => {
+      setProcessLoanData((p) => [
+        ...p,
+        {
+          equipmentId: loanItem.equipment!.id,
+          loanItemId: loanItem.id,
+          description: loanItem.equipment!.name,
+          checklist: loanItem.equipment!.checklist ?? "",
+          assetNumber: loanItem.loanedInventory!.assetNumber,
+          returned: false,
+        },
+      ]);
+      // processedLoanData.push({
+      //   equipmentId: loanItem.equipment!.id,
+      //   loanItemId: loanItem.id,
+      //   description: loanItem.equipment!.name,
+      //   checklist: loanItem.equipment!.checklist ?? "",
+      //   assetNumber: loanItem.loanedInventory!.assetNumber,
+      // });
+    });
+    setProcessLoanData((prev) => prev.slice(0, data?.loanItems.length));
+  }, [data?.loanItems, isFetched]);
+
+  useEffect(() => {
+    const index = processedLoanData.findIndex(
+      (loanData) => loanData.assetNumber === returnedInventoryAssetNum,
+    );
+    if (index !== -1 && !processedLoanData[index]?.returned) {
+      setProcessLoanData((prevItems) => {
+        // Create a copy of the array
+        const updatedItems = [...prevItems];
+        // Update the specific index
+        updatedItems[index]!.returned = true;
+        // Return the new array
+        return updatedItems;
+      });
+
+      setReturnedInventoryAssetNum("");
+      setReturnedItemLength(returnedItemLength + 1);
+    }
+  }, [processedLoanData, returnedInventoryAssetNum, returnedItemLength]);
+
+  function onSubmit() {
+    processLoanCollection
+      .mutateAsync({ id: id })
+      .then((results) => {
+        collectionLoanToast({
+          title: results.title,
+          description: results.description,
+          // @ts-expect-error ggg
+          variant: results.variant,
+        });
+        if (results.variant != "destructive") {
+          closeDialog();
+        }
+      })
+      .catch(() => {
+        console.log("error");
+      });
+  }
+
+  if (isFetching || !data) {
+    return (
+      <div className="w-7/8 h-full p-5 ">
+        <Skeleton className="h-7 w-1/2" />
+        <Skeleton className="mt-4 h-5 w-96" />
+        <Skeleton className="mt-2 h-5 w-96" />
+        <Skeleton className="mt-2 h-5 w-96" />
+        <Skeleton className="mt-2 h-5 w-96" />
+        <Skeleton className="mt-5 h-96 w-full" />
+      </div>
+    );
+  }
+  return (
+    <div className="w-7/8 h-full overflow-y-scroll p-5">
+      <div className="flex">
+        <div className="flex w-1/2 flex-col">
+          <div className="text-xl font-bold">{data.loanId}</div>
+          <div className="mt-4 text-sm">
+            <p className="flex">
+              <span className="font-bold">Loaner:&nbsp;</span>
+              {data.loanedBy === null ? "Deleted User" : data.loanedBy.name}
+            </p>
+            <p className="flex">
+              <span className="font-bold">Approved By:&nbsp;</span>
+              {data.approvedBy?.name ?? "-"}
+            </p>
+            <p className="flex">
+              <span className="font-bold">Remark(s):&nbsp;</span> {data.remarks}
+            </p>
+            <p className="flex">
+              <span className="font-bold">Prepared By:&nbsp;</span>
+              {data.preparedBy?.name ?? "-"}
+            </p>
+            <p className="flex">
+              <span className="font-bold">Issued By:&nbsp;</span>
+              {data.issuedBy?.name ?? "-"}
+            </p>
+            <p className="flex">
+              <span className="font-bold">Returned To:&nbsp;</span>
+              {data.returnedTo?.name ?? "-"}
+            </p>
+            <p className="flex">
+              <span className="font-bold">Loan Status:&nbsp;</span>{" "}
+              {data.status}
+            </p>
+            <p className="flex" suppressHydrationWarning>
+              <span className="font-bold">Due Date:&nbsp;</span>
+              {new Date(data.dueDate).toLocaleDateString()}
+            </p>
+          </div>
+        </div>
+        <div className="flex w-1/2 justify-end">
+          <div
+            onClick={() => {
+              closeDialog();
+            }}
+          >
+            <X></X>
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-7">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-1/4">Item Description</TableHead>
+              <TableHead className="w-1/2">Checklist</TableHead>
+              <TableHead>Asset Number</TableHead>
+              <TableHead>Returned</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {processedLoanData.map((loanItem, index) => (
+              <TableRow key={loanItem.equipmentId}>
+                <TableCell className="font-medium">
+                  {loanItem.description}
+                </TableCell>
+                <TableCell>{loanItem.checklist}</TableCell>
+                <TableCell>{loanItem.assetNumber}</TableCell>
+                <TableCell>{loanItem.returned ? "Returned" : ""}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+      <div className="mt-4 flex flex-col items-center">
+        <p className="font-semibold">Returned Inventory Asset Number</p>
+        <Input
+          type="text"
+          className="h-7 w-1/4"
+          value={returnedInventoryAssetNum}
+          onChange={(event) => {
+            setReturnedInventoryAssetNum(event.target.value);
+          }}
+        />
+      </div>
+      <div className="mt-10 flex justify-center">
+        <div className="flex flex-col items-center">
+          <p className="font-semibold">Collection Reference Number</p>
+          <p>{data.collectionReferenceNumber}</p>
+        </div>
+      </div>
+      <div className="mt-6 flex flex-col items-center gap-2">
+        <p className=" font-semibold">Loaner Signature</p>
+        <div className=" overflow-hidden">
+          {data.signature !== null ? (
+            <Image
+              // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+              src={data.signature}
+              width={400}
+              height={200}
+              alt="Loaner's Signature"
+            />
+          ) : null}
+        </div>
+      </div>
+      <div className="mt-10 flex justify-center gap-3">
+        <Button
+          variant={"secondary"}
+          className="bg-gray-300 hover:bg-gray-200"
+          onClick={() => {
+            closeDialog();
+          }}
+          type="button"
+        >
+          Close
+        </Button>
+        <Button
+          onClick={() => {
+            onSubmit();
+          }}
+          disabled={processedLoanData.length !== returnedItemLength}
+        >
+          Process Collection
+        </Button>
+      </div>
+    </div>
+  );
+};
+
+export default ReturnLoanDialog;

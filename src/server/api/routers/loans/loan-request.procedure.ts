@@ -333,6 +333,25 @@ export const loanRequestRouter = createTRPCRouter({
       throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
     }
   }),
+  getLoansForCollection: protectedProcedure.query(async ({ ctx }) => {
+    try {
+      const results = await ctx.db.loan.findMany({
+        where: {
+          status: "READY",
+        },
+        include: {
+          loanedBy: {
+            select: { name: true },
+          },
+        },
+      });
+
+      return results;
+    } catch (err) {
+      console.log(err);
+      throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+    }
+  }),
   prepareLoanRequest: protectedProcedure
     .input(
       z.object({
@@ -408,6 +427,15 @@ export const loanRequestRouter = createTRPCRouter({
           await ctx.db.loan.update({
             data: {
               status: "READY",
+            },
+            where: {
+              id: input.id,
+            },
+          }),
+          await ctx.db.loan.update({
+            data: {
+              collectionReferenceNumber: input.collectionRefNum,
+              preparedById: ctx.user.id,
             },
             where: {
               id: input.id,
@@ -496,6 +524,116 @@ export const loanRequestRouter = createTRPCRouter({
       } catch (err) {
         console.log(err);
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      }
+    }),
+  getReadyLoanById: protectedProcedure
+    .input(z.object({ id: z.string().min(1) }))
+    .query(async ({ ctx, input }) => {
+      try {
+        const loanDetails = await ctx.db.loan.findUnique({
+          where: { id: input.id },
+          include: {
+            loanedBy: { select: { name: true } },
+            approvedBy: { select: { name: true } },
+            preparedBy: { select: { name: true } },
+            issuedBy: { select: { name: true } },
+            returnedTo: { select: { name: true } },
+            loanItems: { include: { equipment: true, loanedInventory: true } },
+          },
+        });
+
+        return loanDetails;
+      } catch (err) {
+        console.log(err);
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      }
+    }),
+
+  processLoanCollection: protectedProcedure
+    .input(
+      z.object({ signatureData: z.string().min(1), id: z.string().min(1) }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      try {
+        await ctx.db.loan.update({
+          where: { id: input.id },
+          data: {
+            signature: input.signatureData,
+            dateCollected: new Date(),
+            status: "COLLECTED",
+            issuedById: ctx.user.id,
+          },
+        });
+
+        return {
+          title: "Loan Successfully Collected",
+          description: "Loan Status has been updated to Collected",
+          variant: "default",
+        };
+      } catch (error) {
+        console.log(error);
+        return {
+          title: "Something Unexpected Happened",
+          description: "Please contact Help Desk",
+          variant: "destructive",
+        };
+      }
+    }),
+  getLoansForReturn: protectedProcedure.query(async ({ ctx, input }) => {
+    try {
+      const loanDetails = await ctx.db.loan.findMany({
+        where: { status: "COLLECTED" },
+        include: {
+          loanedBy: { select: { name: true } },
+          approvedBy: { select: { name: true } },
+          preparedBy: { select: { name: true } },
+          issuedBy: { select: { name: true } },
+          returnedTo: { select: { name: true } },
+          loanItems: { include: { equipment: true, loanedInventory: true } },
+        },
+      });
+
+      return loanDetails;
+    } catch (err) {
+      console.log(err);
+      throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+    }
+  }),
+  processLoanReturn: protectedProcedure
+    .input(z.object({ id: z.string().min(1) }))
+    .mutation(async ({ ctx, input }) => {
+      try {
+        await ctx.db.inventory.updateMany({
+          where: {
+            loanItems: {
+              some: {
+                loanId: input.id,
+              },
+            },
+          },
+          data: { status: "AVAILABLE" },
+        });
+        await ctx.db.loan.update({
+          where: { id: input.id },
+          data: {
+            dateReturned: new Date(),
+            status: "RETURNED",
+            returnedToId: ctx.user.id,
+          },
+        });
+
+        return {
+          title: "Loan Returned Collected",
+          description: "Loan Status has been updated to Returned",
+          variant: "default",
+        };
+      } catch (error) {
+        console.log(error);
+        return {
+          title: "Something Unexpected Happened",
+          description: "Please contact Help Desk",
+          variant: "destructive",
+        };
       }
     }),
 });
