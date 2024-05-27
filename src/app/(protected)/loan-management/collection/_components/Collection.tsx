@@ -1,56 +1,56 @@
 "use client";
 import { api } from "@/trpc/react";
 import React, { useCallback, useMemo, useState } from "react";
+
 import { useRouter } from "next/navigation";
+
 import { useToast } from "@/app/_components/ui/use-toast";
-import { Loan } from "@prisma/client";
-import { PreparationColumns } from "./PreparationColumns";
-import { PreparationDataTable } from "./PreparationDataTable";
-import PreparationLoanDialog from "../../_components/PreparationLoanDialog";
+import { type Loan } from "@prisma/client";
+import { CollectionColumns } from "./CollectionColumns";
+import { CollectionDataTable } from "./CollectionDataTable";
+import { Dialog } from "@mantine/core";
+import CollectionLoanDialog from "../../_components/CollectionLoanDialog";
 import {
   AlertDialog,
   AlertDialogContent,
 } from "@/app/_components/ui/alert-dialog";
-import { DialogContent } from "@/app/_components/ui/dialog";
 import { Skeleton } from "@/app/_components/ui/skeleton";
 
-export interface PreparationLoanType extends Loan {
+export interface CollectionLoanType extends Loan {
   loanedBy: { name: string };
 }
 
-const PreparationPage: React.FC<{
+const CollectionPage: React.FC<{
   allSemesters: { name: string }[];
 }> = ({ allSemesters }) => {
   const { isLoading, data, refetch } =
-    api.loanRequest.getLoansToPrepare.useQuery();
+    api.loanRequest.getLoansForCollection.useQuery();
 
   const { toast } = useToast();
   const router = useRouter();
-  const [openPreparationDialog, setOpenPreparationDialog] =
-    useState<boolean>(false);
+  const [openCollectDialog, setOpenCollectDialog] = useState<boolean>(false);
   const [preperationId, setPreparationId] = useState<string>("");
   // const [loanPendingApprovalData, setLoanPendingApprovalData] = useState()
-
   const onView = useCallback((loanDetails: Loan) => {
     router.push(`/equipment-loans/loans/${loanDetails.id}`);
   }, []);
-  const onPreparation = useCallback((loanDetails: Loan) => {
+  const onCollect = useCallback((loanDetails: Loan) => {
     setPreparationId(loanDetails.id);
-    setOpenPreparationDialog(true);
+    setOpenCollectDialog(true);
   }, []);
 
-  const PreparationTableColumns = useMemo(
-    () => PreparationColumns({ onView, onPreparation }),
+  const CollectionTableColumns = useMemo(
+    () => CollectionColumns({ onView, onCollect }),
     [],
   );
 
   return (
     <div className="rounded-lg bg-white p-5 shadow-lg">
-      <AlertDialog open={openPreparationDialog}>
+      <AlertDialog open={openCollectDialog}>
         <AlertDialogContent className=" h-3/4 w-11/12 max-w-none">
-          <PreparationLoanDialog
+          <CollectionLoanDialog
             closeDialog={() => {
-              setOpenPreparationDialog(false);
+              setOpenCollectDialog(false);
               refetch().catch(() => {
                 toast({
                   title: "Something Unexpected Happen",
@@ -70,8 +70,8 @@ const PreparationPage: React.FC<{
           <Skeleton className="h-96 w-full" />
         </div>
       ) : (
-        <PreparationDataTable
-          columns={PreparationTableColumns}
+        <CollectionDataTable
+          columns={CollectionTableColumns}
           data={data}
           allSemesters={allSemesters}
         />
@@ -80,4 +80,4 @@ const PreparationPage: React.FC<{
   );
 };
 
-export default PreparationPage;
+export default CollectionPage;

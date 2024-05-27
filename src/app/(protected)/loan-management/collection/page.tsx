@@ -1,18 +1,17 @@
 import TopHeaderComponent from "@/app/_components/TopHeader";
 import React from "react";
-import { PreparationDataTable } from "./_components/PreparationDataTable";
-import PreparationPage from "./_components/Preparation";
 import { api } from "@/trpc/server";
+import CollectionPage from "./_components/Collection";
 
 const page = async () => {
   const allSemesters = await api.loan.getSemesters();
   return (
     <div>
       <TopHeaderComponent
-        pageName="Preparation"
-        pathName="Loan Management / Preparation"
+        pageName="Collection"
+        pathName="Loan Management / Collection"
       />
-      <PreparationPage allSemesters={allSemesters} />
+      <CollectionPage allSemesters={allSemesters} />
     </div>
   );
 };

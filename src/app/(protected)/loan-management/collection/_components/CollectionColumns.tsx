@@ -1,21 +1,19 @@
 /* eslint-disable react-hooks/rules-of-hooks */
 "use client";
-import { Button } from "@/app/_components/ui/button";
-import { Loan } from "@prisma/client";
+import { type Loan } from "@prisma/client";
 import { type ColumnDef } from "@tanstack/react-table";
-import { ArrowUpDown } from "lucide-react";
-import { PreparationRowActionsProps } from "./LoanRowAction";
-import { PreparationLoanType } from "./Preparation";
+import { LoanTableCollectionRowActionsProps } from "./CollectionRowAction";
+import { CollectionLoanType } from "./Collection";
 
-interface LoanProps {
-  onView: (value: PreparationLoanType) => void;
-  onPreparation: (value: PreparationLoanType) => void;
+interface CollectionProps {
+  onView: (value: CollectionLoanType) => void;
+  onCollect: (value: CollectionLoanType) => void;
 }
 
-export const PreparationColumns = ({
+export const CollectionColumns = ({
   onView,
-  onPreparation,
-}: LoanProps): ColumnDef<Loan>[] => [
+  onCollect,
+}: CollectionProps): ColumnDef<Loan>[] => [
   {
     accessorKey: "loanId",
     header: "Loan ID",
@@ -54,10 +52,10 @@ export const PreparationColumns = ({
   {
     id: "actions",
     cell: ({ row }) => (
-      <PreparationRowActionsProps
+      <LoanTableCollectionRowActionsProps
         row={row}
         onView={onView}
-        onPreparation={onPreparation}
+        onCollect={onCollect}
       />
     ),
   },

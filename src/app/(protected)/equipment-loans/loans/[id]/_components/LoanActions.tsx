@@ -11,12 +11,16 @@ const LoanActions: React.FC<{
   rejectLoan: () => void;
   requestForCollectionLoan: () => void;
   prepareLoan: () => void;
+  collectLoan: () => void;
+  returnLoan: () => void;
 }> = ({
   userAccessRights,
   approveLoan,
   status,
   requestForCollectionLoan,
   prepareLoan,
+  collectLoan,
+  returnLoan,
 }) => {
   if (userAccessRights.includes("userAllowedToApproveLoan")) {
     return (
@@ -57,6 +61,32 @@ const LoanActions: React.FC<{
           }}
         >
           Prepare Loan
+        </Button>
+      </div>
+    );
+  }
+  if (userAccessRights.includes("Collection") && status === "READY") {
+    return (
+      <div className="flex justify-center gap-4">
+        <Button
+          onClick={() => {
+            collectLoan();
+          }}
+        >
+          Collect Loan
+        </Button>
+      </div>
+    );
+  }
+  if (userAccessRights.includes("Return") && status === "COLLECTED") {
+    return (
+      <div className="flex justify-center gap-4">
+        <Button
+          onClick={() => {
+            returnLoan();
+          }}
+        >
+          Return Loan
         </Button>
       </div>
     );

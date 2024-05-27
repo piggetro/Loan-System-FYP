@@ -72,6 +72,12 @@ export function EquipmentDataTable<TData, TValue>({
       columnFilters,
       rowSelection,
     },
+    initialState: {
+      pagination: {
+        pageIndex: 0,
+        pageSize: 5,
+      },
+    },
   });
 
   return (

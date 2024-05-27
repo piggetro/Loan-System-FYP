@@ -4,17 +4,17 @@ import { Button } from "@/app/_components/ui/button";
 import { Loan } from "@prisma/client";
 import { type ColumnDef } from "@tanstack/react-table";
 import { ArrowUpDown } from "lucide-react";
-import { PreparationRowActionsProps } from "./LoanRowAction";
-import { PreparationLoanType } from "./Preparation";
+import { PreparationRowActionsProps } from "./ReturnLoanRowAction";
+import { PreparationLoanType } from "./Return";
 
 interface LoanProps {
   onView: (value: PreparationLoanType) => void;
-  onPreparation: (value: PreparationLoanType) => void;
+  onReturn: (value: PreparationLoanType) => void;
 }
 
 export const PreparationColumns = ({
   onView,
-  onPreparation,
+  onReturn,
 }: LoanProps): ColumnDef<Loan>[] => [
   {
     accessorKey: "loanId",
@@ -57,7 +57,7 @@ export const PreparationColumns = ({
       <PreparationRowActionsProps
         row={row}
         onView={onView}
-        onPreparation={onPreparation}
+        onReturn={onReturn}
       />
     ),
   },
