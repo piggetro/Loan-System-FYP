@@ -97,7 +97,7 @@ export const loanRouter = createTRPCRouter({
           id: true,
           loanId: true,
           dateCreated: true,
-          collectionDate: true,
+          dateCollected: true,
           dueDate: true,
           approvingLecturer: {
             select: {
@@ -112,7 +112,7 @@ export const loanRouter = createTRPCRouter({
         id: loan.id,
         loanId: loan.loanId,
         dateRequested: loan.dateCreated,
-        dateCollected: loan.collectionDate,
+        dateCollected: loan.dateCollected,
         dueDate: loan.dueDate,
         approvingLecturer: loan.approvingLecturer?.name,
         status: loan.status,
