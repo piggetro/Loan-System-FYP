@@ -27,7 +27,7 @@ export async function login(adminId: string, password: string) {
       if (results == null || results.hashed_password == null) {
         return {
           title: "Login Failed",
-          description: "Admin ID/Password is incorrect",
+          description: "The admin ID or password is incorrect.",
           variant: "destructive",
         };
       }
@@ -49,7 +49,7 @@ export async function login(adminId: string, password: string) {
       } else {
         return {
           title: "Login Failed",
-          description: "Admin ID/Password is incorrect",
+          description: "The admin ID or password is incorrect.",
           variant: "destructive",
         };
       }
@@ -58,7 +58,7 @@ export async function login(adminId: string, password: string) {
       if (error == "Not Found") {
         throw {
           title: "Login Failed",
-          description: "Admin ID/Password is incorrect",
+          description: "The admin ID or password is incorrect.",
           variant: "destructive",
         };
       }
@@ -94,21 +94,21 @@ export async function register(adminId: string, mobile: string) {
       if (results == null) {
         return {
           title: "Registration Failed",
-          description: "Admin ID is invalid",
+          description: "Invalid admin ID.",
           variant: "destructive",
         };
       }
       if (results.hashed_password != null) {
         return {
           title: "Registration Failed",
-          description: "Admin ID is already registered",
+          description: "The admin ID is already registered.",
           variant: "destructive",
         };
       }
       if (results.email == undefined) {
         return {
           title: "Registration Failed",
-          description: "Account issue, please contact service desk",
+          description: "Account issue. Please contact the service desk.",
           variant: "destructive",
         };
       }
@@ -144,7 +144,7 @@ export async function register(adminId: string, mobile: string) {
       } catch (error) {
         return {
           title: "Registration Failed",
-          description: "Admin ID is already registered",
+          description: "The admin ID is already registered.",
           variant: "destructive",
         };
       }
@@ -152,7 +152,7 @@ export async function register(adminId: string, mobile: string) {
     .catch(() => {
       throw {
         title: "Registration Failed",
-        description: "Please contact service desk",
+        description: "Please contact the service desk.",
         variant: "destructive",
       };
     });
@@ -169,28 +169,28 @@ export async function resetPassword(adminId: string, email: string) {
       if (results == null) {
         return {
           title: "Password Reset Failed",
-          description: "Admin ID/Email is invalid",
+          description: "The Admin ID or email is invalid.",
           variant: "destructive",
         };
       }
       if (results.hashed_password == null) {
         return {
           title: "Password Reset Failed",
-          description: "Admin ID/Email is invalid",
+          description: "The Admin ID or email is invalid.",
           variant: "destructive",
         };
       }
       if (results.email == undefined) {
         return {
           title: "Password Reset Failed",
-          description: "Account issue, please contact service desk.",
+          description: "Account issue. Please contact the service desk.",
           variant: "destructive",
         };
       }
       if (results.email != email) {
         return {
           title: "Password Reset Failed",
-          description: "Admin ID/Email is invalid",
+          description: "The Admin ID or email is invalid.",
           variant: "destructive",
         };
       }
@@ -221,8 +221,8 @@ export async function resetPassword(adminId: string, email: string) {
           data: { hashed_password: hashed_password },
         });
         return {
-          title: "Password has been Reset",
-          description: "An email has been sent to your iChat email address containing the new password.",
+          title: "Password Reset Success",
+          description: "An email has been sent to your iChat email address containing the new password. Please login with your new password.",
         };
       } catch (error) {
         return {
@@ -235,7 +235,7 @@ export async function resetPassword(adminId: string, email: string) {
     .catch(() => {
       throw {
         title: "Password Reset Failed",
-        description: "Please contact service desk",
+        description: "Please contact the service desk.",
         variant: "destructive",
       };
     });

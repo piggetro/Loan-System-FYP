@@ -71,7 +71,7 @@ const PasswordForm = () => {
 
           toast({
             title: "Password Changed Failed",
-            description: "Old password is incorrect.",
+            description: "The old password is incorrect.",
             variant: "destructive",
           });
 
