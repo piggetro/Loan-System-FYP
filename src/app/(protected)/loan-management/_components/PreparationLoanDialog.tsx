@@ -6,7 +6,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/app/_components/ui/table";
-import React from "react";
+import React, { useState } from "react";
 import {
   Form,
   FormControl,
@@ -20,7 +20,7 @@ import { Input } from "@/app/_components/ui/input";
 import { api } from "@/trpc/react";
 import { Skeleton } from "@/app/_components/ui/skeleton";
 import { useForm } from "react-hook-form";
-import { X } from "lucide-react";
+import { Loader2, X } from "lucide-react";
 import { z } from "zod";
 import { useToast } from "@/app/_components/ui/use-toast";
 import { Button } from "@/app/_components/ui/button";
@@ -51,25 +51,15 @@ const PreparationLoanDialog: React.FC<{
   closeDialog: () => void;
   id: string;
 }> = ({ closeDialog, id }) => {
-  const { isFetching, data } = api.loan.getLoanById.useQuery({ id: id });
+  const [isPreparing, setIsPreparing] = useState<boolean>(false);
+  const { isFetching, data } = api.loanRequest.getPrepareLoanById.useQuery({
+    id: id,
+  });
   const prepareLoan = api.loanRequest.prepareLoanRequest.useMutation();
   const processedLoanData: PreparationDataType[] = [];
-  // const [processedLoanData, setProcessLoanData] = useState<
-  //   PreparationDataType[]
-  // >([]);
   const { toast: preperationLoanToast } = useToast();
 
   data?.loanItems.forEach((loanItem) => {
-    // setProcessLoanData([
-    //   ...processedLoanData,
-    //   {
-    //     equipmentId: loanItem.equipment.id,
-    //     loanItemId: loanItem.id,
-    //     description: loanItem.equipment.name,
-    //     checklist: loanItem.equipment.checklist ?? "",
-    //     assetNumber: "",
-    //   },
-    // ]);
     processedLoanData.push({
       equipmentId: loanItem.equipment!.id,
       loanItemId: loanItem.id,
@@ -89,10 +79,11 @@ const PreparationLoanDialog: React.FC<{
   });
 
   function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log("hello");
+    setIsPreparing(true);
     prepareLoan
       .mutateAsync(values)
       .then((results) => {
+        setIsPreparing(false);
         preperationLoanToast({
           title: results.title,
           description: results.description,
@@ -102,6 +93,7 @@ const PreparationLoanDialog: React.FC<{
         closeDialog();
       })
       .catch((error) => {
+        setIsPreparing(false);
         console.log(error);
       });
   }
@@ -233,7 +225,16 @@ const PreparationLoanDialog: React.FC<{
             >
               Close
             </Button>
-            <Button type="submit">Ready For Collection</Button>
+            <Button
+              type="submit"
+              onClick={() => {
+                console.log("lolll");
+              }}
+              disabled={isPreparing}
+            >
+              {isPreparing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Ready For Collection
+            </Button>
           </div>
         </form>
       </Form>

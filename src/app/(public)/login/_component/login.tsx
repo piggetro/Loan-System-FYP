@@ -8,6 +8,7 @@ import { Input } from "@/app/_components/ui/input";
 import { useToast } from "@/app/_components/ui/use-toast";
 import { login } from "@/lib/auth/actions";
 import { useRouter } from "next/navigation";
+import { Loader2 } from "lucide-react";
 
 const LoginComponent = () => {
   const router = useRouter();
@@ -15,10 +16,12 @@ const LoginComponent = () => {
   const [adminId, setAdminId] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [showPassword, setShowPassword] = useState<boolean>(false);
+  const [isPending, setIsPending] = useState<boolean>(false);
 
   const { toast } = useToast();
 
   const performLogin = () => {
+    setIsPending(true);
     login(adminId, password)
       .then((result) => {
         if (result?.title != undefined) {
@@ -31,9 +34,11 @@ const LoginComponent = () => {
                 : null,
           });
         }
+        setIsPending(false);
       })
       .catch((error) => {
         console.log(error);
+        setIsPending(false);
       });
   };
 
@@ -103,6 +108,7 @@ const LoginComponent = () => {
             />
           </div>
           <Button disabled={isLoading} className="w-full">
+            {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Login
           </Button>
         </form>

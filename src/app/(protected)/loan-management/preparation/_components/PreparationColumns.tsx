@@ -1,11 +1,8 @@
 /* eslint-disable react-hooks/rules-of-hooks */
 "use client";
-import { Button } from "@/app/_components/ui/button";
-import { Loan } from "@prisma/client";
 import { type ColumnDef } from "@tanstack/react-table";
-import { ArrowUpDown } from "lucide-react";
 import { PreparationRowActionsProps } from "./LoanRowAction";
-import { PreparationLoanType } from "./Preparation";
+import { type PreparationLoanType } from "./Preparation";
 
 interface LoanProps {
   onView: (value: PreparationLoanType) => void;

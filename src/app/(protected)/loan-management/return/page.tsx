@@ -1,6 +1,5 @@
 import TopHeaderComponent from "@/app/_components/TopHeader";
 import React from "react";
-import { PreparationDataTable } from "./_components/ReturnDataTable";
 import PreparationPage from "./_components/Return";
 import { api } from "@/trpc/server";
 

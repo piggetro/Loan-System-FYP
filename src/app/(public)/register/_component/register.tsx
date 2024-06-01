@@ -8,6 +8,7 @@ import { Input } from "@/app/_components/ui/input";
 import { useToast } from "@/app/_components/ui/use-toast";
 import { register } from "@/lib/auth/actions";
 import { useRouter } from "next/navigation";
+import { Loader2 } from "lucide-react";
 
 const RegisterComponent = () => {
   const router = useRouter();
@@ -15,6 +16,7 @@ const RegisterComponent = () => {
   const [adminId, setAdminId] = useState<string>("");
   const [mobile, setMobile] = useState<string>();
   const { toast } = useToast();
+  const [isPending, setIsPending] = useState<boolean>(false);
 
   const performRegister = () => {
     if (adminId.length == 0) {
@@ -34,6 +36,7 @@ const RegisterComponent = () => {
       });
       return;
     }
+    setIsPending(true);
     register(adminId, mobile)
       .then((result) => {
         if (result?.title != undefined) {
@@ -43,9 +46,11 @@ const RegisterComponent = () => {
             variant: result.variant ? "destructive" : "default",
           });
         }
+        setIsPending(false);
       })
       .catch((error) => {
         console.log(error);
+        setIsPending(false);
       });
   };
 
@@ -107,6 +112,7 @@ const RegisterComponent = () => {
             />
           </div>
           <Button disabled={isLoading} className="w-full">
+            {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Register
           </Button>
         </form>
