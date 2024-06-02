@@ -254,7 +254,7 @@ export const loanRequestRouter = createTRPCRouter({
       }
     }),
   rejectLoanRequest: protectedProcedure
-    .input(z.object({ loanId: z.string().min(1) }))
+    .input(z.object({ id: z.string().min(1) }))
     .mutation(async ({ ctx, input }) => {
       try {
         await ctx.db.loan.update({
@@ -262,7 +262,7 @@ export const loanRequestRouter = createTRPCRouter({
             status: "REJECTED",
           },
           where: {
-            loanId: input.loanId,
+            id: input.id,
             approvingLecturerId: ctx.user.id,
           },
         });
@@ -321,9 +321,12 @@ export const loanRequestRouter = createTRPCRouter({
           status: "PREPARING",
         },
         include: {
-          loanedBy: {
-            select: { name: true },
-          },
+          loanedBy: { select: { name: true } },
+          approvedBy: { select: { name: true } },
+          preparedBy: { select: { name: true } },
+          issuedBy: { select: { name: true } },
+          returnedTo: { select: { name: true } },
+          loanItems: { include: { equipment: true, loanedInventory: true } },
         },
       });
 
@@ -333,6 +336,28 @@ export const loanRequestRouter = createTRPCRouter({
       throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
     }
   }),
+  getPrepareLoanById: protectedProcedure
+    .input(z.object({ id: z.string().min(1) }))
+    .query(async ({ ctx, input }) => {
+      try {
+        const loanDetails = await ctx.db.loan.findUnique({
+          where: { id: input.id },
+          include: {
+            loanedBy: { select: { name: true } },
+            approvedBy: { select: { name: true } },
+            preparedBy: { select: { name: true } },
+            issuedBy: { select: { name: true } },
+            returnedTo: { select: { name: true } },
+            loanItems: { include: { equipment: true } },
+          },
+        });
+
+        return loanDetails;
+      } catch (err) {
+        console.log(err);
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      }
+    }),
   getLoansForCollection: protectedProcedure.query(async ({ ctx }) => {
     try {
       const results = await ctx.db.loan.findMany({
@@ -385,7 +410,11 @@ export const loanRequestRouter = createTRPCRouter({
           },
         });
         if (assetsArray.length !== inventoryAvailability.length) {
-          throw new Error("Inventory Available");
+          return {
+            title: "Error",
+            description: "Asset Number is Incorrect or Asset is Unavailable",
+            variant: "destructive",
+          };
         }
         //Link AssetNumber to LoanItem
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
@@ -449,82 +478,6 @@ export const loanRequestRouter = createTRPCRouter({
           variant: "default",
         };
       });
-
-      try {
-        //Check if they are still available
-        const inventoryAvailability = await ctx.db.inventory.findMany({
-          where: {
-            status: "AVAILABLE",
-            OR: assetsArray,
-          },
-        });
-
-        if (assetsArray.length !== inventoryAvailability.length) {
-          return {
-            title: "Not Successful",
-            description: "Items either unavailable or Wrong Asset Number",
-            variant: "destructive",
-          };
-        }
-        const updateDB = await ctx.db.inventory.updateMany({
-          data: {
-            status: "LOANED",
-          },
-          where: {
-            status: "AVAILABLE",
-            OR: assetsArray,
-          },
-        });
-        await Promise.all([
-          await ctx.db.inventory.updateMany({
-            data: {
-              status: "LOANED",
-            },
-            where: {
-              status: "AVAILABLE",
-              OR: assetsArray,
-            },
-          }),
-          await ctx.db.loan.update({
-            data: {
-              status: "READY",
-            },
-            where: {
-              id: input.id,
-            },
-          }),
-        ]);
-
-        // const linkInventorytoLoan = await ctx.db.inventory.updateMany({
-        //   data: {
-        //     status: "LOANED",
-        //   },
-        //   where: {
-        //     status: "AVAILABLE",
-        //     OR: assetsArray,
-        //   },
-        // });
-        // const results = await ctx.db.loan.update({
-        //   where: {
-        //     id: input.id
-        //   },
-
-        //   data: {
-        //     loanedEquipment: {
-        //       updateMany: input.loanedItem
-        //     }
-        //   }
-        // })
-
-        return {
-          title: "Successful",
-          description: "Loan is now ready for collection",
-          variant: "default",
-        };
-      } catch (err) {
-        console.log(err);
-        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
-      }
     }),
   getReadyLoanById: protectedProcedure
     .input(z.object({ id: z.string().min(1) }))
@@ -579,7 +532,7 @@ export const loanRequestRouter = createTRPCRouter({
         };
       }
     }),
-  getLoansForReturn: protectedProcedure.query(async ({ ctx, input }) => {
+  getLoansForReturn: protectedProcedure.query(async ({ ctx }) => {
     try {
       const loanDetails = await ctx.db.loan.findMany({
         where: { status: "COLLECTED" },

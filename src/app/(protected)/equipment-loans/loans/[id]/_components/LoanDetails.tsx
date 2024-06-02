@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 "use client";
 
@@ -13,10 +14,26 @@ import {
   AlertDialog,
   AlertDialogContent,
 } from "@/app/_components/ui/alert-dialog";
+import PreparationLoanDialog from "@/app/(protected)/loan-management/_components/PreparationLoanDialog";
+import ReturnLoanDialog from "@/app/(protected)/loan-management/_components/ReturnLoanDialog";
 
 const LoanDetails: React.FC<{
   id: string;
 }> = ({ id }) => {
+  //For Action Button Loading States
+  const [isPendingRejectLoan, setIsPendingRejectLoan] =
+    useState<boolean>(false);
+  const [isPendingApproveLoan, setIsPendingApproveLoan] =
+    useState<boolean>(false);
+  const [isPendingRequestCollection, setIsPendingRequestCollection] =
+    useState<boolean>(false);
+
+  const [openCollectLoanDialog, setOpenCollectLoanDialog] =
+    useState<boolean>(false);
+  const [openPreparationDialog, setOpenPreparationDialog] =
+    useState<boolean>(false);
+  const [openReturnDialog, setOpenReturnDialog] = useState<boolean>(false);
+
   const {
     refetch: userAccessRightsRefetch,
     isLoading: userAccessRightsIsLoading,
@@ -24,14 +41,13 @@ const LoanDetails: React.FC<{
   } = api.loan.getUsersLoanAccess.useQuery({
     id: id,
   });
-  const [openCollectLoanDialog, setOpenCollectLoanDialog] =
-    useState<boolean>(false);
   const approveRequest = api.loanRequest.approveLoanRequestWithId.useMutation();
   const requestCollection = api.loanRequest.requestForCollection.useMutation();
   const { toast } = useToast();
   const { isFetching, refetch, data } = api.loan.getLoanById.useQuery({
     id: id,
   });
+  const rejectLoan = api.loanRequest.rejectLoanRequest.useMutation();
   function refresh() {
     refetch().catch((error) => {
       console.log(error);
@@ -39,50 +55,62 @@ const LoanDetails: React.FC<{
   }
 
   const onApprove = useCallback(() => {
+    setIsPendingApproveLoan(true);
     approveRequest
       .mutateAsync({
         id: id,
       })
-      .then((results) => {
-        // console.log("jelo");
-        // toast({
-        //   title: "Loan has been approved",
-        //   description: `Loan ${results} has been approved`,
-        // });
-
-        //Updating frontend for UX
+      .then(() => {
+        setIsPendingApproveLoan(false);
+        //Check if still need this
         userAccessRightsRefetch().catch((error) => {
           console.log(error);
         });
+        toast({ title: "Loan Successfully Approved" });
         refresh();
       })
-      .catch((error) => {
-        console.log(error);
+      .catch(() => {
+        setIsPendingApproveLoan(false);
+        toast({ title: "Something Unexpected Happened" });
       });
   }, []);
   const onReject = useCallback(() => {
-    //Derricks part, use api.loanRequest.rejectLoanRequest
-    console.log("onreject");
+    setIsPendingRejectLoan(true);
+    rejectLoan
+      .mutateAsync({ id: id })
+      .then(() => {
+        setIsPendingRejectLoan(false);
+        refresh();
+      })
+      .catch(() => {
+        setIsPendingRejectLoan(false);
+        toast({ title: "Something Unexpected Happened" });
+      });
   }, []);
+
   const onRequestForCollectionLoan = useCallback(() => {
+    setIsPendingRequestCollection(true);
     requestCollection
       .mutateAsync({ id: id })
       .then(() => {
+        setIsPendingRequestCollection(false);
+        toast({ title: "Request For Collection Is Successful" });
         refresh();
       })
       .catch(() => {
         //handle error
+        setIsPendingRequestCollection(false);
+        toast({ title: "Something Unexpected Happened" });
       });
-    console.log("onreject");
   }, []);
   const onPrepareLoan = useCallback(() => {
-    console.log("onreject");
+    setOpenPreparationDialog(true);
   }, []);
   const onCollectLoan = useCallback(() => {
     setOpenCollectLoanDialog(true);
   }, []);
   const onReturnLoan = useCallback(() => {
-    setOpenCollectLoanDialog(true);
+    setOpenReturnDialog(true);
   }, []);
   if (isFetching || !data) {
     return (
@@ -103,13 +131,41 @@ const LoanDetails: React.FC<{
           <CollectionLoanDialog
             closeDialog={() => {
               setOpenCollectLoanDialog(false);
-              // refetch().catch(() => {
-              //   toast({
-              //     title: "Something Unexpected Happen",
-              //     description:
-              //       "Please refresh your browser to view updated data",
-              //   });
-              // });
+              refresh();
+            }}
+            id={id}
+          />
+        </AlertDialogContent>
+      </AlertDialog>
+      <AlertDialog open={openPreparationDialog}>
+        <AlertDialogContent className=" h-3/4 w-11/12 max-w-none">
+          <PreparationLoanDialog
+            closeDialog={() => {
+              setOpenPreparationDialog(false);
+              refetch().catch(() => {
+                toast({
+                  title: "Something Unexpected Happen",
+                  description:
+                    "Please refresh your browser to view updated data",
+                });
+              });
+            }}
+            id={id}
+          />
+        </AlertDialogContent>
+      </AlertDialog>
+      <AlertDialog open={openReturnDialog}>
+        <AlertDialogContent className=" h-3/4 w-11/12 max-w-none">
+          <ReturnLoanDialog
+            closeDialog={() => {
+              setOpenReturnDialog(false);
+              refetch().catch(() => {
+                toast({
+                  title: "Something Unexpected Happen",
+                  description:
+                    "Please refresh your browser to view updated data",
+                });
+              });
             }}
             id={id}
           />
@@ -119,8 +175,8 @@ const LoanDetails: React.FC<{
         <div className="text-xl font-bold">{data.loanId}</div>
         <div className="mt-4 text-sm">
           <p className="flex">
-            <span className="font-bold">Loaner:&nbsp;</span>{" "}
-            {data.loanedBy.name}
+            <span className="font-bold">Loaner:&nbsp;</span>
+            {!data.loanedBy ? "Deleted Account" : data.loanedBy.name}
           </p>
           <p className="flex">
             <span className="font-bold">Approved By:&nbsp;</span>
@@ -170,6 +226,9 @@ const LoanDetails: React.FC<{
             <Skeleton className="h-10 w-1/6" />
           ) : (
             <LoanActions
+              isPendingRequestCollection={isPendingRequestCollection}
+              isPendingApproveLoan={isPendingApproveLoan}
+              isPendingRejectLoan={isPendingRejectLoan}
               userAccessRights={userAccessRights}
               approveLoan={onApprove}
               rejectLoan={onReject}

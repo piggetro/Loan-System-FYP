@@ -5,7 +5,7 @@ import { Loan } from "@prisma/client";
 import LoanPage from "./_components/LoanPage";
 
 export interface LoanTableDataType extends Loan {
-  approvingLecturer: { name: string };
+  approvingLecturer: { name: string } | null;
 }
 
 const page = async () => {

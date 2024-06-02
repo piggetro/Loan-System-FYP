@@ -1,9 +1,8 @@
 /* eslint-disable react-hooks/rules-of-hooks */
 "use client";
-import { type Loan } from "@prisma/client";
 import { type ColumnDef } from "@tanstack/react-table";
 import { LoanTableCollectionRowActionsProps } from "./CollectionRowAction";
-import { CollectionLoanType } from "./Collection";
+import { type CollectionLoanType } from "./Collection";
 
 interface CollectionProps {
   onView: (value: CollectionLoanType) => void;
@@ -13,7 +12,7 @@ interface CollectionProps {
 export const CollectionColumns = ({
   onView,
   onCollect,
-}: CollectionProps): ColumnDef<Loan>[] => [
+}: CollectionProps): ColumnDef<CollectionLoanType>[] => [
   {
     accessorKey: "loanId",
     header: "Loan ID",

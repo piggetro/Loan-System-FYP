@@ -6,16 +6,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/app/_components/ui/table";
-import React, {
-  useEffect,
-  useRef,
-  useState,
-  type MouseEvent,
-  type TouchEvent,
-} from "react";
+import React, { useEffect, useState } from "react";
 import { api } from "@/trpc/react";
 import { Skeleton } from "@/app/_components/ui/skeleton";
-import { X } from "lucide-react";
+import { Loader2, X } from "lucide-react";
 import { useToast } from "@/app/_components/ui/use-toast";
 import { Button } from "@/app/_components/ui/button";
 import Image from "next/image";
@@ -34,6 +28,7 @@ const ReturnLoanDialog: React.FC<{
   closeDialog: () => void;
   id: string;
 }> = ({ closeDialog, id }) => {
+  const [isReturning, setIsReturning] = useState<boolean>(false);
   const { isFetching, data, isFetched } =
     api.loanRequest.getReadyLoanById.useQuery({
       id: id,
@@ -62,13 +57,6 @@ const ReturnLoanDialog: React.FC<{
           returned: false,
         },
       ]);
-      // processedLoanData.push({
-      //   equipmentId: loanItem.equipment!.id,
-      //   loanItemId: loanItem.id,
-      //   description: loanItem.equipment!.name,
-      //   checklist: loanItem.equipment!.checklist ?? "",
-      //   assetNumber: loanItem.loanedInventory!.assetNumber,
-      // });
     });
     setProcessLoanData((prev) => prev.slice(0, data?.loanItems.length));
   }, [data?.loanItems, isFetched]);
@@ -93,9 +81,11 @@ const ReturnLoanDialog: React.FC<{
   }, [processedLoanData, returnedInventoryAssetNum, returnedItemLength]);
 
   function onSubmit() {
+    setIsReturning(true);
     processLoanCollection
       .mutateAsync({ id: id })
       .then((results) => {
+        setIsReturning(false);
         collectionLoanToast({
           title: results.title,
           description: results.description,
@@ -107,6 +97,7 @@ const ReturnLoanDialog: React.FC<{
         }
       })
       .catch(() => {
+        setIsReturning(false);
         console.log("error");
       });
   }
@@ -184,7 +175,7 @@ const ReturnLoanDialog: React.FC<{
             </TableRow>
           </TableHeader>
           <TableBody>
-            {processedLoanData.map((loanItem, index) => (
+            {processedLoanData.map((loanItem) => (
               <TableRow key={loanItem.equipmentId}>
                 <TableCell className="font-medium">
                   {loanItem.description}
@@ -243,8 +234,11 @@ const ReturnLoanDialog: React.FC<{
           onClick={() => {
             onSubmit();
           }}
-          disabled={processedLoanData.length !== returnedItemLength}
+          disabled={
+            processedLoanData.length !== returnedItemLength || isReturning
+          }
         >
+          {isReturning && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           Process Collection
         </Button>
       </div>

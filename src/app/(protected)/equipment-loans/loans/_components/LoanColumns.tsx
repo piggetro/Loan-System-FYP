@@ -1,9 +1,7 @@
 /* eslint-disable react-hooks/rules-of-hooks */
 "use client";
-import { Button } from "@/app/_components/ui/button";
 import { type ColumnDef } from "@tanstack/react-table";
-import { ArrowUpDown } from "lucide-react";
-import { LoanTableDataType } from "../page";
+import { type LoanTableDataType } from "../page";
 import { LoanTablePendingApprovalRowActionsProps } from "./LoanRowAction";
 
 interface LoanProps {

@@ -1,9 +1,10 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 "use client";
 import { api } from "@/trpc/react";
 import React, { useCallback, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/app/_components/ui/use-toast";
-import { Loan } from "@prisma/client";
+import { type Loan } from "@prisma/client";
 import { PreparationColumns } from "./PreparationColumns";
 import { PreparationDataTable } from "./PreparationDataTable";
 import PreparationLoanDialog from "../../_components/PreparationLoanDialog";
@@ -11,18 +12,16 @@ import {
   AlertDialog,
   AlertDialogContent,
 } from "@/app/_components/ui/alert-dialog";
-import { DialogContent } from "@/app/_components/ui/dialog";
 import { Skeleton } from "@/app/_components/ui/skeleton";
 
 export interface PreparationLoanType extends Loan {
-  loanedBy: { name: string };
+  loanedBy: { name: string } | null;
 }
 
 const PreparationPage: React.FC<{
   allSemesters: { name: string }[];
 }> = ({ allSemesters }) => {
-  const { isLoading, data, refetch } =
-    api.loanRequest.getLoansToPrepare.useQuery();
+  const { data, refetch } = api.loanRequest.getLoansToPrepare.useQuery();
 
   const { toast } = useToast();
   const router = useRouter();

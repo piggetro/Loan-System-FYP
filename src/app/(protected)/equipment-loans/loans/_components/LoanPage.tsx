@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 "use client";
 import { api } from "@/trpc/react";
 import React, { useCallback, useMemo, useState } from "react";
@@ -22,15 +23,14 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/app/_components/ui/alert-dialog";
 import { useToast } from "@/app/_components/ui/use-toast";
 
 const LoanPage: React.FC<{
   allSemesters: { name: string }[];
   userLoans: LoanTableDataType[];
-}> = ({ allSemesters, userLoans }) => {
-  const { isLoading, data, refetch } = api.loan.getUsersLoans.useQuery();
+}> = ({ allSemesters }) => {
+  const { data, refetch } = api.loan.getUsersLoans.useQuery();
   const requestCollection = api.loanRequest.requestForCollection.useMutation();
   const cancelLoan = api.loanRequest.cancelLoan.useMutation();
 
@@ -79,7 +79,7 @@ const LoanPage: React.FC<{
             });
           });
         })
-        .catch((error) => {
+        .catch(() => {
           toast({
             title: "Something Unexpected Happened",
             description: "Please contact help desk",
@@ -99,11 +99,19 @@ const LoanPage: React.FC<{
     requestCollection
       .mutateAsync({ id: loanDetails.id })
       .then(() => {
+        toast({
+          title: "Request For Collection is Successfull",
+          description: "Loan is now Preparing",
+        });
         refetch().catch(() => {
           //handle error
         });
       })
       .catch(() => {
+        toast({
+          title: "Something Unexpected Happened",
+          description: "Contact Help Desk For Assistance",
+        });
         //handle error
       });
   }, []);

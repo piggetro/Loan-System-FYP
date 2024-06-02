@@ -1,8 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-
 import { Button } from "@/app/_components/ui/button";
-import { Equipment, Loan } from "@prisma/client";
-import { useState } from "react";
+import { Loader2 } from "lucide-react";
 
 const LoanActions: React.FC<{
   status: string;
@@ -13,6 +11,9 @@ const LoanActions: React.FC<{
   prepareLoan: () => void;
   collectLoan: () => void;
   returnLoan: () => void;
+  isPendingRejectLoan: boolean;
+  isPendingApproveLoan: boolean;
+  isPendingRequestCollection: boolean;
 }> = ({
   userAccessRights,
   approveLoan,
@@ -21,16 +22,36 @@ const LoanActions: React.FC<{
   prepareLoan,
   collectLoan,
   returnLoan,
+  rejectLoan,
+  isPendingRejectLoan,
+  isPendingApproveLoan,
+  isPendingRequestCollection,
 }) => {
-  if (userAccessRights.includes("userAllowedToApproveLoan")) {
+  if (
+    userAccessRights.includes("userAllowedToApproveLoan") &&
+    status === "PENDING_APPROVAL"
+  ) {
     return (
       <div className="flex justify-center gap-4">
-        <Button variant={"destructive"}>Reject</Button>
+        <Button
+          onClick={() => {
+            rejectLoan();
+          }}
+          variant={"destructive"}
+        >
+          {isPendingRejectLoan && (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          )}
+          Reject
+        </Button>
         <Button
           onClick={() => {
             approveLoan();
           }}
         >
+          {isPendingApproveLoan && (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          )}
           Approve
         </Button>
       </div>
@@ -47,6 +68,9 @@ const LoanActions: React.FC<{
             requestForCollectionLoan();
           }}
         >
+          {isPendingRequestCollection && (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          )}
           Request For Collection
         </Button>
       </div>

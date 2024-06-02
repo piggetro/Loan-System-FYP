@@ -14,7 +14,7 @@ import React, {
 } from "react";
 import { api } from "@/trpc/react";
 import { Skeleton } from "@/app/_components/ui/skeleton";
-import { X } from "lucide-react";
+import { Loader2, X } from "lucide-react";
 
 import { useToast } from "@/app/_components/ui/use-toast";
 import { Button } from "@/app/_components/ui/button";
@@ -31,9 +31,11 @@ const CollectionLoanDialog: React.FC<{
   closeDialog: () => void;
   id: string;
 }> = ({ closeDialog, id }) => {
+  const [isCollecting, setIsCollecting] = useState<boolean>(false);
   const { isFetching, data } = api.loanRequest.getReadyLoanById.useQuery({
     id: id,
   });
+
   const processLoanCollection =
     api.loanRequest.processLoanCollection.useMutation();
   const processedLoanData: CollectionDataType[] = [];
@@ -44,16 +46,6 @@ const CollectionLoanDialog: React.FC<{
   const { toast: collectionLoanToast } = useToast();
 
   data?.loanItems.forEach((loanItem) => {
-    // setProcessLoanData([
-    //   ...processedLoanData,
-    //   {
-    //     equipmentId: loanItem.equipment.id,
-    //     loanItemId: loanItem.id,
-    //     description: loanItem.equipment.name,
-    //     checklist: loanItem.equipment.checklist ?? "",
-    //     assetNumber: "",
-    //   },
-    // ]);
     processedLoanData.push({
       equipmentId: loanItem.equipment!.id,
       loanItemId: loanItem.id,
@@ -64,23 +56,26 @@ const CollectionLoanDialog: React.FC<{
   });
 
   function onSubmit() {
+    setIsCollecting(true);
     const canvas = canvasRef.current;
 
     if (canvas) {
       processLoanCollection
         .mutateAsync({ signatureData: canvas.toDataURL("image/png"), id: id })
         .then((results) => {
+          setIsCollecting(false);
           collectionLoanToast({
             title: results.title,
             description: results.description,
             // @ts-expect-error ggg
             variant: results.variant,
           });
-          if (results.variant != "destructive") {
+          if (results.variant !== "destructive") {
             closeDialog();
           }
         })
         .catch(() => {
+          setIsCollecting(false);
           console.log("error");
         });
     }
@@ -269,8 +264,9 @@ const CollectionLoanDialog: React.FC<{
           onClick={() => {
             onSubmit();
           }}
-          disabled={!isSigned}
+          disabled={!isSigned || isCollecting}
         >
+          {isCollecting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           Process Collection
         </Button>
       </div>

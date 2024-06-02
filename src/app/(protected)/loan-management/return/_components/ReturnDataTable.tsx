@@ -38,7 +38,7 @@ interface DataTableProps<TData, TValue> {
   allSemesters: { name: string }[];
 }
 
-export function PreparationDataTable<TData, TValue>({
+export function ReturnDataTable<TData, TValue>({
   columns,
   data,
   allSemesters,

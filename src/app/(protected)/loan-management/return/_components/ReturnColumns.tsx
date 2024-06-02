@@ -1,11 +1,8 @@
 /* eslint-disable react-hooks/rules-of-hooks */
 "use client";
-import { Button } from "@/app/_components/ui/button";
-import { Loan } from "@prisma/client";
 import { type ColumnDef } from "@tanstack/react-table";
-import { ArrowUpDown } from "lucide-react";
 import { PreparationRowActionsProps } from "./ReturnLoanRowAction";
-import { PreparationLoanType } from "./Return";
+import { type PreparationLoanType } from "./Return";
 
 interface LoanProps {
   onView: (value: PreparationLoanType) => void;
@@ -15,7 +12,7 @@ interface LoanProps {
 export const PreparationColumns = ({
   onView,
   onReturn,
-}: LoanProps): ColumnDef<Loan>[] => [
+}: LoanProps): ColumnDef<PreparationLoanType>[] => [
   {
     accessorKey: "loanId",
     header: "Loan ID",

@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 "use client";
 import { api } from "@/trpc/react";
 import React, { useCallback, useMemo, useState } from "react";
@@ -8,7 +9,6 @@ import { useToast } from "@/app/_components/ui/use-toast";
 import { type Loan } from "@prisma/client";
 import { CollectionColumns } from "./CollectionColumns";
 import { CollectionDataTable } from "./CollectionDataTable";
-import { Dialog } from "@mantine/core";
 import CollectionLoanDialog from "../../_components/CollectionLoanDialog";
 import {
   AlertDialog,
@@ -17,14 +17,13 @@ import {
 import { Skeleton } from "@/app/_components/ui/skeleton";
 
 export interface CollectionLoanType extends Loan {
-  loanedBy: { name: string };
+  loanedBy: { name: string } | null;
 }
 
 const CollectionPage: React.FC<{
   allSemesters: { name: string }[];
 }> = ({ allSemesters }) => {
-  const { isLoading, data, refetch } =
-    api.loanRequest.getLoansForCollection.useQuery();
+  const { data, refetch } = api.loanRequest.getLoansForCollection.useQuery();
 
   const { toast } = useToast();
   const router = useRouter();
