@@ -82,7 +82,7 @@ const PreparationLoanDialog: React.FC<{
     if (id && data) {
       form.reset({
         id: id,
-        collectionRefNum: "dfg",
+        collectionRefNum: "",
         loanedItem: processedLoanData,
       });
     }

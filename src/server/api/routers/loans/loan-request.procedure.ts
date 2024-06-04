@@ -463,6 +463,7 @@ export const loanRequestRouter = createTRPCRouter({
           await ctx.db.loanItem.update({
             data: {
               inventoryId: inventory?.id,
+              status: "READY",
             },
             where: {
               id: loanItem.loanItemId,
@@ -551,6 +552,15 @@ export const loanRequestRouter = createTRPCRouter({
             dateCollected: new Date(),
             status: "COLLECTED",
             issuedById: ctx.user.id,
+          },
+        });
+
+        await ctx.db.loanItem.updateMany({
+          data: {
+            status: "COLLECTED",
+          },
+          where: {
+            loanId: input.id,
           },
         });
 
