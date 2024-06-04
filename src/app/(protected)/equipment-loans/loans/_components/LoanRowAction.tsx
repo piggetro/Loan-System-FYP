@@ -1,4 +1,4 @@
-import { Row } from "@tanstack/react-table";
+import type { Row } from "@tanstack/react-table";
 import React from "react";
 import {
   DropdownMenu,
@@ -9,7 +9,6 @@ import {
 } from "@/app/_components/ui/dropdown-menu";
 import { Button } from "@/app/_components/ui/button";
 import { MoreHorizontal } from "lucide-react";
-import { api } from "@/trpc/react";
 
 interface LoanTableRowActionsProps<TData> {
   row: Row<TData>;

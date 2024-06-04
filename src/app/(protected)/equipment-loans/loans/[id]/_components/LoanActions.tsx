@@ -38,6 +38,7 @@ const LoanActions: React.FC<{
             rejectLoan();
           }}
           variant={"destructive"}
+          disabled={isPendingApproveLoan}
         >
           {isPendingRejectLoan && (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -48,6 +49,7 @@ const LoanActions: React.FC<{
           onClick={() => {
             approveLoan();
           }}
+          disabled={isPendingApproveLoan}
         >
           {isPendingApproveLoan && (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -67,6 +69,7 @@ const LoanActions: React.FC<{
           onClick={() => {
             requestForCollectionLoan();
           }}
+          disabled={isPendingRequestCollection}
         >
           {isPendingRequestCollection && (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
