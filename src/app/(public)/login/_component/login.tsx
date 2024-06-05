@@ -12,7 +12,6 @@ import { Loader2 } from "lucide-react";
 
 const LoginComponent = () => {
   const router = useRouter();
-  const [isLoading] = useState<boolean>(false);
   const [adminId, setAdminId] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [showPassword, setShowPassword] = useState<boolean>(false);
@@ -72,7 +71,7 @@ const LoginComponent = () => {
               autoCapitalize="none"
               autoComplete="Admin Number"
               autoCorrect="off"
-              disabled={isLoading}
+              disabled={isPending}
               className="mb-3"
             />
             <div className="mb-2 flex items-center text-sm">
@@ -103,11 +102,11 @@ const LoginComponent = () => {
               autoCapitalize="none"
               autoComplete="Password"
               autoCorrect="off"
-              disabled={isLoading}
+              disabled={isPending}
               className="mb-5"
             />
           </div>
-          <Button disabled={isLoading} className="w-full">
+          <Button disabled={isPending} className="w-full">
             {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Login
           </Button>

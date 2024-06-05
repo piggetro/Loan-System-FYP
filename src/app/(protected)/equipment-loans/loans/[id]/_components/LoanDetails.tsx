@@ -137,23 +137,17 @@ const LoanDetails: React.FC<{
           />
         </AlertDialogContent>
       </AlertDialog>
-      <AlertDialog open={openPreparationDialog}>
-        <AlertDialogContent className=" h-3/4 w-11/12 max-w-none">
-          <PreparationLoanDialog
-            closeDialog={() => {
-              setOpenPreparationDialog(false);
-              refetch().catch(() => {
-                toast({
-                  title: "Something Unexpected Happen",
-                  description:
-                    "Please refresh your browser to view updated data",
-                });
-              });
-            }}
-            id={id}
-          />
-        </AlertDialogContent>
-      </AlertDialog>
+
+      <PreparationLoanDialog
+        isDialogOpen={openPreparationDialog}
+        setIsDialogOpen={setOpenPreparationDialog}
+        onSuccessClose={() => {
+          setOpenPreparationDialog(false);
+          refresh();
+        }}
+        id={id}
+      />
+
       <AlertDialog open={openReturnDialog}>
         <AlertDialogContent className=" h-3/4 w-11/12 max-w-none">
           <ReturnLoanDialog

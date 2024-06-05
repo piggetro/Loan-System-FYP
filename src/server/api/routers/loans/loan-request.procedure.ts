@@ -247,6 +247,15 @@ export const loanRequestRouter = createTRPCRouter({
           },
         });
 
+        await ctx.db.loanItem.updateMany({
+          data: {
+            status: "REQUEST_COLLECTION",
+          },
+          where: {
+            loanId: input.id,
+          },
+        });
+
         return data.loanId;
       } catch (err) {
         console.log(err);
@@ -264,6 +273,15 @@ export const loanRequestRouter = createTRPCRouter({
           where: {
             id: input.id,
             approvingLecturerId: ctx.user.id,
+          },
+        });
+
+        await ctx.db.loanItem.updateMany({
+          data: {
+            status: "CANCELLED",
+          },
+          where: {
+            loanId: input.id,
           },
         });
 
@@ -286,6 +304,16 @@ export const loanRequestRouter = createTRPCRouter({
             loanedById: ctx.user.id,
           },
         });
+
+        await ctx.db.loanItem.updateMany({
+          data: {
+            status: "PREPARING",
+          },
+          where: {
+            loanId: input.id,
+          },
+        });
+
         console.log(results);
 
         return "PREPARING";
@@ -305,6 +333,14 @@ export const loanRequestRouter = createTRPCRouter({
           where: {
             id: input.id,
             loanedById: ctx.user.id,
+          },
+        });
+        await ctx.db.loanItem.updateMany({
+          data: {
+            status: "CANCELLED",
+          },
+          where: {
+            loanId: input.id,
           },
         });
 
@@ -427,6 +463,7 @@ export const loanRequestRouter = createTRPCRouter({
           await ctx.db.loanItem.update({
             data: {
               inventoryId: inventory?.id,
+              status: "READY",
             },
             where: {
               id: loanItem.loanItemId,
@@ -515,6 +552,15 @@ export const loanRequestRouter = createTRPCRouter({
             dateCollected: new Date(),
             status: "COLLECTED",
             issuedById: ctx.user.id,
+          },
+        });
+
+        await ctx.db.loanItem.updateMany({
+          data: {
+            status: "COLLECTED",
+          },
+          where: {
+            loanId: input.id,
           },
         });
 
