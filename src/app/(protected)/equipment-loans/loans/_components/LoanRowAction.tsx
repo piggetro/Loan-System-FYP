@@ -1,4 +1,4 @@
-import { Row } from "@tanstack/react-table";
+import type { Row } from "@tanstack/react-table";
 import React from "react";
 import {
   DropdownMenu,
@@ -9,18 +9,19 @@ import {
 } from "@/app/_components/ui/dropdown-menu";
 import { Button } from "@/app/_components/ui/button";
 import { MoreHorizontal } from "lucide-react";
-import { api } from "@/trpc/react";
 
 interface LoanTableRowActionsProps<TData> {
   row: Row<TData>;
   onView: (id: TData) => void;
-  onDelete: (id: TData) => void;
+  onCancel: (id: TData) => void;
+  onRequestCollection: (id: TData) => void;
 }
 
-export const LoanTableRowActionsProps = <TData,>({
+export const LoanTablePendingApprovalRowActionsProps = <TData,>({
   row,
   onView,
-  onDelete,
+  onCancel,
+  onRequestCollection,
 }: LoanTableRowActionsProps<TData>) => {
   return (
     <DropdownMenu>
@@ -39,14 +40,26 @@ export const LoanTableRowActionsProps = <TData,>({
         >
           View Loan
         </DropdownMenuItem>
-        {row.getValue("status") == "PENDING_APPROVAL" ? (
+
+        {row.getValue("status") == "REQUEST_COLLECTION" ? (
           <DropdownMenuItem
             onClick={() => {
-              onDelete(row.original);
+              onRequestCollection(row.original);
+            }}
+            className=""
+          >
+            Request Collection
+          </DropdownMenuItem>
+        ) : null}
+        {row.getValue("status") == "PENDING_APPROVAL" ||
+        row.getValue("status") == "APPROVED" ? (
+          <DropdownMenuItem
+            onClick={() => {
+              onCancel(row.original);
             }}
             className="text-primary text-red-500"
           >
-            Delete Request
+            Cancel Request
           </DropdownMenuItem>
         ) : null}
       </DropdownMenuContent>

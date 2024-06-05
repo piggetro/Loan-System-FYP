@@ -8,7 +8,6 @@ import {
   ApprovalManagementHistoryColumns,
 } from "./ApprovalManagementColumns";
 
-import { z } from "zod";
 import {
   ApprovalManagementHistoryTable,
   ApprovalManagementTable,
@@ -23,10 +22,6 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/app/_components/ui/tabs";
-const formSchema = z.object({
-  remarks: z.string().min(2).max(50),
-  returnDate: z.string().date(),
-});
 
 const ApprovalManagementComponent: React.FC<{
   loanRequests: ApprovalManagementType[];
@@ -39,7 +34,7 @@ const ApprovalManagementComponent: React.FC<{
   const { toast } = useToast();
   const approveRequest =
     api.loanRequest.approveLoanRequestWithLoanId.useMutation();
-
+  const rejectRequest = api.loanRequest.rejectLoanRequest.useMutation();
   const [approveRequestHistoryData, setApproveRequestHistoryData] =
     useState<ApprovalManagementType[]>(loanRequestHistory);
 
@@ -66,7 +61,7 @@ const ApprovalManagementComponent: React.FC<{
 
         //Updating frontend for UX
         removeLoan(loanDetails.loanId);
-        loanDetails.status = "APPROVED";
+        loanDetails.status = "REQUEST_COLLECTION";
         setApproveRequestHistoryData((prev) => [...prev, loanDetails]);
       })
       .catch((error) => {
@@ -75,7 +70,24 @@ const ApprovalManagementComponent: React.FC<{
   }, []);
   const onReject = useCallback((loanDetails: ApprovalManagementType) => {
     //Derricks part, use api.loanRequest.rejectLoanRequest
-    console.log("onreject");
+    rejectRequest
+      .mutateAsync({ id: loanDetails.id })
+      .then(() => {
+        toast({
+          title: "Loan has been rejected",
+          description: `Loan ${loanDetails.loanId} has been rejected`,
+        });
+        //Updating frontend for UX
+        removeLoan(loanDetails.loanId);
+        loanDetails.status = "REJECTED";
+        setApproveRequestHistoryData((prev) => [...prev, loanDetails]);
+      })
+      .catch(() => {
+        toast({
+          title: "Something Unexpected Happened",
+          description: `Contact Help Desk for assistance`,
+        });
+      });
   }, []);
 
   const TableColumns = useMemo(

@@ -8,6 +8,7 @@ import { Input } from "@/app/_components/ui/input";
 import { useToast } from "@/app/_components/ui/use-toast";
 import { register } from "@/lib/auth/actions";
 import { useRouter } from "next/navigation";
+import { Loader2 } from "lucide-react";
 
 const RegisterComponent = () => {
   const router = useRouter();
@@ -15,6 +16,7 @@ const RegisterComponent = () => {
   const [adminId, setAdminId] = useState<string>("");
   const [mobile, setMobile] = useState<string>();
   const { toast } = useToast();
+  const [isPending, setIsPending] = useState<boolean>(false);
 
   const performRegister = () => {
     if (adminId.length == 0) {
@@ -34,6 +36,7 @@ const RegisterComponent = () => {
       });
       return;
     }
+    setIsPending(true);
     register(adminId, mobile)
       .then((result) => {
         if (result?.title != undefined) {
@@ -43,16 +46,18 @@ const RegisterComponent = () => {
             variant: result.variant ? "destructive" : "default",
           });
         }
+        setIsPending(false);
       })
       .catch((error) => {
         console.log(error);
+        setIsPending(false);
       });
   };
 
   return (
     <div className="mx-auto w-1/3 min-w-96">
       <div className="mb-4 rounded-xl bg-white px-8 pb-8 pt-6 shadow-lg">
-        <h1 className="mb-4 text-2xl tracking-tight">Register Account</h1>
+        <h1 className="mb-4 text-2xl tracking-tight">Welcome</h1>
 
         <form
           onSubmit={(e) => {
@@ -96,7 +101,7 @@ const RegisterComponent = () => {
                 setMobile(e.target.value);
               }}
               id="mobileNumber"
-              placeholder="Mobile Number Input"
+              placeholder="Password Input"
               minLength={1}
               type="number"
               autoCapitalize="none"
@@ -107,6 +112,7 @@ const RegisterComponent = () => {
             />
           </div>
           <Button disabled={isLoading} className="w-full">
+            {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Register
           </Button>
         </form>

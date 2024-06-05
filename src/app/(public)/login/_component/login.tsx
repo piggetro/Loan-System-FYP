@@ -8,17 +8,19 @@ import { Input } from "@/app/_components/ui/input";
 import { useToast } from "@/app/_components/ui/use-toast";
 import { login } from "@/lib/auth/actions";
 import { useRouter } from "next/navigation";
+import { Loader2 } from "lucide-react";
 
 const LoginComponent = () => {
   const router = useRouter();
-  const [isLoading] = useState<boolean>(false);
   const [adminId, setAdminId] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [showPassword, setShowPassword] = useState<boolean>(false);
+  const [isPending, setIsPending] = useState<boolean>(false);
 
   const { toast } = useToast();
 
   const performLogin = () => {
+    setIsPending(true);
     login(adminId, password)
       .then((result) => {
         if (result?.title != undefined) {
@@ -31,9 +33,11 @@ const LoginComponent = () => {
                 : null,
           });
         }
+        setIsPending(false);
       })
       .catch((error) => {
         console.log(error);
+        setIsPending(false);
       });
   };
 
@@ -67,7 +71,7 @@ const LoginComponent = () => {
               autoCapitalize="none"
               autoComplete="Admin Number"
               autoCorrect="off"
-              disabled={isLoading}
+              disabled={isPending}
               className="mb-3"
             />
             <div className="mb-2 flex items-center text-sm">
@@ -78,12 +82,12 @@ const LoginComponent = () => {
                 Password
               </Label>
               <div
-                className="flex w-1/2 justify-end font-medium hover:cursor-pointer hover:text-cyan-700"
+                className="flex w-1/2 justify-end font-medium hover:cursor-pointer"
                 onClick={() => {
                   setShowPassword(!showPassword);
                 }}
               >
-                {showPassword ? "Hide Password" : "Show Password"}
+                Show Password
               </div>
             </div>
             <Input
@@ -98,12 +102,13 @@ const LoginComponent = () => {
               autoCapitalize="none"
               autoComplete="Password"
               autoCorrect="off"
-              disabled={isLoading}
+              disabled={isPending}
               className="mb-5"
             />
           </div>
-          <Button disabled={isLoading} className="w-full">
-            Sign In
+          <Button disabled={isPending} className="w-full">
+            {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Login
           </Button>
         </form>
         <span className="mt-2 flex text-sm font-medium">

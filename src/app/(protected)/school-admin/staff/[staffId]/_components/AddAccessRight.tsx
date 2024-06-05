@@ -12,7 +12,7 @@ import {
 } from "@/app/_components/ui/dialog";
 import { Loader2 } from "lucide-react";
 import { api } from "@/trpc/react";
-import { AccessRights } from "./AccessRightColumns";
+import type { AccessRights } from "./AccessRightColumns";
 import { AccessRightDataTable } from "@/app/_components/AddAccessRightDataTable";
 import { accessRightColumns } from "@/app/_components/AddAccessRightColumns";
 
@@ -76,7 +76,7 @@ const AddAccessRight = ({
         }
       }
     }
-    fetchData();
+    void fetchData();
   }, [isDialogOpen]);
 
   const onSubmit = () => {

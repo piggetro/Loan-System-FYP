@@ -1,19 +1,19 @@
 /* eslint-disable react-hooks/rules-of-hooks */
 "use client";
-import { Button } from "@/app/_components/ui/button";
 import { type ColumnDef } from "@tanstack/react-table";
-import { ArrowUpDown } from "lucide-react";
-import { LoanTableDataType } from "../page";
-import { LoanTableRowActionsProps } from "./LoanRowAction";
+import { type LoanTableDataType } from "../page";
+import { LoanTablePendingApprovalRowActionsProps } from "./LoanRowAction";
 
 interface LoanProps {
   onView: (value: LoanTableDataType) => void;
-  onDelete: (value: LoanTableDataType) => void;
+  onCancel: (value: LoanTableDataType) => void;
+  onRequestCollection: (value: LoanTableDataType) => void;
 }
 
-export const LoanColumns = ({
+export const LoanPendingApprovalColumns = ({
   onView,
-  onDelete,
+  onCancel,
+  onRequestCollection,
 }: LoanProps): ColumnDef<LoanTableDataType>[] => [
   {
     accessorKey: "loanId",
@@ -52,7 +52,12 @@ export const LoanColumns = ({
   {
     id: "actions",
     cell: ({ row }) => (
-      <LoanTableRowActionsProps row={row} onView={onView} onDelete={onDelete} />
+      <LoanTablePendingApprovalRowActionsProps
+        row={row}
+        onView={onView}
+        onCancel={onCancel}
+        onRequestCollection={onRequestCollection}
+      />
     ),
   },
 ];

@@ -10,35 +10,36 @@ import {
   AlertDialogAction,
 } from "@/app/_components/ui/alert-dialog";
 import { useToast } from "@/app/_components/ui/use-toast";
-import { OrganizationUnits } from "./OrganizationUnitColumns";
 import { api } from "@/trpc/react";
 import { Loader2 } from "lucide-react";
+import type { AccessRights } from "./AccessRightColumns";
 
-// In DeleteOrganizationUnit.tsx
-interface DeleteOrganizationUnitProps {
+interface DeleteAccessRightProps {
   isDeleteDialogOpen: boolean;
   setIsDeleteDialogOpen: (value: boolean) => void;
-  organizationUnit: OrganizationUnits | null;
-  setOrganizationUnits: React.Dispatch<React.SetStateAction<OrganizationUnits[]>>;
+  accessRight: AccessRights | null;
+  setAccessRghts: React.Dispatch<React.SetStateAction<AccessRights[]>>;
+  studentId: string;
 }
 
-const DeleteOrganizationUnit = ({
+const DeleteAccessRight = ({
   isDeleteDialogOpen,
   setIsDeleteDialogOpen,
-  organizationUnit,
-  setOrganizationUnits,
-}: DeleteOrganizationUnitProps) => {
+  accessRight,
+  setAccessRghts,
+  studentId,
+}: DeleteAccessRightProps) => {
   const { toast } = useToast();
 
-  const { mutate: deleteOrganizationUnit, isPending } =
-    api.schoolAdmin.deleteOrganizationUnit.useMutation({
+  const { mutate: deleteAccessRightFromStudent, isPending } =
+    api.schoolAdmin.deleteAccessRightFromStudent.useMutation({
       onSuccess: () => {
-        setOrganizationUnits((prev) =>
-          prev.filter((item) => item.id !== organizationUnit?.id),
+        setAccessRghts((prev) =>
+          prev.filter((item) => item.id !== accessRight?.id),
         );
         toast({
-          title: "Organization Unit Deleted",
-          description: "The organization unit has been deleted successfully",
+          title: "Access Right Deleted",
+          description: "The access right has been deleted successfully",
         });
         setIsDeleteDialogOpen(false);
       },
@@ -46,7 +47,7 @@ const DeleteOrganizationUnit = ({
         console.log(err);
         toast({
           title: "Error",
-          description: "An error occurred while deleting the organization unit",
+          description: "An error occurred while deleting the access right",
           variant: "destructive",
         });
       },
@@ -58,8 +59,8 @@ const DeleteOrganizationUnit = ({
         <AlertDialogHeader>
           <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
           <AlertDialogDescription>
-            This action cannot be undone. This will permanently delete the
-            data and remove the data from our servers.
+            This action cannot be undone. This will permanently delete the data
+            and remove the data from our servers.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
@@ -73,7 +74,12 @@ const DeleteOrganizationUnit = ({
           <AlertDialogAction
             disabled={isPending}
             onClick={() => {
-              deleteOrganizationUnit({ id: organizationUnit?.id! });
+              if (accessRight?.id) {
+                deleteAccessRightFromStudent({
+                  id: accessRight.id,
+                  studentId: studentId,
+                });
+              }
             }}
           >
             {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -85,4 +91,4 @@ const DeleteOrganizationUnit = ({
   );
 };
 
-export default DeleteOrganizationUnit;
+export default DeleteAccessRight;

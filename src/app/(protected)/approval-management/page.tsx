@@ -2,19 +2,19 @@ import TopHeaderComponent from "@/app/_components/TopHeader";
 import React from "react";
 import { api } from "@/trpc/server";
 import ApprovalManagementComponent from "./_components/ApprovalManagement";
-import { Loan, LoanItem } from "@prisma/client";
+import { type Loan } from "@prisma/client";
 
 export interface ApprovalManagementType extends Loan {
   loanedBy: {
     name: string;
-  };
+  } | null;
   approvingLecturer: {
     name: string;
-  };
+  } | null;
   loanItems: {
     equipment: {
       name: string;
-    };
+    } | null;
   }[];
 }
 

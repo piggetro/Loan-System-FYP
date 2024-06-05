@@ -1,8 +1,8 @@
 "use client";
 
 import {
-  ColumnDef,
-  ColumnFiltersState,
+  type ColumnDef,
+  type ColumnFiltersState,
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
@@ -21,16 +21,15 @@ import { Button } from "@/app/_components/ui/button";
 import { Input } from "@/app/_components/ui/input";
 import { useState } from "react";
 
-interface DataTableProps<TData, TValue> {
+interface StudentDataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
 }
 
-export function DataTable<TData, TValue>({
+export function StudentDataTable<TData, TValue>({
   columns,
   data,
-}: DataTableProps<TData, TValue>) {
-
+}: StudentDataTableProps<TData, TValue>) {
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
 
   const table = useReactTable({
@@ -49,17 +48,15 @@ export function DataTable<TData, TValue>({
     <div>
       <div className="flex items-center">
         <Input
-          placeholder="Filter Organization Unit..."
-          value={
-            (table.getColumn("name")?.getFilterValue() as string) ?? ""
-          }
+          placeholder="Filter Email ..."
+          value={(table.getColumn("email")?.getFilterValue() as string) ?? ""}
           onChange={(event) =>
-            table.getColumn("name")?.setFilterValue(event.target.value)
+            table.getColumn("email")?.setFilterValue(event.target.value)
           }
           className="max-w-sm"
         />
       </div>
-      <div className="rounded-md border mt-4">
+      <div className="mt-4 rounded-md border">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (

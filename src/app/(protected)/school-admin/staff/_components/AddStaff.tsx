@@ -1,5 +1,5 @@
 import React from "react";
-import { Staff } from "./StaffColumns";
+import type { Staff } from "./StaffColumns";
 import {
   Form,
   FormField,
@@ -16,7 +16,7 @@ import {
   SelectValue,
 } from "@/app/_components/ui/select";
 import { Button } from "@/app/_components/ui/button";
-import { SubmitHandler, useForm } from "react-hook-form";
+import { type SubmitHandler, useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "@/app/_components/ui/input";

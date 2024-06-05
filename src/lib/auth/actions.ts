@@ -17,7 +17,6 @@ export interface ActionResponse<T> {
 }
 
 export async function login(adminId: string, password: string) {
-  console.log(await new Argon2id().hash(password));
   return await db.user
     .findUnique({
       where: {
@@ -41,6 +40,7 @@ export async function login(adminId: string, password: string) {
         const session = await lucia.createSession(adminId, {});
 
         const sessionCookie = lucia.createSessionCookie(session.id);
+
         cookies().set(
           sessionCookie.name,
           sessionCookie.value,

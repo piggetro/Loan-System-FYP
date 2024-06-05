@@ -23,25 +23,44 @@ export const loanRouter = createTRPCRouter({
     .input(z.object({ id: z.string().min(1) }))
     .query(async ({ ctx, input }) => {
       try {
+        //Access Rights to check
+        const accessRightsToCheck = ["Preparation", "Collection", "Return"];
         //This array to contain the strings of allowed access
+
         const accessRightsArray = [];
         //Queries to get access
-        const [usersLoanAccess, userAllowedToApproveLoan] = await Promise.all([
-          await ctx.db.userAccessRights.findMany({
-            where: { grantedUserId: ctx.session.userId },
-            select: { accessRight: { select: { pageName: true } } },
-          }),
-          await ctx.db.loan.findUnique({
-            where: {
-              approvingLecturerId: ctx.user.id,
-              id: input.id,
-              status: "PENDING_APPROVAL",
-            },
-          }),
-        ]);
+        const [usersLoanAccess, userAllowedToApproveLoan, usersOwnLoan] =
+          await Promise.all([
+            await ctx.db.userAccessRights.findMany({
+              where: { grantedUserId: ctx.session.userId },
+              select: { accessRight: { select: { pageName: true } } },
+            }),
+            await ctx.db.loan.findUnique({
+              where: {
+                approvingLecturerId: ctx.user.id,
+                id: input.id,
+                status: "PENDING_APPROVAL",
+              },
+            }),
+            await ctx.db.loan.findUnique({
+              where: {
+                loanedById: ctx.user.id,
+                id: input.id,
+              },
+            }),
+          ]);
+        if (usersOwnLoan !== null) {
+          accessRightsArray.push("usersOwnLoan");
+        }
         if (userAllowedToApproveLoan !== null) {
           accessRightsArray.push("userAllowedToApproveLoan");
         }
+        usersLoanAccess.forEach((accessRight) => {
+          if (accessRightsToCheck.includes(accessRight.accessRight.pageName)) {
+            accessRightsArray.push(accessRight.accessRight.pageName);
+          }
+        });
+        console.log(accessRightsArray);
 
         return accessRightsArray;
       } catch (err) {
@@ -61,10 +80,10 @@ export const loanRouter = createTRPCRouter({
             preparedBy: { select: { name: true } },
             issuedBy: { select: { name: true } },
             returnedTo: { select: { name: true } },
-            loanItems: { select: { equipment: true } },
+            loanItems: { include: { equipment: true } },
           },
         });
-        console.log(loanDetails?.loanItems);
+
         return loanDetails;
       } catch (err) {
         console.log(err);

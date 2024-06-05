@@ -12,7 +12,7 @@ import {
 import { useToast } from "@/app/_components/ui/use-toast";
 import { api } from "@/trpc/react";
 import { Loader2 } from "lucide-react";
-import { Staff } from "./StaffColumns";
+import type { Staff } from "./StaffColumns";
 
 interface DeleteStaffProps {
   isDeleteDialogOpen: boolean;

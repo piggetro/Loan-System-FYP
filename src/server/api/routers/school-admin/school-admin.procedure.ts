@@ -2,7 +2,6 @@ import { TRPCError } from "@trpc/server";
 import { protectedProcedure, createTRPCRouter } from "../../trpc";
 import { z } from "zod";
 import { Argon2id } from "oslo/password";
-import AddOrganizationUnit from "@/app/(protected)/school-admin/organisation-units/_components/AddOrganizationUnit";
 
 export const schoolAdminRouter = createTRPCRouter({
   getAccessRights: protectedProcedure.query(async ({ ctx }) => {
@@ -61,58 +60,6 @@ export const schoolAdminRouter = createTRPCRouter({
           data: {
             pageName: input.pageName,
             pageLink: input.pageLink,
-          },
-        });
-      } catch (err) {
-        console.log(err);
-        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
-      }
-    }),
-  updateOrganizationUnit: protectedProcedure
-    .input(
-      z.object({
-        id: z.string().min(1),
-        name: z.string().min(1),
-      }),
-    )
-    .mutation(async ({ ctx, input }) => {
-      try {
-        return await ctx.db.organizationUnit.update({
-          where: {
-            id: input.id,
-          },
-          data: {
-            name: input.name,
-          },
-        });
-      } catch (err) {
-        console.log(err);
-        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
-      }
-    }),
-  deleteOrganizationUnit: protectedProcedure
-    .input(z.object({ id: z.string().min(1) }))
-    .mutation(async ({ ctx, input }) => {
-      try {
-        return await ctx.db.organizationUnit.delete({
-          where: {
-            id: input.id,
-          },
-        });
-      } catch (err) {
-        console.log(err);
-        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
-      }
-    }),
-  addOrganizationUnit: protectedProcedure
-    .input(
-      z.object({ name: z.string().min(1) }),
-    )
-    .mutation(async ({ ctx, input }) => {
-      try {
-        return await ctx.db.organizationUnit.create({
-          data: {
-            name: input.name,
           },
         });
       } catch (err) {
@@ -225,9 +172,9 @@ export const schoolAdminRouter = createTRPCRouter({
       });
       return data.map((staff) => ({
         ...staff,
-        organizationUnit: staff.organizationUnit?.name!,
-        staffType: staff.staffType?.name!,
-        role: staff.role?.role!,
+        organizationUnit: staff.organizationUnit?.name ?? "",
+        staffType: staff.staffType?.name ?? "",
+        role: staff.role?.role ?? "",
       }));
     } catch (err) {
       console.log(err);
@@ -325,17 +272,18 @@ export const schoolAdminRouter = createTRPCRouter({
           },
         });
         await ctx.db.userAccessRights.createMany({
-          data: data.role?.accessRights.map((accessRight) => ({
-            accessRightId: accessRight.accessRightId,
-            grantedUserId: input.id,
-            grantedById: ctx.user.id,
-          })) as any,
+          data:
+            data.role?.accessRights.map((accessRight) => ({
+              accessRightId: accessRight.accessRightId,
+              grantedUserId: input.id,
+              grantedById: ctx.user.id,
+            })) ?? [],
         });
         return {
           ...data,
-          organizationUnit: data.organizationUnit?.name!,
-          staffType: data.staffType?.name!,
-          role: data.role?.role!,
+          organizationUnit: data.organizationUnit?.name ?? "",
+          staffType: data.staffType?.name ?? "",
+          role: data.role?.role ?? "",
         };
       } catch (err) {
         console.log(err);
@@ -378,18 +326,19 @@ export const schoolAdminRouter = createTRPCRouter({
           },
         });
         return {
-          id: data?.id!,
-          email: data?.email!,
-          mobile: data?.mobile || "",
-          name: data?.name!,
-          organizationUnit: data?.organizationUnit?.id!,
-          staffType: data?.staffType?.id!,
-          role: data?.role?.id!,
-          accessRightsGranted: data?.accessRightsGranted.map((accessRight) => ({
-            id: accessRight.accessRight.id,
-            pageName: accessRight.accessRight.pageName,
-            pageLink: accessRight.accessRight.pageLink,
-          }))!,
+          id: data?.id ?? "",
+          email: data?.email ?? "",
+          mobile: data?.mobile ?? "",
+          name: data?.name ?? "",
+          organizationUnit: data?.organizationUnit?.id ?? "",
+          staffType: data?.staffType?.id ?? "",
+          role: data?.role?.id ?? "",
+          accessRightsGranted:
+            data?.accessRightsGranted.map((accessRight) => ({
+              id: accessRight.accessRight.id,
+              pageName: accessRight.accessRight.pageName,
+              pageLink: accessRight.accessRight.pageLink,
+            })) ?? [],
         };
       } catch (err) {
         console.log(err);
@@ -417,12 +366,14 @@ export const schoolAdminRouter = createTRPCRouter({
             },
           },
         });
-        return data?.accessRightsGranted.map((accessRight) => ({
-          id: accessRight.accessRight.id,
-          pageName: accessRight.accessRight.pageName,
-          pageLink: accessRight.accessRight.pageLink,
-          grantedBy: accessRight.grantedBy.name,
-        }))!;
+        return (
+          data?.accessRightsGranted.map((accessRight) => ({
+            id: accessRight.accessRight.id,
+            pageName: accessRight.accessRight.pageName,
+            pageLink: accessRight.accessRight.pageLink,
+            grantedBy: accessRight.grantedBy.name,
+          })) ?? []
+        );
       } catch (err) {
         console.log(err);
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
@@ -448,9 +399,7 @@ export const schoolAdminRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       try {
         const hashed_password =
-          input.password &&
-          input.password.trim() &&
-          (await new Argon2id().hash(input.password));
+          input.password?.trim() && (await new Argon2id().hash(input.password));
 
         const role = await ctx.db.user.findUnique({
           where: {
@@ -469,7 +418,7 @@ export const schoolAdminRouter = createTRPCRouter({
                 select: { accessRightId: true },
               }),
               ctx.db.accessRightsOnRoles.findMany({
-                where: { roleId: role?.roleId! },
+                where: { roleId: role?.roleId ?? "" },
                 select: { accessRightId: true },
               }),
               ctx.db.accessRightsOnRoles.findMany({
@@ -572,19 +521,20 @@ export const schoolAdminRouter = createTRPCRouter({
           },
         });
         return {
-          id: staff?.id!,
-          email: staff?.email!,
-          mobile: staff?.mobile || "",
-          name: staff?.name!,
-          organizationUnit: staff?.organizationUnit?.id!,
-          staffType: staff?.staffType?.id!,
-          role: staff?.role?.id!,
-          accessRights: staff?.accessRightsGranted.map((accessRight) => ({
-            id: accessRight.accessRight.id,
-            pageName: accessRight.accessRight.pageName,
-            pageLink: accessRight.accessRight.pageLink,
-            grantedBy: accessRight.grantedBy.name,
-          }))!,
+          id: staff?.id ?? "",
+          email: staff?.email ?? "",
+          mobile: staff?.mobile ?? "",
+          name: staff?.name ?? "",
+          organizationUnit: staff?.organizationUnit?.id ?? "",
+          staffType: staff?.staffType?.id ?? "",
+          role: staff?.role?.id ?? "",
+          accessRights:
+            staff?.accessRightsGranted.map((accessRight) => ({
+              id: accessRight.accessRight.id,
+              pageName: accessRight.accessRight.pageName,
+              pageLink: accessRight.accessRight.pageLink,
+              grantedBy: accessRight.grantedBy.name,
+            })) ?? [],
         };
       } catch (err) {
         console.log(err);
@@ -713,13 +663,14 @@ export const schoolAdminRouter = createTRPCRouter({
           },
         });
         return {
-          id: role?.id!,
-          role: role?.role!,
-          accessRights: role?.accessRights.map((accessRight) => ({
-            id: accessRight.accessRight.id,
-            pageName: accessRight.accessRight.pageName,
-            pageLink: accessRight.accessRight.pageLink,
-          }))!,
+          id: role?.id ?? "",
+          role: role?.role ?? "",
+          accessRights:
+            role?.accessRights.map((accessRight) => ({
+              id: accessRight.accessRight.id,
+              pageName: accessRight.accessRight.pageName,
+              pageLink: accessRight.accessRight.pageLink,
+            })) ?? [],
         };
       } catch (err) {
         console.log(err);
@@ -824,6 +775,367 @@ export const schoolAdminRouter = createTRPCRouter({
           pageName: accessRight.accessRight.pageName,
           pageLink: accessRight.accessRight.pageLink,
         }));
+      } catch (err) {
+        console.log(err);
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      }
+    }),
+  getAllStudents: protectedProcedure.query(async ({ ctx }) => {
+    try {
+      const data = await ctx.db.user.findMany({
+        where: {
+          staffType: null,
+        },
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          batch: true,
+          graduationDate: true,
+          course: {
+            select: {
+              name: true,
+            },
+          },
+        },
+      });
+      return data.map((student) => ({
+        ...student,
+        batch: student.batch!,
+        graduationDate:
+          student.graduationDate?.toLocaleDateString("en-SG") ?? "",
+        course: student.course?.name ?? "",
+      }));
+    } catch (err) {
+      console.log(err);
+      throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+    }
+  }),
+  getAllActiveCourses: protectedProcedure.query(async ({ ctx }) => {
+    try {
+      return await ctx.db.course.findMany({
+        where: {
+          active: true,
+        },
+        select: {
+          id: true,
+          name: true,
+          code: true,
+        },
+      });
+    } catch (err) {
+      console.log(err);
+      throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+    }
+  }),
+  addStudent: protectedProcedure
+    .input(
+      z.object({
+        id: z.string().min(1),
+        email: z.string().email(),
+        name: z.string().min(1),
+        course: z.string().min(1),
+        batch: z.string().min(1),
+        graduationDate: z.date(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      try {
+        const role = await ctx.db.role.findFirstOrThrow({
+          where: {
+            role: "Student",
+          },
+        });
+        const data = await ctx.db.user.create({
+          data: {
+            id: input.id,
+            email: input.email,
+            name: input.name,
+            course: {
+              connect: {
+                id: input.course,
+              },
+            },
+            batch: input.batch,
+            graduationDate: input.graduationDate,
+            role: {
+              connect: {
+                id: role.id,
+              },
+            },
+          },
+          select: {
+            id: true,
+            email: true,
+            name: true,
+            batch: true,
+            graduationDate: true,
+            course: {
+              select: {
+                name: true,
+              },
+            },
+            role: {
+              select: {
+                role: true,
+                accessRights: {
+                  select: {
+                    accessRightId: true,
+                  },
+                },
+              },
+            },
+          },
+        });
+        await ctx.db.userAccessRights.createMany({
+          data:
+            data.role?.accessRights.map((accessRight) => ({
+              accessRightId: accessRight.accessRightId,
+              grantedUserId: input.id,
+              grantedById: ctx.user.id,
+            })) ?? [],
+        });
+        return {
+          id: data.id,
+          email: data.email,
+          name: data.name,
+          batch: data.batch ?? "",
+          graduationDate:
+            data.graduationDate?.toLocaleDateString("en-SG") ?? "",
+          course: data.course?.name ?? "",
+        };
+      } catch (err) {
+        console.log(err);
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      }
+    }),
+  deleteStudent: protectedProcedure
+    .input(z.object({ id: z.string().min(1) }))
+    .mutation(async ({ ctx, input }) => {
+      try {
+        return await ctx.db.user.delete({
+          where: {
+            id: input.id,
+          },
+        });
+      } catch (err) {
+        console.log(err);
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      }
+    }),
+  getStudent: protectedProcedure
+    .input(z.object({ id: z.string().min(1) }))
+    .query(async ({ ctx, input }) => {
+      try {
+        const data = await ctx.db.user.findUnique({
+          where: {
+            id: input.id,
+          },
+          select: {
+            id: true,
+            email: true,
+            mobile: true,
+            name: true,
+            batch: true,
+            graduationDate: true,
+            course: {
+              select: {
+                id: true,
+              },
+            },
+            accessRightsGranted: {
+              select: {
+                accessRight: true,
+              },
+            },
+          },
+        });
+        return {
+          id: data?.id ?? "",
+          email: data?.email ?? "",
+          mobile: data?.mobile ?? "",
+          name: data?.name ?? "",
+          batch: data?.batch ?? "",
+          graduationDate: data?.graduationDate ?? new Date(),
+          course: data?.course?.id ?? "",
+          accessRightsGranted:
+            data?.accessRightsGranted.map((accessRight) => ({
+              id: accessRight.accessRight.id,
+              pageName: accessRight.accessRight.pageName,
+              pageLink: accessRight.accessRight.pageLink,
+            })) ?? [],
+        };
+      } catch (err) {
+        console.log(err);
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      }
+    }),
+  getStudentAccessRights: protectedProcedure
+    .input(z.object({ id: z.string().min(1) }))
+    .query(async ({ ctx, input }) => {
+      try {
+        const data = await ctx.db.user.findUnique({
+          where: {
+            id: input.id,
+          },
+          select: {
+            accessRightsGranted: {
+              select: {
+                accessRight: true,
+                grantedBy: {
+                  select: {
+                    name: true,
+                  },
+                },
+              },
+            },
+          },
+        });
+        return (
+          data?.accessRightsGranted.map((accessRight) => ({
+            id: accessRight.accessRight.id,
+            pageName: accessRight.accessRight.pageName,
+            pageLink: accessRight.accessRight.pageLink,
+            grantedBy: accessRight.grantedBy.name,
+          })) ?? []
+        );
+      } catch (err) {
+        console.log(err);
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      }
+    }),
+  updateStudent: protectedProcedure
+    .input(
+      z.object({
+        id: z.string().min(1),
+        name: z.string().min(1),
+        email: z.string().email(),
+        mobile: z
+          .string()
+          .regex(/^\d{8}$/)
+          .optional()
+          .or(z.literal("")),
+        password: z.string().optional().or(z.literal("")),
+        batch: z.string().min(1),
+        graduationDate: z.date(),
+        course: z.string().min(1),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      try {
+        const hashed_password =
+          input.password?.trim() && (await new Argon2id().hash(input.password));
+
+        const student = await ctx.db.user.update({
+          where: {
+            id: input.id,
+          },
+          data: {
+            id: input.id,
+            name: input.name,
+            email: input.email,
+            mobile: input.mobile?.trim() === "" ? null : input.mobile,
+            ...(hashed_password && { hashed_password }),
+            batch: input.batch,
+            graduationDate: input.graduationDate,
+            course: {
+              connect: {
+                id: input.course,
+              },
+            },
+          },
+          select: {
+            id: true,
+            email: true,
+            mobile: true,
+            name: true,
+            batch: true,
+            graduationDate: true,
+            course: {
+              select: {
+                id: true,
+              },
+            },
+          },
+        });
+        return {
+          id: student?.id ?? "",
+          email: student?.email ?? "",
+          mobile: student?.mobile ?? "",
+          name: student?.name ?? "",
+          batch: student?.batch ?? "",
+          course: student?.course?.id ?? "",
+          graduationDate: student?.graduationDate ?? new Date(),
+        };
+      } catch (err) {
+        console.log(err);
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      }
+    }),
+  addAccessRightToStudent: protectedProcedure
+    .input(
+      z.object({
+        id: z.string().min(1),
+        accessRights: z.array(z.string().min(1)),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      try {
+        await ctx.db.userAccessRights.createMany({
+          data: input.accessRights.map((accessRight) => ({
+            accessRightId: accessRight,
+            grantedUserId: input.id,
+            grantedById: ctx.user.id,
+          })),
+        });
+        const data = await ctx.db.userAccessRights.findMany({
+          where: {
+            grantedUserId: input.id,
+          },
+          select: {
+            grantedBy: {
+              select: {
+                name: true,
+              },
+            },
+            accessRight: {
+              select: {
+                id: true,
+                pageName: true,
+                pageLink: true,
+              },
+            },
+          },
+        });
+        return data.map((accessRight) => ({
+          id: accessRight.accessRight.id,
+          pageName: accessRight.accessRight.pageName,
+          pageLink: accessRight.accessRight.pageLink,
+          grantedBy: accessRight.grantedBy.name,
+        }));
+      } catch (err) {
+        console.log(err);
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      }
+    }),
+  deleteAccessRightFromStudent: protectedProcedure
+    .input(z.object({ id: z.string().min(1), studentId: z.string().min(1) }))
+    .mutation(async ({ ctx, input }) => {
+      try {
+        const userAccessRight = await ctx.db.userAccessRights.findFirst({
+          where: {
+            accessRightId: input.id,
+            grantedUserId: input.studentId,
+          },
+          select: {
+            id: true,
+          },
+        });
+        return await ctx.db.userAccessRights.delete({
+          where: {
+            id: userAccessRight?.id,
+          },
+        });
       } catch (err) {
         console.log(err);
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });

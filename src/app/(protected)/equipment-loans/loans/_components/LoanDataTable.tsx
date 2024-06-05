@@ -36,12 +36,14 @@ interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
   allSemesters: { name: string }[];
+  filterOptions: "collectionReq" | "prepCollect" | null;
 }
 
-export function LoanDataTable<TData, TValue>({
+export function DefaultLoanDataTable<TData, TValue>({
   columns,
   data,
   allSemesters,
+  filterOptions,
 }: DataTableProps<TData, TValue>) {
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [rowSelection, setRowSelection] = useState({});
@@ -91,7 +93,7 @@ export function LoanDataTable<TData, TValue>({
             }
           }}
         >
-          <SelectTrigger className="h-7 w-1/4  min-w-44">
+          <SelectTrigger className="mr-4 h-7 w-1/4 min-w-44">
             <SelectValue placeholder="Semester" />
           </SelectTrigger>
           <SelectContent>
@@ -108,6 +110,67 @@ export function LoanDataTable<TData, TValue>({
             </SelectGroup>
           </SelectContent>
         </Select>
+        {filterOptions === "collectionReq" ? (
+          <Select
+            onValueChange={(key) => {
+              if (key === "All") {
+                table.getColumn("status")?.setFilterValue("");
+              } else {
+                table.getColumn("status")?.setFilterValue(key);
+              }
+            }}
+          >
+            <SelectTrigger className="h-7 w-1/4  min-w-44">
+              <SelectValue placeholder="Filter Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                <SelectLabel>Status</SelectLabel>
+                <SelectItem key={"All"} value={"All"}>
+                  All
+                </SelectItem>
+                <SelectItem
+                  key={"REQUEST_COLLECTION"}
+                  value={"REQUEST_COLLECTION"}
+                >
+                  REQUEST_COLLECTION
+                </SelectItem>
+                <SelectItem key={"APPROVED"} value={"APPROVED"}>
+                  APPROVED
+                </SelectItem>
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+        ) : null}
+        {filterOptions === "prepCollect" ? (
+          <Select
+            onValueChange={(key) => {
+              if (key === "All") {
+                table.getColumn("status")?.setFilterValue("");
+              } else {
+                table.getColumn("status")?.setFilterValue(key);
+              }
+            }}
+          >
+            <SelectTrigger className="h-7 w-1/4  min-w-44">
+              <SelectValue placeholder="Filter Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                <SelectLabel>Status</SelectLabel>
+                <SelectItem key={"All"} value={"All"}>
+                  All
+                </SelectItem>
+                <SelectItem key={"PREPARING"} value={"PREPARING"}>
+                  PREPARING
+                </SelectItem>
+                <SelectItem key={"READY"} value={"READY"}>
+                  READY
+                </SelectItem>
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+        ) : null}
       </div>
 
       <div className="my-3 w-full ">
@@ -155,7 +218,7 @@ export function LoanDataTable<TData, TValue>({
                     colSpan={columns.length}
                     className="h-24 text-center"
                   >
-                    No Active Loan Requests
+                    No Loans Found
                   </TableCell>
                 </TableRow>
               )}

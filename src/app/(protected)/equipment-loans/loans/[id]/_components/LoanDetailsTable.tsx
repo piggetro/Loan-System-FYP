@@ -2,17 +2,17 @@
 import {
   Table,
   TableBody,
-  TableCaption,
   TableCell,
-  TableFooter,
   TableHead,
   TableHeader,
   TableRow,
 } from "@/app/_components/ui/table";
-import { Equipment, Loan } from "@prisma/client";
-import { useState } from "react";
+import { type LoanItem, type Equipment, type Loan } from "@prisma/client";
+interface ExtendedLoanItems extends LoanItem {
+  equipment: Equipment | null;
+}
 interface LoanDetailsData extends Loan {
-  loanItems: { equipment: Equipment }[];
+  loanItems: ExtendedLoanItems[];
 }
 
 type EquipmentDataType = {
@@ -32,14 +32,14 @@ const LoanDetailsTable: React.FC<{
   const processedLoanData: EquipmentDataType[] = [];
   loanData.loanItems.forEach((equipment) => {
     const index = processedLoanData.findIndex(
-      (equipmentInArr) => equipmentInArr.id === equipment.equipment.id,
+      (equipmentInArr) => equipmentInArr.id === equipment.equipment!.id,
     );
 
     if (index === -1) {
       const tempEquipmentObject: EquipmentDataType = {
-        id: equipment.equipment.id,
-        description: equipment.equipment.name,
-        checklist: equipment.equipment.checklist,
+        id: equipment.equipment!.id,
+        description: equipment.equipment!.name,
+        checklist: equipment.equipment!.checklist,
         quantityRequested: 1,
         quantityApproved: 0,
         quantityPrepared: 0,
@@ -47,19 +47,38 @@ const LoanDetailsTable: React.FC<{
         quantityReturned: 0,
       };
 
-      if (loanData.approvedById != null) {
+      if (loanData.approvedById !== null && loanData.status !== "REJECTED") {
         tempEquipmentObject.quantityApproved = 1;
       }
+      if (loanData.preparedById !== null) {
+        tempEquipmentObject.quantityPrepared = 1;
+      }
+      if (loanData.issuedById !== null) {
+        tempEquipmentObject.quantityCollected = 1;
+      }
+      if (loanData.returnedToId !== null) {
+        tempEquipmentObject.quantityReturned = 1;
+      }
       processedLoanData.push(tempEquipmentObject);
-
-      //   console.log(processedLoanData);
     } else {
       if (processedLoanData[index] != undefined) {
-        processedLoanData[index].quantityRequested =
-          processedLoanData[index].quantityRequested + 1;
-        if (loanData.approvedById != null) {
-          processedLoanData[index].quantityApproved =
-            processedLoanData[index].quantityApproved + 1;
+        processedLoanData[index]!.quantityRequested =
+          processedLoanData[index]!.quantityRequested + 1;
+        if (loanData.approvedById != null && loanData.status !== "REJECTED") {
+          processedLoanData[index]!.quantityApproved =
+            processedLoanData[index]!.quantityApproved + 1;
+        }
+        if (loanData.preparedById != null) {
+          processedLoanData[index]!.quantityPrepared =
+            processedLoanData[index]!.quantityPrepared + 1;
+        }
+        if (loanData.issuedById !== null) {
+          processedLoanData[index]!.quantityCollected =
+            processedLoanData[index]!.quantityCollected + 1;
+        }
+        if (loanData.returnedToId !== null) {
+          processedLoanData[index]!.quantityReturned =
+            processedLoanData[index]!.quantityReturned + 1;
         }
       }
     }
@@ -86,9 +105,9 @@ const LoanDetailsTable: React.FC<{
             <TableCell>{loanItem.checklist}</TableCell>
             <TableCell>{loanItem.quantityRequested}</TableCell>
             <TableCell>{loanItem.quantityApproved}</TableCell>
-            <TableCell>0</TableCell>
-            <TableCell>0</TableCell>
-            <TableCell>0</TableCell>
+            <TableCell>{loanItem.quantityPrepared}</TableCell>
+            <TableCell>{loanItem.quantityCollected}</TableCell>
+            <TableCell>{loanItem.quantityReturned}</TableCell>
           </TableRow>
         ))}
       </TableBody>

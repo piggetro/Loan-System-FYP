@@ -10,17 +10,15 @@ import {
 import { Button } from "@/app/_components/ui/button";
 import { MoreHorizontal } from "lucide-react";
 
-interface DataTableRowActionsProps<TData> {
+interface AccessRightDataTableRowActionsProps<TData> {
   row: Row<TData>;
-  onEdit: (value: TData) => void;
   onDelete: (value: TData) => void;
 }
 
-const DataTableRowActions = <TData,>({
+const AccessRightDataTableRowActions = <TData,>({
   row,
-  onEdit,
   onDelete,
-}: DataTableRowActionsProps<TData>) => {
+}: AccessRightDataTableRowActionsProps<TData>) => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -31,24 +29,18 @@ const DataTableRowActions = <TData,>({
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuLabel>Actions</DropdownMenuLabel>
-        <DropdownMenuItem
-          onClick={() => {
-            onEdit(row.original);
-          }}
-        >
-          Edit Organization Unit
-        </DropdownMenuItem>
+
         <DropdownMenuItem
           onClick={() => {
             onDelete(row.original);
           }}
           className="text-red-500 focus:bg-red-100 focus:text-red-500"
         >
-          Delete Organization Unit
+          Remove Access Right
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
 };
 
-export default DataTableRowActions;
+export default AccessRightDataTableRowActions;

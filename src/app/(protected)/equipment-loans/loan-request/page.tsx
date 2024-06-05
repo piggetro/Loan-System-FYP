@@ -18,8 +18,8 @@ const LoanRequestPage = async () => {
         const tempEquipement = {
           equipmentId: equipment.id,
           itemDescription: equipment.name,
-          category: equipment.subCategory.category.name,
-          subCategory: equipment.subCategory.name,
+          category: equipment.subCategory!.category.name,
+          subCategory: equipment.subCategory!.name,
           quantityAvailable: quantityAvailable,
           quantitySelected: 1,
         };

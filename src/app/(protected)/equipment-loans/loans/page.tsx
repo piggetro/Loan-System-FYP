@@ -1,13 +1,11 @@
 import TopHeaderComponent from "@/app/_components/TopHeader";
 import { api } from "@/trpc/server";
 import React from "react";
-import { LoanDataTable } from "./_components/LoanDataTable";
-import { LoanColumns } from "./_components/LoanColumns";
 import { Loan } from "@prisma/client";
 import LoanPage from "./_components/LoanPage";
 
 export interface LoanTableDataType extends Loan {
-  approvingLecturer: { name: string };
+  approvingLecturer: { name: string } | null;
 }
 
 const page = async () => {
