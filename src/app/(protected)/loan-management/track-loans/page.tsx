@@ -10,7 +10,7 @@ export interface TrackLoansType {
   dateRequested: Date;
   dateCollected: Date | null;
   dueDate: Date;
-  approvingLecturer: string
+  approvingLecturer: string | undefined;
 }
 
 const page = async () => {
