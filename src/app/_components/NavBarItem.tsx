@@ -1,4 +1,4 @@
-import { NavbarNavItem } from "@/path";
+import type { NavbarNavItem } from "@/path";
 import Link from "next/link";
 import React from "react";
 import {
