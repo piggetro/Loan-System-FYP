@@ -1,3 +1,4 @@
+import TopHeaderComponent from "@/app/_components/TopHeader";
 import React from "react";
 import { api } from "@/trpc/server";
 import Roles from "./_components/Roles";
@@ -10,12 +11,11 @@ const page = async () => {
 
   return (
     <div>
-      <h3 className="scroll-m-20 text-2xl font-semibold tracking-tight">
-        Roles
-      </h3>
-      <div>
-        <Roles roles={data} accessRights={accessRights} />
-      </div>
+      <TopHeaderComponent
+        pathName="School Admin / Roles"
+        pageName="Roles"
+      />
+      <Roles roles={data} accessRights={accessRights} />
     </div>
   );
 };

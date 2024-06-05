@@ -45,7 +45,7 @@ export const ApprovalManagementTableRowActionsProps = <TData,>({
           onClick={() => {
             onApprove(row.original);
           }}
-          className=""
+          className="text-primary focus:bg-blue-100 focus:text-blue-500"
         >
           Approve Loan
         </DropdownMenuItem>

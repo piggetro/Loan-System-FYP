@@ -6,19 +6,17 @@ import { Button } from "@/app/_components/ui/button";
 import { Label } from "@/app/_components/ui/label";
 import { Input } from "@/app/_components/ui/input";
 import { useToast } from "@/app/_components/ui/use-toast";
-import { register } from "@/lib/auth/actions";
+import { register, resetPassword } from "@/lib/auth/actions";
 import { useRouter } from "next/navigation";
-import { Loader2 } from "lucide-react";
 
-const RegisterComponent = () => {
+const ResetComponent = () => {
   const router = useRouter();
   const [isLoading] = useState<boolean>(false);
   const [adminId, setAdminId] = useState<string>("");
-  const [mobile, setMobile] = useState<string>("");
+  const [email, setEmail] = useState<string>("");
   const { toast } = useToast();
-  const [isPending, setIsPending] = useState<boolean>(false);
 
-  const performRegister = () => {
+  const performReset = () => {
     if (adminId.length == 0) {
       toast({
         title: "Admin ID not entered",
@@ -27,26 +25,15 @@ const RegisterComponent = () => {
       });
       return;
     }
-    if (mobile == undefined || mobile == "") {
+    if (email.length == 0) {
       toast({
-        title: "Mobile number not entered",
-        description: "Please enter mobile number",
+        title: "Email not entered",
+        description: "Please enter email address",
         variant: "destructive",
       });
       return;
     }
-    //todo fix - fixed by franc
-    if (mobile.length != 8 || isNaN(parseInt(mobile))) {
-      // Made it so that it will not accept non-number values or non 8 digit values.
-      toast({
-        title: "Invalid Phone Number",
-        description: "Please enter Singapore phone number without +65 prefix",
-        variant: "destructive",
-      });
-      return;
-    }
-    setIsPending(true);
-    register(adminId, mobile)
+    resetPassword(adminId, email)
       .then((result) => {
         if (result?.title != undefined) {
           toast({
@@ -55,23 +42,21 @@ const RegisterComponent = () => {
             variant: result.variant ? "destructive" : "default",
           });
         }
-        setIsPending(false);
       })
       .catch((error) => {
         console.log(error);
-        setIsPending(false);
       });
   };
 
   return (
     <div className="mx-auto w-1/3 min-w-96">
       <div className="mb-4 rounded-xl bg-white px-8 pb-8 pt-6 shadow-lg">
-        <h1 className="mb-4 text-2xl tracking-tight">Register Account</h1>
+        <h1 className="mb-4 text-2xl tracking-tight">Reset Password</h1>
 
         <form
           onSubmit={(e) => {
             e.preventDefault();
-            performRegister();
+            performReset();
           }}
         >
           <div className="">
@@ -96,37 +81,34 @@ const RegisterComponent = () => {
               disabled={isLoading}
               className="mb-3"
             />
-            <div className="mb-2 flex items-center text-sm">
-              <Label
-                className="block w-1/2 font-bold text-gray-700"
-                htmlFor="mobile number"
-              >
-                Mobile Number
-              </Label>
-            </div>
+            <Label
+              className="mb-2 block text-sm font-bold text-gray-700"
+              htmlFor="email"
+            >
+              Email
+            </Label>
             <Input
-              value={mobile}
+              value={email}
               onChange={(e) => {
-                setMobile(e.target.value);
+                setEmail(e.target.value);
               }}
-              id="mobileNumber"
-              placeholder="Mobile Number Input"
+              id="email"
+              placeholder="Email Input"
               minLength={1}
-              type="text"
+              type="email"
               autoCapitalize="none"
-              autoComplete="tel"
+              autoComplete="Admin Number"
               autoCorrect="off"
               disabled={isLoading}
-              className="mb-5"
+              className="mb-3"
             />
           </div>
           <Button disabled={isLoading} className="w-full">
-            {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Register
+            Reset Password
           </Button>
         </form>
         <span className="mt-2 flex  text-sm font-regular">
-          Have an account?
+          Go back to login page?
           <div
             className="ml-1 hover:cursor-pointer hover:text-cyan-700 font-medium"
             onClick={() => {
@@ -141,4 +123,4 @@ const RegisterComponent = () => {
   );
 };
 
-export default RegisterComponent;
+export default ResetComponent;

@@ -25,7 +25,7 @@ export const LoanPendingApprovalColumns = ({
     header: "Date Requested",
     cell: ({ row }) => (
       <div className="" suppressHydrationWarning>
-        {new Date(row.getValue("dateCreated")).toLocaleDateString()}
+        {new Date(row.getValue("dateCreated")).toLocaleDateString("en-SG")}
       </div>
     ),
   },
@@ -34,7 +34,7 @@ export const LoanPendingApprovalColumns = ({
     header: "Due Date",
     cell: ({ row }) => (
       <div className="" suppressHydrationWarning>
-        {new Date(row.getValue("dueDate")).toLocaleDateString()}
+        {new Date(row.getValue("dueDate")).toLocaleDateString("en-SG")}
       </div>
     ),
   },
