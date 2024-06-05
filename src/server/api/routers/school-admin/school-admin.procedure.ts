@@ -2,7 +2,6 @@ import { TRPCError } from "@trpc/server";
 import { protectedProcedure, createTRPCRouter } from "../../trpc";
 import { z } from "zod";
 import { Argon2id } from "oslo/password";
-import AddOrganizationUnit from "@/app/(protected)/school-admin/organisation-units/_components/AddOrganizationUnit";
 
 export const schoolAdminRouter = createTRPCRouter({
   getAccessRights: protectedProcedure.query(async ({ ctx }) => {
@@ -1194,4 +1193,71 @@ export const schoolAdminRouter = createTRPCRouter({
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
       }
     }),
+    deleteCourse: protectedProcedure
+    .input(z.object({ id: z.string().min(1) }))
+    .mutation(async ({ ctx, input }) => {
+      try {
+        return await ctx.db.course.delete({
+          where: {
+            id: input.id,
+          },
+        });
+      } catch (err) {
+        console.log(err);
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      }
+    }),
+   addCourse: protectedProcedure.input(
+    z.object({
+      id: z.string().min(1),
+      name: z.string().min(1),
+      code: z.string().min(1),
+      active: z.boolean(),
+    }),
+   ).mutation(async ({ ctx,input})=> {
+    try {
+      const data = await ctx.db.course.create({
+        data:{
+          id: input.id,
+          name: input.name,
+          code: input.code,
+          active: input.active,
+        },
+        select: {
+          id: true,
+          name: true,
+          code: true,
+          active:true,
+        },
+      });
+      return {
+        ...data,
+      };
+    } catch (err) {
+      console.log(err);
+      throw new TRPCError({ code:"INTERNAL_SERVER_ERROR"});
+    }
+   }),
+   getAllCourse: protectedProcedure.query(async ({ ctx }) => {
+    try {
+      const data = await ctx.db.course.findMany({
+        select: {
+          id: true,
+          name: true,
+          code:true,
+          active:true,
+        },
+      });
+      return data.map((course) => ({
+        id: course.id,
+        name: course.name,
+        code:course.code,
+        active:course.active,
+      }));
+    } catch (err) {
+      console.log(err);
+      throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+    }
+  }),
+
 });

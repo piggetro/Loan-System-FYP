@@ -1,12 +1,10 @@
-import { NavbarNavItem } from "@/path";
+import type { NavbarNavItem } from "@/path";
 import Link from "next/link";
 import React from "react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/app/_components/ui/dropdown-menu";
 
