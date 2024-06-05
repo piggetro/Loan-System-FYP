@@ -3,10 +3,8 @@ import { api } from "@/trpc/server";
 import Course from "./_components/Course";
 import TopHeaderComponent from "@/app/_components/TopHeader";
 
-const page =async () => {
-  const [ course ] = await Promise.all([
-api.schoolAdmin.getAllCourse(),
-  ]);
+const page = async () => {
+  const [course] = await Promise.all([api.schoolAdmin.getAllCourse()]);
   return (
     <div>
       <TopHeaderComponent
@@ -14,11 +12,10 @@ api.schoolAdmin.getAllCourse(),
         pageName="Courses"
       />
       <div>
-        <Course
-        course={course} />
+        <Course course={course} />
       </div>
     </div>
-  )
-}
+  );
+};
 
 export default page;

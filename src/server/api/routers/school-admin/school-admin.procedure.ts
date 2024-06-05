@@ -2,7 +2,6 @@ import { TRPCError } from "@trpc/server";
 import { protectedProcedure, createTRPCRouter } from "../../trpc";
 import { z } from "zod";
 import { Argon2id } from "oslo/password";
-import AddOrganizationUnit from "@/app/(protected)/school-admin/organisation-units/_components/AddOrganizationUnit";
 
 export const schoolAdminRouter = createTRPCRouter({
   getAccessRights: protectedProcedure.query(async ({ ctx }) => {
