@@ -40,9 +40,10 @@ import { CalendarIcon } from "lucide-react";
 import { Calendar } from "@/app/_components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
+import { Textarea } from "@/app/_components/ui/textarea";
 
 const formSchema = z.object({
-  remarks: z.string().min(1, "Required").max(50),
+  remarks: z.string().min(1, "Required").max(150),
   returnDate: z.date({}),
   approvingLecturer: z.string().min(1),
 });
@@ -80,6 +81,33 @@ const LoanRequestComponent: React.FC<{
         (equipment) => equipment.equipmentId == itemToAdd.equipmentId,
       )
     ) {
+      const indexOfItem = selectedEquipment.findIndex(
+        (item) => item.equipmentId === itemToAdd.equipmentId,
+      );
+      if (
+        itemToAdd.quantitySelected +
+          selectedEquipment[indexOfItem]!.quantitySelected >
+        itemToAdd.quantityAvailable
+      ) {
+        toast({
+          title: "Maximum Quantity Reached",
+          description: `Total Quantity Available: ${itemToAdd.quantityAvailable}`,
+          variant: "destructive",
+        });
+      } else {
+        const updatedItems = [...selectedEquipment];
+        updatedItems[indexOfItem] = {
+          quantitySelected:
+            updatedItems[indexOfItem]!.quantitySelected +
+            itemToAdd.quantitySelected,
+          itemDescription: updatedItems[indexOfItem]!.itemDescription,
+          equipmentId: updatedItems[indexOfItem]!.equipmentId,
+          category: updatedItems[indexOfItem]!.category,
+          subCategory: updatedItems[indexOfItem]!.subCategory,
+          quantityAvailable: updatedItems[indexOfItem]!.quantityAvailable,
+        };
+        setSelectedEquipment(updatedItems);
+      }
     } else {
       setSelectedEquipment((oldArray) => [...oldArray, itemToAdd]);
     }
@@ -96,7 +124,6 @@ const LoanRequestComponent: React.FC<{
     );
 
     selectedEquipment.splice(index, 1, equipmentData);
-    console.log(selectedEquipment);
   }
   const closeDialog = (successMessage?: {
     title: string | undefined;
@@ -154,11 +181,7 @@ const LoanRequestComponent: React.FC<{
                       render={({ field }) => (
                         <FormItem className="flex items-center gap-3">
                           <FormControl>
-                            <Input
-                              placeholder="Remarks"
-                              {...field}
-                              className="h-7"
-                            />
+                            <Textarea placeholder="Remarks" {...field} />
                           </FormControl>
 
                           <FormMessage className="h-7" />
@@ -168,7 +191,7 @@ const LoanRequestComponent: React.FC<{
                   </div>
                 </div>
                 <div className="flex">
-                  <div className="w-1/2 max-w-52">
+                  <div className="flex w-1/2  max-w-52 items-center">
                     <Label>Approving Lecturer</Label>
                   </div>
                   <div className="w-1/2">
@@ -185,7 +208,7 @@ const LoanRequestComponent: React.FC<{
                             defaultValue={field.value}
                           >
                             <FormControl>
-                              <SelectTrigger className="h-7 w-1/4 min-w-44">
+                              <SelectTrigger className=" w-1/4 min-w-44">
                                 <SelectValue placeholder="Lecturer Name" />
                               </SelectTrigger>
                             </FormControl>
@@ -212,8 +235,8 @@ const LoanRequestComponent: React.FC<{
                 </div>
               </div>
               <div className="flex w-1/2 justify-end">
-                <div className="flex w-3/5">
-                  <div className="flex h-7 items-center">
+                <div className="flex h-min w-3/5">
+                  <div className="flex items-center">
                     <Label className=" h-fit w-28">Return Date</Label>
                   </div>
                   <FormField
@@ -227,7 +250,7 @@ const LoanRequestComponent: React.FC<{
                               <Button
                                 variant={"outline"}
                                 className={cn(
-                                  "h-7 w-[240px] pl-3 text-left font-normal",
+                                  " w-[240px] pl-3 text-left font-normal",
                                   !field.value && "text-muted-foreground",
                                 )}
                               >
@@ -277,11 +300,11 @@ const LoanRequestComponent: React.FC<{
             </div>
           </div>
           <div className="flex justify-end">
-            <Dialog open={reviewLoanRequestOpen}>
+            <Dialog>
               <DialogTrigger asChild>
                 <Button
                   type="submit"
-                  className="h-8 w-28"
+                  className=" w-28"
                   disabled={selectedEquipment.length === 0}
                 >
                   Next

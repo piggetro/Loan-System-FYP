@@ -86,7 +86,6 @@ export function EquipmentDataTable<TData, TValue>({
       <div className="my-2 flex gap-3">
         <Input
           placeholder="Search"
-          className="h-7"
           value={
             (table.getColumn("itemDescription")?.getFilterValue() as string) ??
             ""
@@ -97,7 +96,7 @@ export function EquipmentDataTable<TData, TValue>({
               ?.setFilterValue(event.target.value)
           }
         />
-        <Select
+        {/* <Select
           onValueChange={(key) => {
             if (key === "All") {
               setSelectedCategoryId("");
@@ -159,7 +158,7 @@ export function EquipmentDataTable<TData, TValue>({
               )}
             </SelectGroup>
           </SelectContent>
-        </Select>
+        </Select> */}
       </div>
       <div className="my-3 w-full ">
         <div className="rounded-md border">

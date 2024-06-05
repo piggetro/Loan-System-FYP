@@ -92,7 +92,6 @@ export const equipmentColumns = (
             onClick={() => {
               setAddedEquipment(row.original);
             }}
-            className="h-7"
           >
             Add Item
           </Button>
