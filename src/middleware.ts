@@ -50,6 +50,6 @@ export const config = {
      * - Login
      * - Register
      */
-    "/((?!api|_next/static|_next/image|login|register|not-found|favicon.ico).*)",
+    "/((?!api|_next/static|_next/image|login|register|reset-password|not-found|favicon.ico).*)",
   ],
 };

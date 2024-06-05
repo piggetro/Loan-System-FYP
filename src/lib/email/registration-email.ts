@@ -14,6 +14,10 @@ const transporter = createTransport({
 });
 
 async function sendRegistrationEmail(emailTo: string, password: string) {
+
+  // Replace angled brackets to fix formatting issue.
+  password = password.replaceAll("<", "&lt;").replaceAll(">", "&gt;");
+
   await transporter.sendMail({
     from: '"SOC Loan System" <jleeshancheng@gmail.com>', // sender address
     to: emailTo, // list of receivers

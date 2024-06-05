@@ -92,7 +92,7 @@ const ReviewLoanRequest: React.FC<LoanRequestType> = ({
               <Input
                 readOnly={true}
                 className="h-7 w-44 focus-visible:ring-0 focus-visible:ring-offset-0"
-                value={returnDate.toLocaleDateString()}
+                value={returnDate != "" ? new Date(returnDate).toLocaleDateString("en-SG") : ""}
               />
             </div>
           </div>

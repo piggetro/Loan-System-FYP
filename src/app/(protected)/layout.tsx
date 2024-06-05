@@ -84,7 +84,7 @@ export default async function RootLayout({
                         Loan System
                       </span>
                     </Link>
-                    <nav className="hidden items-center gap-4 text-sm md:flex lg:gap-8">
+                    <nav className="hidden items-center gap-2 text-sm md:flex lg:gap-3">
                       <NavBarItem navBarItems={filteredNavItems} />
                     </nav>
                   </div>
