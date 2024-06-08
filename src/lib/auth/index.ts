@@ -19,7 +19,7 @@ export const lucia = new Lucia(adapter, {
       role: attributes.roleId,
     };
   },
-  sessionExpiresIn: new TimeSpan(1, "d"),
+  sessionExpiresIn: new TimeSpan(7, "d"),
   sessionCookie: {
     expires: false,
     attributes: {

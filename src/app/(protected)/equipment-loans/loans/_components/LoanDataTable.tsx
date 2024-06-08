@@ -78,7 +78,7 @@ export function DefaultLoanDataTable<TData, TValue>({
       <div className="mb-2 flex">
         <Input
           placeholder="Search Loan ID"
-          className="mr-4 h-7 w-1/3"
+          className="mr-4 w-1/3"
           value={(table.getColumn("loanId")?.getFilterValue() as string) ?? ""}
           onChange={(event) =>
             table.getColumn("loanId")?.setFilterValue(event.target.value)
@@ -93,7 +93,7 @@ export function DefaultLoanDataTable<TData, TValue>({
             }
           }}
         >
-          <SelectTrigger className="mr-4 h-7 w-1/4 min-w-44">
+          <SelectTrigger className="mr-4  w-1/4 min-w-44">
             <SelectValue placeholder="Semester" />
           </SelectTrigger>
           <SelectContent>
@@ -120,7 +120,7 @@ export function DefaultLoanDataTable<TData, TValue>({
               }
             }}
           >
-            <SelectTrigger className="h-7 w-1/4  min-w-44">
+            <SelectTrigger className=" w-1/4  min-w-44">
               <SelectValue placeholder="Filter Status" />
             </SelectTrigger>
             <SelectContent>
@@ -152,7 +152,7 @@ export function DefaultLoanDataTable<TData, TValue>({
               }
             }}
           >
-            <SelectTrigger className="h-7 w-1/4  min-w-44">
+            <SelectTrigger className=" w-1/4  min-w-44">
               <SelectValue placeholder="Filter Status" />
             </SelectTrigger>
             <SelectContent>
