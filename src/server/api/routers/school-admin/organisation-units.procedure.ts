@@ -3,15 +3,15 @@ import { protectedProcedure, createTRPCRouter } from "../../trpc";
 import { z } from "zod";
 
 export const organisationUnitsRouter = createTRPCRouter({
-    getAllOrganizationUnits: protectedProcedure.query(async ({ ctx }) => {
-        try {
-            return await ctx.db.organizationUnit.findMany();
-        } catch (err) {
-            console.log(err);
-            throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
-        }
-    }),
-    updateOrganizationUnit: protectedProcedure
+  getAllOrganizationUnits: protectedProcedure.query(async ({ ctx }) => {
+    try {
+      return await ctx.db.organizationUnit.findMany();
+    } catch (err) {
+      console.log(err);
+      throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+    }
+  }),
+  updateOrganizationUnit: protectedProcedure
     .input(
       z.object({
         id: z.string().min(1),
