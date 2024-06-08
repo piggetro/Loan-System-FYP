@@ -71,7 +71,7 @@ export const loanRequestRouter = createTRPCRouter({
             name: {
               contains: input.searchInput,
             },
-            EquipmentOnCourses: {
+            course: {
               some: {
                 courseId: referingCourseId,
               },
