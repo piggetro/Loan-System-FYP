@@ -9,6 +9,7 @@ import {
 } from "@/app/_components/ui/tabs";
 import type { Course } from "./CoursesColumns";
 import CoursesTable from "./CoursesTable";
+import AddCourse from "./AddCourse";
 
 interface CoursesProps {
   courses: Course[];
@@ -28,7 +29,7 @@ const Courses = ({ courses: data }: CoursesProps) => {
           <CoursesTable courses={courses} setCourses={setCourses} />
         </TabsContent>
         <TabsContent value="addCourse" className="flex-1">
-          Add Course
+          <AddCourse setCourses={setCourses} />
         </TabsContent>
       </div>
     </Tabs>

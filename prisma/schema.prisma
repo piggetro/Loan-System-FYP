@@ -85,7 +85,7 @@ model Equipment {
     inventory          Inventory[]
     loanItems          LoanItem[]
     checklist          String?
-    EquipmentOnCourses EquipmentOnCourses[]
+    Course EquipmentOnCourses[]
 }
 
 model Inventory {
@@ -243,7 +243,7 @@ model Course {
     code               String
     active             Boolean
     user               User[]
-    EquipmentOnCourses EquipmentOnCourses[]
+    equipment EquipmentOnCourses[]
 }
 
 model EquipmentOnCourses {

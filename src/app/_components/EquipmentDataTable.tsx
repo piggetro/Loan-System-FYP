@@ -20,19 +20,19 @@ import {
 import { Button } from "@/app/_components/ui/button";
 import { Input } from "@/app/_components/ui/input";
 import { useEffect, useState } from "react";
-import { Equipment } from "./AddEquipmentColumns";
+import type { Equipment } from "./AddEquipmentColumns";
 
-interface AddEquipmentDataTableProps<TData, TValue> {
-  columns: ColumnDef<TData, TValue>[];
+interface EquipmentDataTableProps<TData, TValue> {
   data: TData[];
-  setSelectedEquipments: React.Dispatch<React.SetStateAction<Equipment[]>>;
+  columns: ColumnDef<TData, TValue>[];
+  setSelectedEquipments?: React.Dispatch<React.SetStateAction<Equipment[]>>;
 }
 
-export function AddEquipmentDataTable<TData, TValue>({
-  columns,
+export function EquipmentDataTable<TData, TValue>({
   data,
+  columns,
   setSelectedEquipments,
-}: AddEquipmentDataTableProps<TData, TValue>) {
+}: EquipmentDataTableProps<TData, TValue>) {
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [rowSelection, setRowSelection] = useState({});
 
@@ -51,9 +51,12 @@ export function AddEquipmentDataTable<TData, TValue>({
   });
 
   useEffect(() => {
-    setSelectedEquipments(
-      table.getSelectedRowModel().rows.map((row) => row.original as Equipment),
-    );
+    setSelectedEquipments &&
+      setSelectedEquipments(
+        table
+          .getSelectedRowModel()
+          .rows.map((row) => row.original as Equipment),
+      );
   }, [rowSelection]);
 
   return (
@@ -61,20 +64,13 @@ export function AddEquipmentDataTable<TData, TValue>({
       <div className="flex items-center">
         <Input
           placeholder="Look for Equipment..."
-          value={
-            (table.getColumn("pageName")?.getFilterValue() as string) ?? ""
-          }
+          value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
           onChange={(event) =>
-            table.getColumn("pageName")?.setFilterValue(event.target.value)
+            table.getColumn("name")?.setFilterValue(event.target.value)
           }
           className="max-w-sm"
         />
       </div>
-      {!Object.keys(rowSelection).length && (
-        <p className="mt-1 text-sm font-medium text-destructive">
-          Please select at least one equipment
-        </p>
-      )}
       <div className="mt-4 rounded-md border">
         <Table>
           <TableHeader>
