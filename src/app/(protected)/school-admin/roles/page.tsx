@@ -1,6 +1,7 @@
 import React from "react";
 import { api } from "@/trpc/server";
 import Roles from "./_components/Roles";
+import TopHeaderComponent from "@/app/_components/TopHeader";
 
 const page = async () => {
   const [data, accessRights] = await Promise.all([
@@ -10,9 +11,10 @@ const page = async () => {
 
   return (
     <div>
-      <h3 className="scroll-m-20 text-2xl font-semibold tracking-tight">
-        Roles
-      </h3>
+      <TopHeaderComponent
+        pathName="School Admin / Roles"
+        pageName="Roles"
+      />
       <div>
         <Roles roles={data} accessRights={accessRights} />
       </div>

@@ -4,14 +4,7 @@ import { Button } from "@/app/_components/ui/button";
 import { type ColumnDef } from "@tanstack/react-table";
 import { ArrowUpDown, Trash2 } from "lucide-react";
 import { useState } from "react";
-export type Inventory = {
-  equipmentId: string;
-  itemDescription: string;
-  category: string;
-  subCategory: string;
-  quantityAvailable: number;
-  quantitySelected: number;
-};
+import { type Inventory } from "../page";
 
 export const equipmentColumns = (
   setAddedEquipment: (ItemToAdd: Inventory) => void,
@@ -92,7 +85,6 @@ export const equipmentColumns = (
             onClick={() => {
               setAddedEquipment(row.original);
             }}
-            className="h-7"
           >
             Add Item
           </Button>

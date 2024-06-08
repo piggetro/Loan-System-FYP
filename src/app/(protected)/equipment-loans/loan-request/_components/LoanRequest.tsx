@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 "use client";
 import { Button } from "@/app/_components/ui/button";
@@ -7,7 +8,6 @@ import { Label } from "@/app/_components/ui/label";
 import React, { useEffect, useState } from "react";
 import { EquipmentDataTable, SummaryDataTable } from "./DataTable";
 import { equipmentColumns, summaryColumns } from "./Columns";
-import { type Inventory } from "./Columns";
 import { type Category, type SubCategory } from "@prisma/client";
 import { Dialog, DialogTrigger } from "@/app/_components/ui/dialog";
 import ReviewLoanRequest from "./ReviewLoanRequest";
@@ -38,11 +38,16 @@ import {
 } from "@/app/_components/ui/form";
 import { CalendarIcon } from "lucide-react";
 import { Calendar } from "@/app/_components/ui/calendar";
+import { type Inventory } from "../page";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
+import { Textarea } from "@/app/_components/ui/textarea";
+import { useRouter } from "next/navigation";
+import { api } from "@/trpc/react";
+import { Skeleton } from "@/app/_components/ui/skeleton";
 
 const formSchema = z.object({
-  remarks: z.string().min(1, "Required").max(50),
+  remarks: z.string().min(1, "Required").max(150),
   returnDate: z.date({}),
   approvingLecturer: z.string().min(1),
 });
@@ -57,22 +62,22 @@ const LoanRequestComponent: React.FC<{
     categories: Category[];
     subCategories: SubCategory[];
   };
-  equipmentAndInventory: Inventory[];
   approvingLecturers: ApprovingLecturersType[];
-}> = ({
-  categoriesAndSubCategories,
-  equipmentAndInventory,
-  approvingLecturers,
-}) => {
+}> = ({ categoriesAndSubCategories, approvingLecturers }) => {
   const [selectedEquipment, setSelectedEquipment] = useState<Inventory[]>([]);
   const [approvingLecturer, setApprovingLecturer] = useState<string>("");
   const [approvingLecturerEmail, setApprovingLecturerEmail] =
     useState<string>("");
+  const [searchInput, setSearchInput] = useState<string>("");
+  const [debouncerIsLoading, setDebouncerIsLoading] = useState<boolean>(false);
   const [reviewLoanRequestOpen, setReviewLoanRequestOpen] =
     useState<boolean>(false);
   const [remarks, setRemarks] = useState<string>("");
   const [returnDate, setReturnDate] = useState<Date>();
   const { toast } = useToast();
+  const router = useRouter();
+  const { data: equipmentAndInventory, mutateAsync: fetchSearch } =
+    api.loanRequest.getEquipmentAndInventory.useMutation();
 
   function addItem(itemToAdd: Inventory) {
     if (
@@ -80,6 +85,33 @@ const LoanRequestComponent: React.FC<{
         (equipment) => equipment.equipmentId == itemToAdd.equipmentId,
       )
     ) {
+      const indexOfItem = selectedEquipment.findIndex(
+        (item) => item.equipmentId === itemToAdd.equipmentId,
+      );
+      if (
+        itemToAdd.quantitySelected +
+          selectedEquipment[indexOfItem]!.quantitySelected >
+        itemToAdd.quantityAvailable
+      ) {
+        toast({
+          title: "Maximum Quantity Reached",
+          description: `Total Quantity Available: ${itemToAdd.quantityAvailable}`,
+          variant: "destructive",
+        });
+      } else {
+        const updatedItems = [...selectedEquipment];
+        updatedItems[indexOfItem] = {
+          quantitySelected:
+            updatedItems[indexOfItem]!.quantitySelected +
+            itemToAdd.quantitySelected,
+          itemDescription: updatedItems[indexOfItem]!.itemDescription,
+          equipmentId: updatedItems[indexOfItem]!.equipmentId,
+          category: updatedItems[indexOfItem]!.category,
+          subCategory: updatedItems[indexOfItem]!.subCategory,
+          quantityAvailable: updatedItems[indexOfItem]!.quantityAvailable,
+        };
+        setSelectedEquipment(updatedItems);
+      }
     } else {
       setSelectedEquipment((oldArray) => [...oldArray, itemToAdd]);
     }
@@ -96,26 +128,35 @@ const LoanRequestComponent: React.FC<{
     );
 
     selectedEquipment.splice(index, 1, equipmentData);
-    console.log(selectedEquipment);
   }
-  const closeDialog = (successMessage?: {
-    title: string | undefined;
-    description: string | undefined;
+  const closeDialog = (successMessage: {
+    title: string;
+    description: string;
+    variant: "default" | "destructive" | "close";
   }) => {
-    setReviewLoanRequestOpen(false);
-    if (successMessage != undefined) {
+    if (successMessage.variant === "default") {
+      setReviewLoanRequestOpen(false);
       toast({
         title: successMessage.title,
         description: successMessage.description,
       });
       setSelectedEquipment([]);
       setReturnDate(undefined);
-      setApprovingLecturer("");
-      setApprovingLecturerEmail("");
       setRemarks("");
+      form.reset({
+        remarks: "",
+        approvingLecturer: "",
+      });
+      router.push("/equipment-loans/loans");
+    } else if (successMessage.variant === "destructive") {
+      toast({
+        title: successMessage.title,
+        description: successMessage.description,
+      });
     }
   };
 
+  //Using email to assign approving lecturer name
   useEffect(() => {
     const lecturer = approvingLecturers.find((lecturer) => {
       return lecturer.grantedUser.email === approvingLecturerEmail;
@@ -124,6 +165,22 @@ const LoanRequestComponent: React.FC<{
       setApprovingLecturer(lecturer?.grantedUser.name);
     }
   }, [approvingLecturerEmail]);
+
+  //debouncer
+  useEffect(() => {
+    setDebouncerIsLoading(true);
+    const timeout = setTimeout(() => {
+      if (searchInput !== "") {
+        fetchSearch({ searchInput: searchInput })
+          .then(() => {
+            setDebouncerIsLoading(false);
+          })
+          .catch((e) => console.log(e));
+      }
+    }, 500);
+
+    return () => clearTimeout(timeout);
+  }, [searchInput]);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -154,11 +211,7 @@ const LoanRequestComponent: React.FC<{
                       render={({ field }) => (
                         <FormItem className="flex items-center gap-3">
                           <FormControl>
-                            <Input
-                              placeholder="Remarks"
-                              {...field}
-                              className="h-7"
-                            />
+                            <Textarea placeholder="Remarks" {...field} />
                           </FormControl>
 
                           <FormMessage className="h-7" />
@@ -168,7 +221,7 @@ const LoanRequestComponent: React.FC<{
                   </div>
                 </div>
                 <div className="flex">
-                  <div className="w-1/2 max-w-52">
+                  <div className="flex w-1/2  max-w-52 items-center">
                     <Label>Approving Lecturer</Label>
                   </div>
                   <div className="w-1/2">
@@ -185,7 +238,7 @@ const LoanRequestComponent: React.FC<{
                             defaultValue={field.value}
                           >
                             <FormControl>
-                              <SelectTrigger className="h-7 w-1/4 min-w-44">
+                              <SelectTrigger className=" w-1/4 min-w-44">
                                 <SelectValue placeholder="Lecturer Name" />
                               </SelectTrigger>
                             </FormControl>
@@ -212,8 +265,8 @@ const LoanRequestComponent: React.FC<{
                 </div>
               </div>
               <div className="flex w-1/2 justify-end">
-                <div className="flex w-3/5">
-                  <div className="flex h-7 items-center">
+                <div className="flex h-min w-3/5">
+                  <div className="flex items-center">
                     <Label className=" h-fit w-28">Return Date</Label>
                   </div>
                   <FormField
@@ -227,7 +280,7 @@ const LoanRequestComponent: React.FC<{
                               <Button
                                 variant={"outline"}
                                 className={cn(
-                                  "h-7 w-[240px] pl-3 text-left font-normal",
+                                  " w-[240px] pl-3 text-left font-normal",
                                   !field.value && "text-muted-foreground",
                                 )}
                               >
@@ -245,7 +298,12 @@ const LoanRequestComponent: React.FC<{
                               mode="single"
                               selected={field.value}
                               onSelect={field.onChange}
-                              disabled={(date) => date < new Date()}
+                              disabled={(date) =>
+                                date <
+                                new Date(
+                                  new Date().setDate(new Date().getDate() + 7),
+                                )
+                              }
                               initialFocus
                             />
                           </PopoverContent>
@@ -258,13 +316,44 @@ const LoanRequestComponent: React.FC<{
               </div>
             </div>
           </div>
-
-          <EquipmentDataTable
-            data={equipmentAndInventory}
-            columns={equipmentColumns(addItem)}
-            categoriesAndSubCategories={categoriesAndSubCategories}
-          />
-
+          <div className="my-3 w-full rounded-lg bg-white px-5 py-2 shadow-md">
+            <h1 className="font-semibold">Search For Item</h1>
+            <div className="my-2 flex gap-3">
+              <Input
+                placeholder="Search"
+                value={searchInput}
+                onChange={(event) => {
+                  setSearchInput(event.target.value);
+                }}
+              />
+            </div>
+            {searchInput === "" ? (
+              <div>
+                <div className="my-3 flex h-[100px] w-full items-center justify-center">
+                  <div>Search For Equipment</div>
+                </div>
+              </div>
+            ) : debouncerIsLoading ? (
+              <div>
+                <div className="my-3 w-full">
+                  <Skeleton className="mb-3 h-7" />
+                  <Skeleton className="h-44" />
+                </div>
+              </div>
+            ) : equipmentAndInventory !== undefined ? (
+              <EquipmentDataTable
+                data={equipmentAndInventory}
+                columns={equipmentColumns(addItem)}
+                categoriesAndSubCategories={categoriesAndSubCategories}
+              />
+            ) : (
+              <div>
+                <div className="my-3 flex h-[100px] w-full items-center justify-center">
+                  <div>No Results Found</div>
+                </div>
+              </div>
+            )}
+          </div>
           <div className="mb-3 w-full rounded-lg bg-white px-5 py-3 shadow-md">
             <h1 className="font-semibold">Summary of Selected Items</h1>
             <div className="my-3 w-full ">
@@ -277,17 +366,17 @@ const LoanRequestComponent: React.FC<{
             </div>
           </div>
           <div className="flex justify-end">
-            <Dialog open={reviewLoanRequestOpen}>
+            <Dialog>
               <DialogTrigger asChild>
                 <Button
                   type="submit"
-                  className="h-8 w-28"
+                  className=" w-28"
                   disabled={selectedEquipment.length === 0}
                 >
                   Next
                 </Button>
               </DialogTrigger>
-              {returnDate && (
+              {reviewLoanRequestOpen && returnDate && (
                 <ReviewLoanRequest
                   remarks={remarks}
                   approvingLecturer={approvingLecturer}

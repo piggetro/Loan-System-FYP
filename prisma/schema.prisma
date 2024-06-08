@@ -76,15 +76,16 @@ model SubCategory {
 }
 
 model Equipment {
-    id            String       @id @default(cuid())
-    name          String
-    photoPath     String
-    updatedAt     DateTime     @updatedAt
-    subCategory   SubCategory? @relation(fields: [subCategoryId], references: [id], onDelete: SetNull)
-    subCategoryId String?
-    inventory     Inventory[]
-    loanItems     LoanItem[]
-    checklist     String?
+    id                 String               @id @default(cuid())
+    name               String
+    photoPath          String
+    updatedAt          DateTime             @updatedAt
+    subCategory        SubCategory?         @relation(fields: [subCategoryId], references: [id], onDelete: SetNull)
+    subCategoryId      String?
+    inventory          Inventory[]
+    loanItems          LoanItem[]
+    checklist          String?
+    Course EquipmentOnCourses[]
 }
 
 model Inventory {
@@ -237,11 +238,21 @@ model Holiday {
 }
 
 model Course {
-    id     String  @id @default(cuid())
-    name   String
-    code   String
-    active Boolean
-    user   User[]
+    id                 String               @id @default(cuid())
+    name               String
+    code               String
+    active             Boolean
+    user               User[]
+    equipment EquipmentOnCourses[]
+}
+
+model EquipmentOnCourses {
+    equipment   Equipment @relation(fields: [equipmentId], references: [id], onDelete: Cascade)
+    equipmentId String
+    course      Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+    courseId    String
+
+    @@id([equipmentId, courseId])
 }
 
 model OrganizationUnit {

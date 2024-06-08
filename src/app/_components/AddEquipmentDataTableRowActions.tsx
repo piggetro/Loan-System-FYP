@@ -10,17 +10,15 @@ import {
 import { Button } from "@/app/_components/ui/button";
 import { MoreHorizontal } from "lucide-react";
 
-interface RolesDataTableRowActionsProps<TData> {
+interface AddEquipmentDataTableRowActionsProps<TData> {
   row: Row<TData>;
-  onView: (value: TData) => void;
   onDelete: (value: TData) => void;
 }
 
-const RolesDataTableRowActions = <TData,>({
+const AddEquipmentDataTableRowActions = <TData,>({
   row,
-  onView,
   onDelete,
-}: RolesDataTableRowActionsProps<TData>) => {
+}: AddEquipmentDataTableRowActionsProps<TData>) => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -31,24 +29,18 @@ const RolesDataTableRowActions = <TData,>({
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuLabel>Actions</DropdownMenuLabel>
-        <DropdownMenuItem
-          onClick={() => {
-            onView(row.original);
-          }}
-        >
-          View Role
-        </DropdownMenuItem>
+
         <DropdownMenuItem
           onClick={() => {
             onDelete(row.original);
           }}
           className="text-red-500 focus:bg-red-100 focus:text-red-500"
         >
-          Delete Role
+          Remove Equipment
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
 };
 
-export default RolesDataTableRowActions;
+export default AddEquipmentDataTableRowActions;

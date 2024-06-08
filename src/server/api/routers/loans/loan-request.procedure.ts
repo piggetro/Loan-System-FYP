@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { TRPCError } from "@trpc/server";
 import { protectedProcedure, createTRPCRouter } from "../../trpc";
 import { z } from "zod";
@@ -30,6 +32,104 @@ export const loanRequestRouter = createTRPCRouter({
       throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
     }
   }),
+  getEquipmentAndInventory: protectedProcedure
+    .input(z.object({ searchInput: z.string().min(1) }))
+    .mutation(async ({ ctx, input }) => {
+      try {
+        type Inventory = {
+          equipmentId: string;
+          itemDescription: string;
+          category: string;
+          subCategory: string;
+          quantityAvailable: number;
+          quantitySelected: number;
+        };
+
+        //Checking if user is student
+        const user = await ctx.db.user.findUnique({
+          select: {
+            role: true,
+            courseId: true,
+          },
+          where: {
+            id: ctx.user.id,
+          },
+        });
+        let referingCourseId = undefined;
+
+        if (user?.role?.role === "Student") {
+          if (user.courseId !== null) referingCourseId = user.courseId;
+          else throw new Error("This Account is not linked to a Course");
+        }
+
+        const equipment = await ctx.db.equipment.findMany({
+          include: {
+            inventory: true,
+            subCategory: { include: { category: true } },
+          },
+          where: {
+            name: {
+              contains: input.searchInput,
+            },
+            EquipmentOnCourses: {
+              some: {
+                courseId: referingCourseId,
+              },
+            },
+          },
+        });
+        const loanItems = await ctx.db.loanItem.groupBy({
+          by: ["equipmentId"],
+          _count: {
+            equipmentId: true,
+          },
+          where: {
+            NOT: {
+              OR: [
+                { status: null },
+                { status: "RETURNED" },
+                { status: "REQUEST_COLLECTION" },
+              ],
+            },
+            equipment: {
+              name: {
+                contains: input.searchInput,
+              },
+            },
+          },
+        });
+
+        const tempInventory: Inventory[] = [];
+        equipment.forEach((equipment) => {
+          const unavailableLoanItem = loanItems.find(
+            (equipmentCount) => equipmentCount.equipmentId === equipment.id,
+          );
+
+          let quantityUnavailable = 0;
+          if (unavailableLoanItem !== undefined) {
+            quantityUnavailable = unavailableLoanItem._count.equipmentId;
+          }
+          const quantityAvailable =
+            equipment.inventory.length - quantityUnavailable;
+
+          if (quantityAvailable != 0) {
+            const tempEquipement = {
+              equipmentId: equipment.id,
+              itemDescription: equipment.name,
+              category: equipment.subCategory!.category.name,
+              subCategory: equipment.subCategory!.name,
+              quantityAvailable: quantityAvailable,
+              quantitySelected: 1,
+            };
+            tempInventory.push(tempEquipement);
+          }
+        });
+        return tempInventory;
+      } catch (err) {
+        console.log(err);
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      }
+    }),
   getApprovingLecturers: protectedProcedure.query(async ({ ctx }) => {
     try {
       const approvingLecturers = await ctx.db.userAccessRights.findMany({
@@ -225,6 +325,16 @@ export const loanRequestRouter = createTRPCRouter({
             approvingLecturerId: ctx.user.id,
           },
         });
+        await ctx.db.loanItem.updateMany({
+          data: {
+            status: "REQUEST_COLLECTION",
+          },
+          where: {
+            loan: {
+              loanId: input.loanId,
+            },
+          },
+        });
 
         return "Approved";
       } catch (err) {
@@ -295,28 +405,89 @@ export const loanRequestRouter = createTRPCRouter({
     .input(z.object({ id: z.string().min(1) }))
     .mutation(async ({ ctx, input }) => {
       try {
-        const results = await ctx.db.loan.update({
-          data: {
-            status: "PREPARING",
-          },
-          where: {
-            id: input.id,
-            loanedById: ctx.user.id,
-          },
-        });
-
-        await ctx.db.loanItem.updateMany({
-          data: {
-            status: "PREPARING",
+        //Getting The Loan Items Requested For That Loan
+        const loanItemsRequested = await ctx.db.loanItem.groupBy({
+          by: ["equipmentId"],
+          _count: {
+            equipmentId: true,
           },
           where: {
             loanId: input.id,
           },
         });
+        const arrayOfEquipmentIdReq: { equipmentId: string }[] = [];
+        loanItemsRequested.forEach((loanitem) => {
+          arrayOfEquipmentIdReq.push({ equipmentId: loanitem.equipmentId! });
+        });
+        //Getting count of requested items that exist in inventory
+        const inventoryAvailability = await ctx.db.inventory.groupBy({
+          by: ["equipmentId"],
+          _count: {
+            equipmentId: true,
+          },
+          where: {
+            OR: arrayOfEquipmentIdReq,
+          },
+        });
+        //Getting Count of Current Total Unavailable Equipment grouped by equipmentID
+        const loanItemsUnavailable = await ctx.db.loanItem.groupBy({
+          by: ["equipmentId"],
+          _count: {
+            equipmentId: true,
+          },
+          where: {
+            NOT: {
+              OR: [
+                { status: null },
+                { status: "RETURNED" },
+                { status: "REQUEST_COLLECTION" },
+              ],
+            },
+            OR: arrayOfEquipmentIdReq,
+          },
+        });
 
-        console.log(results);
+        let allowedToRequestForLoan = true;
 
-        return "PREPARING";
+        loanItemsRequested.forEach((item) => {
+          const inventoryCount = inventoryAvailability.find(
+            (inventory) => inventory.equipmentId === item.equipmentId,
+          )!._count.equipmentId;
+          const itemUnavailability = loanItemsUnavailable.find(
+            (loanItem) => loanItem.equipmentId === item.equipmentId,
+          );
+          if (itemUnavailability !== undefined) {
+            if (
+              inventoryCount - itemUnavailability._count.equipmentId <
+              item._count.equipmentId
+            ) {
+              allowedToRequestForLoan = false;
+            }
+          }
+        });
+        if (allowedToRequestForLoan) {
+          await ctx.db.loan.update({
+            data: {
+              status: "PREPARING",
+            },
+            where: {
+              id: input.id,
+              loanedById: ctx.user.id,
+            },
+          });
+
+          await ctx.db.loanItem.updateMany({
+            data: {
+              status: "PREPARING",
+            },
+            where: {
+              loanId: input.id,
+            },
+          });
+          return "PREPARING";
+        }
+
+        return "UNAVAILABLE";
       } catch (err) {
         console.log(err);
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
@@ -618,6 +789,14 @@ export const loanRequestRouter = createTRPCRouter({
             dateReturned: new Date(),
             status: "RETURNED",
             returnedToId: ctx.user.id,
+          },
+        });
+        await ctx.db.loanItem.updateMany({
+          where: {
+            loanId: input.id,
+          },
+          data: {
+            status: "RETURNED",
           },
         });
 

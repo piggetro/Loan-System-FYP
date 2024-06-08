@@ -18,11 +18,12 @@ import {
   TableRow,
 } from "@/app/_components/ui/table";
 
-import { Inventory } from "./Columns";
+import { type Inventory } from "../page";
 import { Input } from "@/app/_components/ui/input";
 import { api } from "@/trpc/react";
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/app/_components/ui/use-toast";
+import { Textarea } from "@/app/_components/ui/textarea";
 
 type LoanRequestType = {
   remarks: string;
@@ -30,9 +31,10 @@ type LoanRequestType = {
   approvingLecturer: string;
   approvingLecturerEmail: string;
   equipments: Inventory[];
-  closeDialog: (successMessage?: {
-    title: string | undefined;
-    description: string | undefined;
+  closeDialog: (successMessage: {
+    title: string;
+    description: string;
+    variant: "default" | "destructive" | "close";
   }) => void;
 };
 const ReviewLoanRequest: React.FC<LoanRequestType> = ({
@@ -50,6 +52,7 @@ const ReviewLoanRequest: React.FC<LoanRequestType> = ({
         closeDialog({
           title: "Loan Request Made Successfully",
           description: "You may view your Loan Request in Loans",
+          variant: "default",
         });
       },
       onError: (error) => {
@@ -71,9 +74,9 @@ const ReviewLoanRequest: React.FC<LoanRequestType> = ({
           <div className=" flex w-1/2 flex-col">
             <div className=" flex   items-center">
               <Label className="mr-8 w-1/3 text-base">Remarks</Label>
-              <Input
+              <Textarea
                 readOnly={true}
-                className="h-7  w-1/2 focus-visible:ring-0 focus-visible:ring-offset-0"
+                className=" h-fit max-h-fit w-1/2 focus-visible:ring-0 focus-visible:ring-offset-0"
                 value={remarks}
               />
             </div>
@@ -81,7 +84,7 @@ const ReviewLoanRequest: React.FC<LoanRequestType> = ({
               <Label className="mr-8 w-1/3 text-base">Approving Lecturer</Label>
               <Input
                 readOnly={true}
-                className="h-7 w-1/2 focus-visible:ring-0 focus-visible:ring-offset-0"
+                className=" w-1/2 focus-visible:ring-0 focus-visible:ring-offset-0"
                 value={approvingLecturer}
               />
             </div>
@@ -91,7 +94,7 @@ const ReviewLoanRequest: React.FC<LoanRequestType> = ({
               <Label className=" mr-8 text-base">Return Date</Label>
               <Input
                 readOnly={true}
-                className="h-7 w-44 focus-visible:ring-0 focus-visible:ring-offset-0"
+                className=" w-44 focus-visible:ring-0 focus-visible:ring-offset-0"
                 value={returnDate.toLocaleDateString()}
               />
             </div>
@@ -128,7 +131,13 @@ const ReviewLoanRequest: React.FC<LoanRequestType> = ({
       <DialogFooter>
         <DialogClose className="mr-3">
           <Button
-            onClick={() => closeDialog()}
+            onClick={() =>
+              closeDialog({
+                title: "",
+                description: "",
+                variant: "close",
+              })
+            }
             className="bg-gray-400 hover:bg-gray-600"
           >
             Close
