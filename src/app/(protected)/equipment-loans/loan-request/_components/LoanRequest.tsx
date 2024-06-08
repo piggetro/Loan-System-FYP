@@ -378,7 +378,7 @@ const LoanRequestComponent: React.FC<{
                   Next
                 </Button>
               </DialogTrigger>
-              {returnDate && (
+              {reviewLoanRequestOpen && returnDate && (
                 <ReviewLoanRequest
                   remarks={remarks}
                   approvingLecturer={approvingLecturer}

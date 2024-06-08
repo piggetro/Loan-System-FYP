@@ -308,6 +308,16 @@ export const loanRequestRouter = createTRPCRouter({
             approvingLecturerId: ctx.user.id,
           },
         });
+        await ctx.db.loanItem.updateMany({
+          data: {
+            status: "REQUEST_COLLECTION",
+          },
+          where: {
+            loan: {
+              loanId: input.loanId,
+            },
+          },
+        });
 
         return "Approved";
       } catch (err) {
@@ -335,9 +345,7 @@ export const loanRequestRouter = createTRPCRouter({
             status: "REQUEST_COLLECTION",
           },
           where: {
-            loan: {
-              id: input.id,
-            },
+            loanId: input.id,
           },
         });
 
@@ -398,8 +406,6 @@ export const loanRequestRouter = createTRPCRouter({
             loanId: input.id,
           },
         });
-
-        console.log(results);
 
         return "PREPARING";
       } catch (err) {
@@ -703,6 +709,14 @@ export const loanRequestRouter = createTRPCRouter({
             dateReturned: new Date(),
             status: "RETURNED",
             returnedToId: ctx.user.id,
+          },
+        });
+        await ctx.db.loanItem.updateMany({
+          where: {
+            loanId: input.id,
+          },
+          data: {
+            status: "RETURNED",
           },
         });
 
