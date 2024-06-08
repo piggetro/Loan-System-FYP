@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 "use client";
 import { Button } from "@/app/_components/ui/button";
@@ -75,11 +76,8 @@ const LoanRequestComponent: React.FC<{
   const [returnDate, setReturnDate] = useState<Date>();
   const { toast } = useToast();
   const router = useRouter();
-  const {
-    data: equipmentAndInventory,
-    mutateAsync: fetchSearch,
-    isPending,
-  } = api.loanRequest.getEquipmentAndInventory.useMutation();
+  const { data: equipmentAndInventory, mutateAsync: fetchSearch } =
+    api.loanRequest.getEquipmentAndInventory.useMutation();
 
   function addItem(itemToAdd: Inventory) {
     if (

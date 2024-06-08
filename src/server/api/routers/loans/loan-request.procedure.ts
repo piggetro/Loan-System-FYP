@@ -61,7 +61,11 @@ export const loanRequestRouter = createTRPCRouter({
           },
           where: {
             NOT: {
-              OR: [{ status: null }, { status: "RETURNED" }],
+              OR: [
+                { status: null },
+                { status: "RETURNED" },
+                { status: "REQUEST_COLLECTION" },
+              ],
             },
             equipment: {
               name: {
@@ -81,12 +85,16 @@ export const loanRequestRouter = createTRPCRouter({
 
         const tempInventory: Inventory[] = [];
         equipment.forEach((equipment) => {
-          const quantityUnavailable = loanItems.find(
+          const unavailableLoanItem = loanItems.find(
             (equipmentCount) => equipmentCount.equipmentId === equipment.id,
           );
+
+          let quantityUnavailable = 0;
+          if (unavailableLoanItem !== undefined) {
+            quantityUnavailable = unavailableLoanItem._count.equipmentId;
+          }
           const quantityAvailable =
-            equipment.inventory.length -
-            quantityUnavailable!._count.equipmentId;
+            equipment.inventory.length - quantityUnavailable;
           if (quantityAvailable != 0) {
             const tempEquipement = {
               equipmentId: equipment.id,
