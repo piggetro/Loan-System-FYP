@@ -18,7 +18,7 @@ import {
   TableRow,
 } from "@/app/_components/ui/table";
 
-import { Inventory } from "./Columns";
+import { type Inventory } from "../page";
 import { Input } from "@/app/_components/ui/input";
 import { api } from "@/trpc/react";
 import { Loader2 } from "lucide-react";
@@ -31,9 +31,10 @@ type LoanRequestType = {
   approvingLecturer: string;
   approvingLecturerEmail: string;
   equipments: Inventory[];
-  closeDialog: (successMessage?: {
-    title: string | undefined;
-    description: string | undefined;
+  closeDialog: (successMessage: {
+    title: string;
+    description: string;
+    variant: "default" | "destructive" | "close";
   }) => void;
 };
 const ReviewLoanRequest: React.FC<LoanRequestType> = ({
@@ -51,6 +52,7 @@ const ReviewLoanRequest: React.FC<LoanRequestType> = ({
         closeDialog({
           title: "Loan Request Made Successfully",
           description: "You may view your Loan Request in Loans",
+          variant: "default",
         });
       },
       onError: (error) => {
@@ -129,7 +131,13 @@ const ReviewLoanRequest: React.FC<LoanRequestType> = ({
       <DialogFooter>
         <DialogClose className="mr-3">
           <Button
-            onClick={() => closeDialog()}
+            onClick={() =>
+              closeDialog({
+                title: "",
+                description: "",
+                variant: "close",
+              })
+            }
             className="bg-gray-400 hover:bg-gray-600"
           >
             Close

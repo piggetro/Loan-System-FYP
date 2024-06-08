@@ -30,6 +30,81 @@ export const loanRequestRouter = createTRPCRouter({
       throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
     }
   }),
+  getEquipmentAndInventory: protectedProcedure
+    .input(z.object({ searchInput: z.string().min(1) }))
+    .mutation(async ({ ctx, input }) => {
+      try {
+        type Inventory = {
+          equipmentId: string;
+          itemDescription: string;
+          category: string;
+          subCategory: string;
+          quantityAvailable: number;
+          quantitySelected: number;
+        };
+
+        const equipment = await ctx.db.equipment.findMany({
+          include: {
+            inventory: { where: { status: "AVAILABLE" } },
+            subCategory: { include: { category: true } },
+          },
+          where: {
+            name: {
+              contains: input.searchInput,
+            },
+          },
+        });
+        const loanItems = await ctx.db.loanItem.groupBy({
+          by: ["equipmentId"],
+          _count: {
+            equipmentId: true,
+          },
+          where: {
+            NOT: {
+              OR: [{ status: null }, { status: "RETURNED" }],
+            },
+            equipment: {
+              name: {
+                contains: input.searchInput,
+              },
+            },
+          },
+        });
+
+        console.log(equipment);
+        console.log("BREAK");
+        console.log(
+          loanItems.find(
+            (equipmentCount) => equipmentCount.equipmentId === "1",
+          ),
+        );
+
+        const tempInventory: Inventory[] = [];
+        equipment.forEach((equipment) => {
+          const quantityUnavailable = loanItems.find(
+            (equipmentCount) => equipmentCount.equipmentId === equipment.id,
+          );
+          const quantityAvailable =
+            equipment.inventory.length -
+            quantityUnavailable!._count.equipmentId;
+          if (quantityAvailable != 0) {
+            const tempEquipement = {
+              equipmentId: equipment.id,
+              itemDescription: equipment.name,
+              category: equipment.subCategory!.category.name,
+              subCategory: equipment.subCategory!.name,
+              quantityAvailable: quantityAvailable,
+              quantitySelected: 1,
+            };
+            tempInventory.push(tempEquipement);
+          }
+        });
+        return tempInventory;
+      } catch (err) {
+        console.log(err);
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      }
+    }),
   getApprovingLecturers: protectedProcedure.query(async ({ ctx }) => {
     try {
       const approvingLecturers = await ctx.db.userAccessRights.findMany({
@@ -252,7 +327,9 @@ export const loanRequestRouter = createTRPCRouter({
             status: "REQUEST_COLLECTION",
           },
           where: {
-            loanId: input.id,
+            loan: {
+              id: input.id,
+            },
           },
         });
 

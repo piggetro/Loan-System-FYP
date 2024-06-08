@@ -81,8 +81,8 @@ export function EquipmentDataTable<TData, TValue>({
   });
 
   return (
-    <div className="my-3 w-full rounded-lg bg-white px-5 py-2 shadow-md">
-      <h1 className="font-semibold">Search For Item</h1>
+    <div>
+      {/* <h1 className="font-semibold">Search For Item</h1>
       <div className="my-2 flex gap-3">
         <Input
           placeholder="Search"
@@ -95,8 +95,8 @@ export function EquipmentDataTable<TData, TValue>({
               .getColumn("itemDescription")
               ?.setFilterValue(event.target.value)
           }
-        />
-        {/* <Select
+        /> */}
+      {/* <Select
           onValueChange={(key) => {
             if (key === "All") {
               setSelectedCategoryId("");
@@ -159,7 +159,7 @@ export function EquipmentDataTable<TData, TValue>({
             </SelectGroup>
           </SelectContent>
         </Select> */}
-      </div>
+      {/* </div> */}
       <div className="my-3 w-full ">
         <div className="rounded-md border">
           <Table>

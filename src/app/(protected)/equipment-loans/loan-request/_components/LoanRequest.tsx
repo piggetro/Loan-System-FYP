@@ -7,7 +7,6 @@ import { Label } from "@/app/_components/ui/label";
 import React, { useEffect, useState } from "react";
 import { EquipmentDataTable, SummaryDataTable } from "./DataTable";
 import { equipmentColumns, summaryColumns } from "./Columns";
-import { type Inventory } from "./Columns";
 import { type Category, type SubCategory } from "@prisma/client";
 import { Dialog, DialogTrigger } from "@/app/_components/ui/dialog";
 import ReviewLoanRequest from "./ReviewLoanRequest";
@@ -38,9 +37,13 @@ import {
 } from "@/app/_components/ui/form";
 import { CalendarIcon } from "lucide-react";
 import { Calendar } from "@/app/_components/ui/calendar";
+import { type Inventory } from "../page";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { Textarea } from "@/app/_components/ui/textarea";
+import { useRouter } from "next/navigation";
+import { api } from "@/trpc/react";
+import { Skeleton } from "@/app/_components/ui/skeleton";
 
 const formSchema = z.object({
   remarks: z.string().min(1, "Required").max(150),
@@ -58,22 +61,25 @@ const LoanRequestComponent: React.FC<{
     categories: Category[];
     subCategories: SubCategory[];
   };
-  equipmentAndInventory: Inventory[];
   approvingLecturers: ApprovingLecturersType[];
-}> = ({
-  categoriesAndSubCategories,
-  equipmentAndInventory,
-  approvingLecturers,
-}) => {
+}> = ({ categoriesAndSubCategories, approvingLecturers }) => {
   const [selectedEquipment, setSelectedEquipment] = useState<Inventory[]>([]);
   const [approvingLecturer, setApprovingLecturer] = useState<string>("");
   const [approvingLecturerEmail, setApprovingLecturerEmail] =
     useState<string>("");
+  const [searchInput, setSearchInput] = useState<string>("");
+  const [debouncerIsLoading, setDebouncerIsLoading] = useState<boolean>(false);
   const [reviewLoanRequestOpen, setReviewLoanRequestOpen] =
     useState<boolean>(false);
   const [remarks, setRemarks] = useState<string>("");
   const [returnDate, setReturnDate] = useState<Date>();
   const { toast } = useToast();
+  const router = useRouter();
+  const {
+    data: equipmentAndInventory,
+    mutateAsync: fetchSearch,
+    isPending,
+  } = api.loanRequest.getEquipmentAndInventory.useMutation();
 
   function addItem(itemToAdd: Inventory) {
     if (
@@ -125,21 +131,30 @@ const LoanRequestComponent: React.FC<{
 
     selectedEquipment.splice(index, 1, equipmentData);
   }
-  const closeDialog = (successMessage?: {
-    title: string | undefined;
-    description: string | undefined;
+  const closeDialog = (successMessage: {
+    title: string;
+    description: string;
+    variant: "default" | "destructive" | "close";
   }) => {
-    setReviewLoanRequestOpen(false);
-    if (successMessage != undefined) {
+    if (successMessage.variant === "default") {
+      setReviewLoanRequestOpen(false);
       toast({
         title: successMessage.title,
         description: successMessage.description,
       });
       setSelectedEquipment([]);
       setReturnDate(undefined);
-      setApprovingLecturer("");
-      setApprovingLecturerEmail("");
       setRemarks("");
+      form.reset({
+        remarks: "",
+        approvingLecturer: "",
+      });
+      router.push("/equipment-loans/loans");
+    } else if (successMessage.variant === "destructive") {
+      toast({
+        title: successMessage.title,
+        description: successMessage.description,
+      });
     }
   };
 
@@ -151,6 +166,22 @@ const LoanRequestComponent: React.FC<{
       setApprovingLecturer(lecturer?.grantedUser.name);
     }
   }, [approvingLecturerEmail]);
+
+  //debounceeeerrr
+  useEffect(() => {
+    setDebouncerIsLoading(true);
+    const timeout = setTimeout(() => {
+      if (searchInput !== "") {
+        fetchSearch({ searchInput: searchInput })
+          .then(() => {
+            setDebouncerIsLoading(false);
+          })
+          .catch((e) => console.log(e));
+      }
+    }, 500);
+
+    return () => clearTimeout(timeout);
+  }, [searchInput]);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -268,7 +299,15 @@ const LoanRequestComponent: React.FC<{
                               mode="single"
                               selected={field.value}
                               onSelect={field.onChange}
-                              disabled={(date) => date < new Date()}
+                              disabled={(date) =>
+                                date < new Date() ||
+                                date >
+                                  new Date(
+                                    new Date().setDate(
+                                      new Date().getDate() + 7,
+                                    ),
+                                  )
+                              }
                               initialFocus
                             />
                           </PopoverContent>
@@ -281,13 +320,44 @@ const LoanRequestComponent: React.FC<{
               </div>
             </div>
           </div>
-
-          <EquipmentDataTable
-            data={equipmentAndInventory}
-            columns={equipmentColumns(addItem)}
-            categoriesAndSubCategories={categoriesAndSubCategories}
-          />
-
+          <div className="my-3 w-full rounded-lg bg-white px-5 py-2 shadow-md">
+            <h1 className="font-semibold">Search For Item</h1>
+            <div className="my-2 flex gap-3">
+              <Input
+                placeholder="Search"
+                value={searchInput}
+                onChange={(event) => {
+                  setSearchInput(event.target.value);
+                }}
+              />
+            </div>
+            {searchInput === "" ? (
+              <div>
+                <div className="my-3 flex h-[100px] w-full items-center justify-center">
+                  <div>Search For Equipment</div>
+                </div>
+              </div>
+            ) : debouncerIsLoading ? (
+              <div>
+                <div className="my-3 w-full">
+                  <Skeleton className="mb-3 h-7" />
+                  <Skeleton className="h-44" />
+                </div>
+              </div>
+            ) : equipmentAndInventory !== undefined ? (
+              <EquipmentDataTable
+                data={equipmentAndInventory}
+                columns={equipmentColumns(addItem)}
+                categoriesAndSubCategories={categoriesAndSubCategories}
+              />
+            ) : (
+              <div>
+                <div className="my-3 flex h-[100px] w-full items-center justify-center">
+                  <div>No Results Found</div>
+                </div>
+              </div>
+            )}
+          </div>
           <div className="mb-3 w-full rounded-lg bg-white px-5 py-3 shadow-md">
             <h1 className="font-semibold">Summary of Selected Items</h1>
             <div className="my-3 w-full ">
