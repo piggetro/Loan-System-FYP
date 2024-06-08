@@ -1,6 +1,7 @@
 import React from "react";
 import { api } from "@/trpc/server";
 import StudentDetails from "./_components/StudentDetails";
+import TopHeaderComponent from "@/app/_components/TopHeader";
 
 interface pageProps {
   params: { studentId: string };
@@ -24,9 +25,10 @@ const page = async ({ params }: pageProps) => {
   ]);
   return (
     <div>
-      <h3 className="scroll-m-20 text-2xl font-semibold tracking-tight">
-        Student Details
-      </h3>
+      <TopHeaderComponent
+        pathName="School Admin / Student"
+        pageName="Student"
+      />
       <div>
         <StudentDetails
           student={student}

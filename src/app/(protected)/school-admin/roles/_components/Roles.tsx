@@ -9,7 +9,7 @@ import {
 } from "@/app/_components/ui/tabs";
 import { type Roles } from "./RolesColumns";
 import RolesTable from "./RolesTable";
-import { AccessRights } from "../../../../_components/AddAccessRightColumns";
+import type { AccessRights } from "../../../../_components/AddAccessRightColumns";
 import AddRole from "./AddRole";
 
 interface RolesProps {
