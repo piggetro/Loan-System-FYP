@@ -156,6 +156,7 @@ const LoanRequestComponent: React.FC<{
     }
   };
 
+  //Using email to assign approving lecturer name
   useEffect(() => {
     const lecturer = approvingLecturers.find((lecturer) => {
       return lecturer.grantedUser.email === approvingLecturerEmail;
@@ -165,7 +166,7 @@ const LoanRequestComponent: React.FC<{
     }
   }, [approvingLecturerEmail]);
 
-  //debounceeeerrr
+  //debouncer
   useEffect(() => {
     setDebouncerIsLoading(true);
     const timeout = setTimeout(() => {
@@ -298,13 +299,10 @@ const LoanRequestComponent: React.FC<{
                               selected={field.value}
                               onSelect={field.onChange}
                               disabled={(date) =>
-                                date < new Date() ||
-                                date >
-                                  new Date(
-                                    new Date().setDate(
-                                      new Date().getDate() + 7,
-                                    ),
-                                  )
+                                date <
+                                new Date(
+                                  new Date().setDate(new Date().getDate() + 7),
+                                )
                               }
                               initialFocus
                             />

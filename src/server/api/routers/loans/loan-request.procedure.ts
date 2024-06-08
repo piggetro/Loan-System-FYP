@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { TRPCError } from "@trpc/server";
 import { protectedProcedure, createTRPCRouter } from "../../trpc";
 import { z } from "zod";
@@ -43,6 +45,23 @@ export const loanRequestRouter = createTRPCRouter({
           quantitySelected: number;
         };
 
+        //Checking if user is student
+        const user = await ctx.db.user.findUnique({
+          select: {
+            role: true,
+            courseId: true,
+          },
+          where: {
+            id: ctx.user.id,
+          },
+        });
+        let referingCourseId = undefined;
+
+        if (user?.role?.role === "Student") {
+          if (user.courseId !== null) referingCourseId = user.courseId;
+          else throw new Error("This Account is not linked to a Course");
+        }
+
         const equipment = await ctx.db.equipment.findMany({
           include: {
             inventory: true,
@@ -51,6 +70,11 @@ export const loanRequestRouter = createTRPCRouter({
           where: {
             name: {
               contains: input.searchInput,
+            },
+            EquipmentOnCourses: {
+              some: {
+                courseId: referingCourseId,
+              },
             },
           },
         });
@@ -405,7 +429,7 @@ export const loanRequestRouter = createTRPCRouter({
             OR: arrayOfEquipmentIdReq,
           },
         });
-
+        //Getting Count of Current Total Unavailable Equipment grouped by equipmentID
         const loanItemsUnavailable = await ctx.db.loanItem.groupBy({
           by: ["equipmentId"],
           _count: {
