@@ -38,6 +38,8 @@ const LoanPage: React.FC<{
   const router = useRouter();
   const [openCancelDialog, setOpenCancelDialog] = useState<boolean>(false);
   const [cancelId, setCancelId] = useState<string>();
+  const [requestCollectionError, setRequestCollectionError] =
+    useState<boolean>(false);
   // const [loanPendingApprovalData, setLoanPendingApprovalData] = useState()
   const loanPendingApprovalData = data?.filter(
     (loan) => loan.status === "PENDING_APPROVAL",
@@ -98,14 +100,18 @@ const LoanPage: React.FC<{
     //Request collection
     requestCollection
       .mutateAsync({ id: loanDetails.id })
-      .then(() => {
-        toast({
-          title: "Request For Collection is Successfull",
-          description: "Loan is now Preparing",
-        });
-        refetch().catch(() => {
-          //handle error
-        });
+      .then((results) => {
+        if (results === "PREPARING") {
+          toast({
+            title: "Request For Collection is Successful",
+            description: "Loan is now Preparing",
+          });
+          refetch().catch(() => {
+            //handle error
+          });
+        } else {
+          setRequestCollectionError(true);
+        }
       })
       .catch(() => {
         toast({
@@ -122,6 +128,25 @@ const LoanPage: React.FC<{
 
   return (
     <div className="rounded-lg bg-white p-5 shadow-lg">
+      <AlertDialog
+        open={requestCollectionError}
+        onOpenChange={setRequestCollectionError}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              Request Collection Was Unsuccessful
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              The Equipment that you have requested is currently unavailable.
+              All Loan Request are subject to Equipment Availability
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Close</AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
       <AlertDialog open={openCancelDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>

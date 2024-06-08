@@ -45,7 +45,7 @@ export const loanRequestRouter = createTRPCRouter({
 
         const equipment = await ctx.db.equipment.findMany({
           include: {
-            inventory: { where: { status: "AVAILABLE" } },
+            inventory: true,
             subCategory: { include: { category: true } },
           },
           where: {
@@ -75,14 +75,6 @@ export const loanRequestRouter = createTRPCRouter({
           },
         });
 
-        console.log(equipment);
-        console.log("BREAK");
-        console.log(
-          loanItems.find(
-            (equipmentCount) => equipmentCount.equipmentId === "1",
-          ),
-        );
-
         const tempInventory: Inventory[] = [];
         equipment.forEach((equipment) => {
           const unavailableLoanItem = loanItems.find(
@@ -95,6 +87,7 @@ export const loanRequestRouter = createTRPCRouter({
           }
           const quantityAvailable =
             equipment.inventory.length - quantityUnavailable;
+
           if (quantityAvailable != 0) {
             const tempEquipement = {
               equipmentId: equipment.id,
@@ -388,26 +381,89 @@ export const loanRequestRouter = createTRPCRouter({
     .input(z.object({ id: z.string().min(1) }))
     .mutation(async ({ ctx, input }) => {
       try {
-        const results = await ctx.db.loan.update({
-          data: {
-            status: "PREPARING",
-          },
-          where: {
-            id: input.id,
-            loanedById: ctx.user.id,
-          },
-        });
-
-        await ctx.db.loanItem.updateMany({
-          data: {
-            status: "PREPARING",
+        //Getting The Loan Items Requested For That Loan
+        const loanItemsRequested = await ctx.db.loanItem.groupBy({
+          by: ["equipmentId"],
+          _count: {
+            equipmentId: true,
           },
           where: {
             loanId: input.id,
           },
         });
+        const arrayOfEquipmentIdReq: { equipmentId: string }[] = [];
+        loanItemsRequested.forEach((loanitem) => {
+          arrayOfEquipmentIdReq.push({ equipmentId: loanitem.equipmentId! });
+        });
+        //Getting count of requested items that exist in inventory
+        const inventoryAvailability = await ctx.db.inventory.groupBy({
+          by: ["equipmentId"],
+          _count: {
+            equipmentId: true,
+          },
+          where: {
+            OR: arrayOfEquipmentIdReq,
+          },
+        });
 
-        return "PREPARING";
+        const loanItemsUnavailable = await ctx.db.loanItem.groupBy({
+          by: ["equipmentId"],
+          _count: {
+            equipmentId: true,
+          },
+          where: {
+            NOT: {
+              OR: [
+                { status: null },
+                { status: "RETURNED" },
+                { status: "REQUEST_COLLECTION" },
+              ],
+            },
+            OR: arrayOfEquipmentIdReq,
+          },
+        });
+
+        let allowedToRequestForLoan = true;
+
+        loanItemsRequested.forEach((item) => {
+          const inventoryCount = inventoryAvailability.find(
+            (inventory) => inventory.equipmentId === item.equipmentId,
+          )!._count.equipmentId;
+          const itemUnavailability = loanItemsUnavailable.find(
+            (loanItem) => loanItem.equipmentId === item.equipmentId,
+          );
+          if (itemUnavailability !== undefined) {
+            if (
+              inventoryCount - itemUnavailability._count.equipmentId <
+              item._count.equipmentId
+            ) {
+              allowedToRequestForLoan = false;
+            }
+          }
+        });
+        if (allowedToRequestForLoan) {
+          await ctx.db.loan.update({
+            data: {
+              status: "PREPARING",
+            },
+            where: {
+              id: input.id,
+              loanedById: ctx.user.id,
+            },
+          });
+
+          await ctx.db.loanItem.updateMany({
+            data: {
+              status: "PREPARING",
+            },
+            where: {
+              loanId: input.id,
+            },
+          });
+          return "PREPARING";
+        }
+
+        return "UNAVAILABLE";
       } catch (err) {
         console.log(err);
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
