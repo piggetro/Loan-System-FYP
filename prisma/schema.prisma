@@ -85,7 +85,7 @@ model Equipment {
     inventory          Inventory[]
     loanItems          LoanItem[]
     checklist          String?
-    Course EquipmentOnCourses[]
+    course EquipmentOnCourses[]
 }
 
 model Inventory {
