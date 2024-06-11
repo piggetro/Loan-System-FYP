@@ -73,7 +73,11 @@ const DeleteOrganizationUnit = ({
           <AlertDialogAction
             disabled={isPending}
             onClick={() => {
-              deleteOrganizationUnit({ id: organizationUnit?.id! });
+              if (organizationUnit?.id !== undefined) {
+                deleteOrganizationUnit({ id: organizationUnit.id });
+              } else {
+                console.error("No ID found for organizationUnit");
+              }
             }}
           >
             {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
