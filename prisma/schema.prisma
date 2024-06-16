@@ -78,7 +78,7 @@ model SubCategory {
 model Equipment {
     id                 String               @id @default(cuid())
     name               String
-    photoPath          String
+    photoPath          String?
     updatedAt          DateTime             @updatedAt
     subCategory        SubCategory?         @relation(fields: [subCategoryId], references: [id], onDelete: SetNull)
     subCategoryId      String?
