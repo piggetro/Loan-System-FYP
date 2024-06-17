@@ -11,11 +11,22 @@ import {
   FormField,
 } from "./ui/form";
 import { Input } from "./ui/input";
-import { PlusCircleIcon, XCircle } from "lucide-react";
+import { CalendarIcon, PlusCircleIcon, XCircle } from "lucide-react";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/app/_components/ui/popover";
+import { Calendar } from "@/app/_components/ui/calendar";
+import { cn } from "@/lib/utils";
+import { format } from "date-fns";
+import { Button } from "./ui/button";
 
 export type InventoryItem = {
   assetNumber: string;
   cost: string;
+  datePurchased: Date;
+  warrantyExpiry: Date;
 };
 
 interface InventoryItemsFormProps {
@@ -31,6 +42,12 @@ const assetSchema = z.object({
       assetNumber: z.string().min(1, { message: "Asset Number is required" }),
       cost: z.string().regex(/^\d+(\.\d{2})?$/, {
         message: "Cost must be a valid number with exactly two decimal places",
+      }),
+      datePurchased: z.date({
+        required_error: "Please select a date",
+      }),
+      warrantyExpiry: z.date({
+        required_error: "Please select a date",
       }),
     }),
   ),
@@ -70,7 +87,7 @@ const InventoryItemsForm = ({
   return (
     <Form {...form}>
       {fields.map((field, index) => (
-        <div key={field.id} className="mb-2 flex w-1/2 space-x-2">
+        <div key={field.id} className="mb-2 flex w-3/4 space-x-2">
           <div className="flex-1">
             <FormField
               name={`assets.${index}.assetNumber`}
@@ -103,7 +120,85 @@ const InventoryItemsForm = ({
               )}
             />
           </div>
-          <div className="pt- flex items-center">
+          <div className="flex-1">
+            <FormField
+              control={form.control}
+              name={`assets.${index}.datePurchased`}
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Date Purchased</FormLabel>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <FormControl>
+                        <Button
+                          variant={"outline"}
+                          className={cn(
+                            "w-full pl-3 text-left font-normal",
+                            !field.value && "text-muted-foreground",
+                          )}
+                        >
+                          {field.value ? (
+                            format(field.value, "PPP")
+                          ) : (
+                            <span>Pick a date</span>
+                          )}
+                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                        </Button>
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={field.value}
+                        onSelect={field.onChange}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+          <div className="flex-1">
+            <FormField
+              control={form.control}
+              name={`assets.${index}.warrantyExpiry`}
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Warranty Expirary</FormLabel>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <FormControl>
+                        <Button
+                          variant={"outline"}
+                          className={cn(
+                            "w-full pl-3 text-left font-normal",
+                            !field.value && "text-muted-foreground",
+                          )}
+                        >
+                          {field.value ? (
+                            format(field.value, "PPP")
+                          ) : (
+                            <span>Pick a date</span>
+                          )}
+                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                        </Button>
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={field.value}
+                        onSelect={field.onChange}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+          <div className="flex items-center">
             <div className="mt-8 flex h-full items-center justify-center">
               <button
                 type="button"
@@ -118,8 +213,15 @@ const InventoryItemsForm = ({
       ))}
       <button
         type="button"
-        onClick={() => append({ assetNumber: "", cost: "" })}
-        className="mt-4 flex w-1/2 items-center justify-center rounded-sm border-2 border-dashed border-gray-400 px-4 py-2 text-gray-400"
+        onClick={() =>
+          append({
+            assetNumber: "",
+            cost: "",
+            datePurchased: new Date(),
+            warrantyExpiry: new Date(),
+          })
+        }
+        className="mt-4 flex w-3/4 items-center justify-center rounded-sm border-2 border-dashed border-gray-400 px-4 py-2 text-gray-400"
       >
         <PlusCircleIcon className="h-6 w-6" />
       </button>

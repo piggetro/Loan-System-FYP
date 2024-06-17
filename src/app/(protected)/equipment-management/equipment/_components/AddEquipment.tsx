@@ -31,7 +31,6 @@ import { Course } from "@/app/(protected)/school-admin/courses/_components/Cours
 import InventoryItemsForm, {
   InventoryItem,
 } from "@/app/_components/InventoryItemsForm";
-import { set } from "date-fns";
 
 interface AddEquipmentProps {
   setEquipment: React.Dispatch<React.SetStateAction<Equipment[]>>;
@@ -110,13 +109,9 @@ const AddEquipment = ({
     values: z.infer<typeof formSchema>,
   ) => {
     addEquipment({
-      name: values.name,
-      checkList: values.checkList,
-      category: values.category,
-      subCategory: values.subCategory,
-      course: values.course,
+      ...values,
       inventoryItems: inventoryItems.map((item) => ({
-        assetNumber: item.assetNumber,
+        ...item,
         cost: parseFloat(item.cost),
       })),
     });

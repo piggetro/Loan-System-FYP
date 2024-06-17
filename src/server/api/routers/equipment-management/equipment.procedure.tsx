@@ -1,6 +1,6 @@
 import { TRPCError } from "@trpc/server";
 import { protectedProcedure, createTRPCRouter } from "../../trpc";
-import { z } from "zod";
+import { date, z } from "zod";
 
 export const equipmentRouter = createTRPCRouter({
   getAllEquipments: protectedProcedure.query(async ({ ctx }) => {
@@ -82,6 +82,8 @@ export const equipmentRouter = createTRPCRouter({
           z.object({
             assetNumber: z.string().min(1),
             cost: z.number().multipleOf(0.01),
+            datePurchased: z.date(),
+            warrantyExpiry: z.date(),
           }),
         ),
       }),
@@ -104,6 +106,8 @@ export const equipmentRouter = createTRPCRouter({
                   assetNumber: item.assetNumber,
                   cost: item.cost,
                   status: "AVAILABLE",
+                  datePurchased: item.datePurchased,
+                  warrantyExpiry: item.warrantyExpiry,
                 })),
               },
             },
@@ -132,6 +136,59 @@ export const equipmentRouter = createTRPCRouter({
           category: subCategory?.category.name ?? "",
           subCategory: subCategory?.name ?? "",
           inventoryCount: _count.inventory,
+        };
+      } catch (err) {
+        console.log(err);
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      }
+    }),
+  getEquipment: protectedProcedure
+    .input(z.object({ id: z.string() }))
+    .query(async ({ ctx, input }) => {
+      try {
+        const data = await ctx.db.equipment.findUnique({
+          where: {
+            id: input.id,
+          },
+          select: {
+            id: true,
+            name: true,
+            checklist: true,
+            course: {
+              select: {
+                courseId: true,
+              },
+            },
+            subCategory: {
+              select: {
+                name: true,
+                category: {
+                  select: {
+                    name: true,
+                  },
+                },
+              },
+            },
+            inventory: {
+              select: {
+                id: true,
+                assetNumber: true,
+                cost: true,
+                status: true,
+                datePurchased: true,
+                warrantyExpiry: true,
+              },
+            },
+          },
+        });
+        return {
+          id: data?.id ?? "",
+          name: data?.name ?? "",
+          checkList: data?.checklist ?? "",
+          courses: data?.course.map((course) => course.courseId) ?? [],
+          category: data?.subCategory?.category.name ?? "",
+          subCategory: data?.subCategory?.name ?? "",
+          inventoryItems: data?.inventory,
         };
       } catch (err) {
         console.log(err);

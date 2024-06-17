@@ -4,6 +4,7 @@ import { Inter } from "next/font/google";
 import { TRPCReactProvider } from "@/trpc/react";
 import { Toaster } from "@/app/_components/ui/toaster";
 import { MantineProvider } from "@mantine/core";
+import ProgressBarProvider from "./_components/ProgressBar";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -12,8 +13,8 @@ const inter = Inter({
 });
 
 export const metadata = {
-  title: "Register",
-  description: "Register Page For SOC Loan System",
+  title: "SOC Loan System",
+  description: "Loan System",
 };
 
 export default async function RootLayout({
@@ -26,12 +27,14 @@ export default async function RootLayout({
       <body
         className={`font-sans ${inter.variable}   bg-slate-50  text-slate-900`}
       >
-        <TRPCReactProvider>
-          <MantineProvider>
-            <div className="h-full w-full ">{children}</div>
-            <Toaster />
-          </MantineProvider>
-        </TRPCReactProvider>
+        <ProgressBarProvider>
+          <TRPCReactProvider>
+            <MantineProvider>
+              {children}
+              <Toaster />
+            </MantineProvider>
+          </TRPCReactProvider>
+        </ProgressBarProvider>
       </body>
     </html>
   );
