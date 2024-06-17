@@ -16,7 +16,11 @@ const config = {
   eslint: {
     ignoreDuringBuilds: true,
   },
-
+  i18n: {
+    locales: ["en"],
+    defaultLocale: "en",
+    localeDetection: false,
+  },
   // externals: ["@node-rs/argon2", "@node-rs/bcrypt"],
 };
 
