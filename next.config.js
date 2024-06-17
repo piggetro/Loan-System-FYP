@@ -16,6 +16,7 @@ const config = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+
   // externals: ["@node-rs/argon2", "@node-rs/bcrypt"],
 };
 
