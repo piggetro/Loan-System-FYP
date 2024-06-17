@@ -8,6 +8,13 @@ interface HistoryProps {
   onView: (value: HistoryLoanType) => void;
 }
 
+function toStartCase(string: string) {
+  return string
+    .split(" ")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(" ");
+}
+
 export const HistoryColumns = ({
   onView,
 }: HistoryProps): ColumnDef<HistoryLoanType>[] => [
@@ -61,7 +68,7 @@ export const HistoryColumns = ({
       return (
         <div className="flex items-center">
           <div className={`mr-2 h-3 w-3 rounded-full ${statusColor}`}></div>
-          {row.getValue("status")}
+          {toStartCase(row.getValue("status"))}
         </div>
       );
     },

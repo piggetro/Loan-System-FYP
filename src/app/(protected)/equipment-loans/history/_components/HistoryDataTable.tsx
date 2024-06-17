@@ -127,13 +127,13 @@ export function CollectionDataTable<TData, TValue>({
                 All
               </SelectItem>
               <SelectItem key={"RETURNED"} value={"RETURNED"}>
-                RETURNED
+                Returned
               </SelectItem>{" "}
               <SelectItem key={"CANCELLED"} value={"CANCELLED"}>
-                CANCELLED
+                Cancelled
               </SelectItem>{" "}
               <SelectItem key={"REJECTED"} value={"REJECTED"}>
-                REJECTED
+                Rejected
               </SelectItem>
             </SelectGroup>
           </SelectContent>
