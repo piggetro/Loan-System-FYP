@@ -1,7 +1,7 @@
 import TopHeaderComponent from "@/app/_components/TopHeader";
 import { api } from "@/trpc/server";
 import React from "react";
-import { Loan } from "@prisma/client";
+import { type Loan } from "@prisma/client";
 import LoanPage from "./_components/LoanPage";
 
 export interface LoanTableDataType extends Loan {

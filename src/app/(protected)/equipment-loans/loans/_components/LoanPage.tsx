@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { type LoanTableDataType } from "../page";
 import { LoanPendingApprovalColumns } from "./LoanColumns";
 import { DefaultLoanDataTable } from "./LoanDataTable";
+import { Loader2 } from "lucide-react";
 import {
   Tabs,
   TabsContent,
@@ -37,6 +38,7 @@ const LoanPage: React.FC<{
   const { toast } = useToast();
   const router = useRouter();
   const [openCancelDialog, setOpenCancelDialog] = useState<boolean>(false);
+  const [pendingCancel, setPendingCancel] = useState<boolean>();
   const [cancelId, setCancelId] = useState<string>();
   const [requestCollectionError, setRequestCollectionError] =
     useState<boolean>(false);
@@ -65,13 +67,14 @@ const LoanPage: React.FC<{
     //Delete Loan **Issue is the count will be screwed in db
   }, []);
   const executeCancel = () => {
+    setPendingCancel(true);
     if (cancelId != undefined) {
       cancelLoan
         .mutateAsync({ id: cancelId })
         .then(() => {
           setOpenCancelDialog(false);
           setCancelId("");
-
+          setPendingCancel(false);
           refetch().catch((error) => {
             console.log(error);
             toast({
@@ -82,6 +85,7 @@ const LoanPage: React.FC<{
           });
         })
         .catch(() => {
+          setPendingCancel(false);
           toast({
             title: "Something Unexpected Happened",
             description: "Please contact help desk",
@@ -89,6 +93,7 @@ const LoanPage: React.FC<{
           });
         });
     } else {
+      setPendingCancel(false);
       toast({
         title: "Something Unexpected Happened",
         description: "Please contact help desk",
@@ -160,6 +165,7 @@ const LoanPage: React.FC<{
               onClick={() => {
                 setOpenCancelDialog(false);
               }}
+              disabled={pendingCancel}
             >
               Cancel
             </AlertDialogCancel>
@@ -167,8 +173,12 @@ const LoanPage: React.FC<{
               onClick={() => {
                 executeCancel();
               }}
+              disabled={pendingCancel}
             >
               Continue
+              {pendingCancel && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -89,6 +89,7 @@ export const loanRequestRouter = createTRPCRouter({
                 { status: null },
                 { status: "RETURNED" },
                 { status: "REQUEST_COLLECTION" },
+                { status: "CANCELLED" },
               ],
             },
             equipment: {
