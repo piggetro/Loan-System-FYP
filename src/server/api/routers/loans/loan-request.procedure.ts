@@ -883,4 +883,21 @@ export const loanRequestRouter = createTRPCRouter({
         };
       }
     }),
+  getLostAndBrokenLoans: protectedProcedure.query(async ({ ctx }) => {
+    try {
+      const loanLostAndBroken = await ctx.db.loan.findMany({
+        where: {
+          status: "PARTIAL_RETURN",
+        },
+        include: {
+          loanedBy: { select: { name: true } },
+        },
+      });
+
+      return loanLostAndBroken;
+    } catch (err) {
+      console.log(err);
+      throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+    }
+  }),
 });
