@@ -147,7 +147,7 @@ const PasswordForm = () => {
         <Button
           onClick={form.handleSubmit(onSubmit)}
           disabled={!form.formState.isValid || isPending}
-          className="rounded bg-blue-500 px-4 py-2 font-bold text-white hover:bg-blue-600"
+          className="w-20"
         >
           {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           Save
