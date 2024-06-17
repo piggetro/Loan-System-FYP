@@ -17,7 +17,8 @@ interface ProfilePageProps {
         name: string,
         id: string,
         email: string,
-        mobile: string
+        mobile: string,
+        course: string,
     };
 }
 

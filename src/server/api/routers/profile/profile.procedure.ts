@@ -59,10 +59,8 @@ export const profileRouter = createTRPCRouter({
     updateParticulars: protectedProcedure
         .input(
             z.object({
-                fullName: z.string().min(1),
-                userID: z.string().min(1),
                 email: z.string().min(1),
-                mobileNumber: z.string().min(1),
+                mobileNumber: z.string(),
             })
         )
         .mutation(async ({ ctx, input }) => {
@@ -72,8 +70,6 @@ export const profileRouter = createTRPCRouter({
                         id: ctx.user.id,
                     },
                     data: {
-                        name: input.fullName,
-                        id: input.userID,
                         email: input.email,
                         mobile: input.mobileNumber,
                     },
@@ -95,14 +91,18 @@ export const profileRouter = createTRPCRouter({
                     id: true,
                     email: true,
                     mobile: true,
+                    course: true,
                 },
             });
+
+            console.log(data?.course?.name);
 
             return {
                 name: data?.name ?? "",
                 id: data?.id ?? "",
                 email: data?.email ?? "",
                 mobile: data?.mobile ?? "",
+                course: data?.course?.name ?? "No Course",
             };
         } catch (err) {
             console.log(err);

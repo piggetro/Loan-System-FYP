@@ -23,7 +23,8 @@ interface PersonalParticularFormProps {
     name: string,
     id: string,
     email: string,
-    mobile: string
+    mobile: string,
+    course: string,
   };
 }
 
@@ -43,9 +44,9 @@ const formSchema = z
       .min(1, { message: "Email must be at least 1 character long" })
       .max(255, { message: "Email must be at most 255 characters long" }),
     mobileNumber: z
-      .string()
-      .length(8, { message: "Invalid mobile number" }) // 8 digits
-      .regex(new RegExp("[0-9]", "g"), { message: "Invalid mobile number" }) // Only digits
+      .string(),
+    course: z
+      .string(),
   });
 
 const PersonalParticularForm: React.FC<PersonalParticularFormProps> = ({ user }) => {
@@ -62,71 +63,12 @@ const PersonalParticularForm: React.FC<PersonalParticularFormProps> = ({ user })
       fullName: user?.name ?? "",
       userID: user?.id ?? "",
       email: user?.email ?? "",
-      mobileNumber: user?.mobile ?? ""
+      mobileNumber: user?.mobile ?? "",
+      course: user?.course ?? ""
     },
     mode: "onChange",
   });
 
-  // const handleSave = async () => {
-  //   try {
-  //     // Perform save action for personal particulars
-  //     // Assuming you have an API route for updating user data
-  //     const response = await fetch('/api/updateUser', {
-  //       method: 'PUT',
-  //       headers: {
-  //         'Content-Type': 'application/json',
-  //       },
-  //       body: JSON.stringify({
-  //         fullName,
-  //         userID,
-  //         email,
-  //         mobileNumber,
-  //         course,
-  //       }),
-  //     });
-
-  //     if (response.ok) {
-  //       console.log('Personal particulars updated successfully');
-  //     } else {
-  //       console.error('Failed to update personal particulars');
-  //     }
-  //   } catch (error) {
-  //     console.error('Error updating personal particulars:', error);
-  //   }
-  // try {
-  //     const result = await updateUserProfile(fullName, mobileNumber , course);
-
-  //     if (result?.title) {
-  //       toast({
-  //         title: result.title,
-  //         description: result.description,
-  //         variant: result.variant ? 'destructive' : 'default',
-  //       });
-  //     } else {
-  //       toast({
-  //         title: 'Profile updated successfully',
-  //         description: 'Your personal particulars have been updated.',
-  //         variant: 'default',
-  //       });
-  //     }
-  //   } catch (error) {
-  //     console.error('Error updating personal particulars:', error);
-  //     toast({
-  //       title: 'Error updating personal particulars',
-  //       description: 'An error occurred while updating your personal particulars.',
-  //       variant: 'destructive',
-  //     });
-  //   }
-  // };
-
-  // const handleCancel = () => {
-  //   // Reset form fields for personal particulars
-  //   setFullName(user.name);
-  //   setUserID(user.id);
-  //   setEmail(user.email);
-  //   setMobileNumber(user.mobile);
-  //   //setCourse(user.courseId);
-  // };
 
   const { mutate: updateParticulars, isPending } =
     api.profile.updateParticulars.useMutation({
@@ -150,9 +92,10 @@ const PersonalParticularForm: React.FC<PersonalParticularFormProps> = ({ user })
   const onSubmit: SubmitHandler<z.infer<typeof formSchema>> = (
     values: z.infer<typeof formSchema>,
   ) => {
+    user.email = values.email;
+    user.mobile = values.mobileNumber;
+
     updateParticulars({
-      fullName: values.fullName ?? "",
-      userID: values.userID ?? "",
       email: values.email ?? "",
       mobileNumber: values.mobileNumber ?? "",
     });
@@ -169,7 +112,8 @@ const PersonalParticularForm: React.FC<PersonalParticularFormProps> = ({ user })
             <FormItem>
               <FormLabel>Full Name</FormLabel>
               <FormControl>
-                <Input type="text" placeholder="Enter your full name" {...field} disabled/>
+                {/* <Input type="text" placeholder="Enter your full name" {...field} disabled/> */}
+                <p>{user.name}</p>
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -183,7 +127,8 @@ const PersonalParticularForm: React.FC<PersonalParticularFormProps> = ({ user })
             <FormItem>
               <FormLabel>User ID</FormLabel>
               <FormControl>
-                <Input type="text" placeholder="Enter your user ID" {...field} disabled/>
+                {/* <Input type="text" placeholder="Enter your user ID" {...field} disabled/> */}
+                <p>{user.id}</p>
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -219,6 +164,20 @@ const PersonalParticularForm: React.FC<PersonalParticularFormProps> = ({ user })
         />
 
         {/* Course Dropdown */}
+        <FormField
+          name="course"
+          control={form.control}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Course</FormLabel>
+              <FormControl>
+                {/* <Input type="text" placeholder="Enter your user ID" {...field} disabled/> */}
+                <p>{user.course}</p>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
         {/* Buttons */}
         <Button
