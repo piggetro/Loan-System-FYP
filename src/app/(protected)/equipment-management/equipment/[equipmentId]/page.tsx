@@ -1,6 +1,7 @@
 import TopHeaderComponent from "@/app/_components/TopHeader";
 import React from "react";
 import { api } from "@/trpc/server";
+import EquipmentDetails from "./_components/EquipmentDetails";
 
 interface pageProps {
   params: { equipmentId: string };
@@ -16,10 +17,15 @@ const page = async ({ params }: pageProps) => {
   return (
     <div>
       <TopHeaderComponent
-        pathName="School Admin / Student"
-        pageName="Student"
+        pathName="Equipment Management / Equipment"
+        pageName="Equipment"
       />
-      <div></div>
+      <EquipmentDetails
+        equipment={data.equipment}
+        inventoryItems={data.inventoryItems ?? []}
+        categories={categories}
+        courses={courses}
+      />
     </div>
   );
 };

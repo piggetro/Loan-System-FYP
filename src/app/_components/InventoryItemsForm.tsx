@@ -32,8 +32,8 @@ export type InventoryItem = {
 interface InventoryItemsFormProps {
   setInventoryItems: React.Dispatch<React.SetStateAction<InventoryItem[]>>;
   setValid: React.Dispatch<React.SetStateAction<boolean>>;
-  reset: boolean;
-  setReset: React.Dispatch<React.SetStateAction<boolean>>;
+  reset?: boolean;
+  setReset?: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const assetSchema = z.object({
@@ -81,13 +81,13 @@ const InventoryItemsForm = ({
 
   useEffect(() => {
     reset && form.reset();
-    setReset(false);
+    setReset && setReset(false);
   }, [reset]);
 
   return (
     <Form {...form}>
       {fields.map((field, index) => (
-        <div key={field.id} className="mb-2 flex w-3/4 space-x-2">
+        <div key={field.id} className="mb-2 flex w-full space-x-2">
           <div className="flex-1">
             <FormField
               name={`assets.${index}.assetNumber`}
@@ -98,7 +98,11 @@ const InventoryItemsForm = ({
                     Asset Number
                   </FormLabel>
                   <FormControl>
-                    <Input id={`assetNumber-${index}`} {...field} />
+                    <Input
+                      placeholder="Asset Number"
+                      id={`assetNumber-${index}`}
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -113,7 +117,7 @@ const InventoryItemsForm = ({
                 <FormItem>
                   <FormLabel htmlFor={`cost-${index}`}>Cost</FormLabel>
                   <FormControl>
-                    <Input id={`cost-${index}`} {...field} />
+                    <Input placeholder="0.00" id={`cost-${index}`} {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -221,7 +225,7 @@ const InventoryItemsForm = ({
             warrantyExpiry: new Date(),
           })
         }
-        className="mt-4 flex w-3/4 items-center justify-center rounded-sm border-2 border-dashed border-gray-400 px-4 py-2 text-gray-400"
+        className="mt-4 flex w-full items-center justify-center rounded-sm border-2 border-dashed border-gray-400 px-4 py-2 text-gray-400"
       >
         <PlusCircleIcon className="h-6 w-6" />
       </button>
