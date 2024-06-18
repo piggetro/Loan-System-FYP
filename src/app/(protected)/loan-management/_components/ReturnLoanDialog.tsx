@@ -15,13 +15,23 @@ import { Button } from "@/app/_components/ui/button";
 import Image from "next/image";
 import { Input } from "@/app/_components/ui/input";
 
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/app/_components/ui/select";
+
 type ReturnDataType = {
   equipmentId: string;
   loanItemId: string;
   description: string;
   checklist: string | undefined;
   assetNumber: string;
-  returned: boolean;
+  returned: string;
 };
 
 const ReturnLoanDialog: React.FC<{
@@ -29,6 +39,7 @@ const ReturnLoanDialog: React.FC<{
   id: string;
 }> = ({ closeDialog, id }) => {
   const [isReturning, setIsReturning] = useState<boolean>(false);
+  const [partialReturn, setPartialReturn] = useState<boolean>(false);
   const { isFetching, data, isFetched } =
     api.loanRequest.getReadyLoanById.useQuery({
       id: id,
@@ -46,15 +57,15 @@ const ReturnLoanDialog: React.FC<{
 
   useEffect(() => {
     data?.loanItems.forEach((loanItem) => {
-      setProcessLoanData((p) => [
-        ...p,
+      setProcessLoanData((prev) => [
+        ...prev,
         {
           equipmentId: loanItem.equipment!.id,
           loanItemId: loanItem.id,
           description: loanItem.equipment!.name,
           checklist: loanItem.equipment!.checklist ?? "",
           assetNumber: loanItem.loanedInventory!.assetNumber,
-          returned: false,
+          returned: "Not Returned",
         },
       ]);
     });
@@ -65,25 +76,30 @@ const ReturnLoanDialog: React.FC<{
     const index = processedLoanData.findIndex(
       (loanData) => loanData.assetNumber === returnedInventoryAssetNum,
     );
-    if (index !== -1 && !processedLoanData[index]?.returned) {
+
+    if (index !== -1) {
       setProcessLoanData((prevItems) => {
-        // Create a copy of the array
         const updatedItems = [...prevItems];
-        // Update the specific index
-        updatedItems[index]!.returned = true;
-        // Return the new array
+        updatedItems[index]!.returned = "Returned";
         return updatedItems;
       });
 
       setReturnedInventoryAssetNum("");
       setReturnedItemLength(returnedItemLength + 1);
     }
+    let returnCount = 0;
+    processedLoanData.forEach((loan) => {
+      if (loan.returned !== "Not Returned") {
+        returnCount++;
+      }
+    });
+    setReturnedItemLength(returnCount);
   }, [processedLoanData, returnedInventoryAssetNum, returnedItemLength]);
 
   function onSubmit() {
     setIsReturning(true);
     processLoanCollection
-      .mutateAsync({ id: id })
+      .mutateAsync({ id: id, loanItemsToReturn: processedLoanData })
       .then((results) => {
         setIsReturning(false);
         collectionLoanToast({
@@ -114,6 +130,7 @@ const ReturnLoanDialog: React.FC<{
       </div>
     );
   }
+
   return (
     <div className="w-7/8 h-full overflow-y-scroll p-5">
       <div className="flex">
@@ -170,19 +187,41 @@ const ReturnLoanDialog: React.FC<{
             <TableRow>
               <TableHead className="w-1/4">Item Description</TableHead>
               <TableHead className="w-1/2">Checklist</TableHead>
-              <TableHead>Asset Number</TableHead>
+              <TableHead className="w-1/6">Asset Number</TableHead>
               <TableHead>Returned</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {processedLoanData.map((loanItem) => (
+            {processedLoanData.map((loanItem, index) => (
               <TableRow key={loanItem.equipmentId}>
                 <TableCell className="font-medium">
                   {loanItem.description}
                 </TableCell>
                 <TableCell>{loanItem.checklist}</TableCell>
                 <TableCell>{loanItem.assetNumber}</TableCell>
-                <TableCell>{loanItem.returned ? "Returned" : ""}</TableCell>
+                <TableCell>
+                  <Select
+                    value={loanItem.returned}
+                    onValueChange={(value) => {
+                      setProcessLoanData((prevItems) => {
+                        const updatedItems = [...prevItems];
+                        updatedItems[index]!.returned = value;
+                        return updatedItems;
+                      });
+                    }}
+                  >
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue placeholder="Select a fruit" />
+                    </SelectTrigger>
+
+                    <SelectContent>
+                      <SelectItem value="Not Returned">Not Returned</SelectItem>
+                      <SelectItem value="Returned">Returned</SelectItem>
+                      <SelectItem value="Lost">Lost</SelectItem>
+                      <SelectItem value="Broken">Broken</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -230,6 +269,7 @@ const ReturnLoanDialog: React.FC<{
         >
           Close
         </Button>
+
         <Button
           onClick={() => {
             onSubmit();
@@ -239,7 +279,7 @@ const ReturnLoanDialog: React.FC<{
           }
         >
           {isReturning && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          Process Collection
+          Process Return
         </Button>
       </div>
     </div>

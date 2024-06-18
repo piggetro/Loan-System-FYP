@@ -72,10 +72,6 @@ export const NAVBAR_NAV_ITEMS: NavbarNavItem[] = [
         path: "/equipment-management/equipment-categories",
       },
       {
-        title: "Equipment Status",
-        path: "/equipment-management/equipment-status",
-      },
-      {
         title: "General Settings",
         path: "/equipment-management/general-settings",
       },
@@ -93,10 +89,6 @@ export const NAVBAR_NAV_ITEMS: NavbarNavItem[] = [
         title: "Student",
         path: "/school-admin/student",
       },
-      // {
-      //   title: "Years of Admission",
-      //   path: "/school-admin/years-of-admission",
-      // },
       {
         title: "Courses",
         path: "/school-admin/courses",
@@ -116,10 +108,6 @@ export const NAVBAR_NAV_ITEMS: NavbarNavItem[] = [
       {
         title: "Access Rights",
         path: "/school-admin/access-rights",
-      },
-      {
-        title: "School Details",
-        path: "/school-admin/school-details",
       },
       {
         title: "Semester and Holidays",

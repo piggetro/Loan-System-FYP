@@ -8,7 +8,7 @@ const page = async () => {
     const currentYear = new Date().getFullYear();
     const years = [];
 
-    for (let i = currentYear - 5; i <= currentYear + 5; i++) {
+    for (let i = currentYear - 3; i <= currentYear + 3; i++) {
       years.push({ value: i.toString() });
     }
 

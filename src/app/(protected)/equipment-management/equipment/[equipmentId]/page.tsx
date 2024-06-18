@@ -1,11 +1,15 @@
 import TopHeaderComponent from "@/app/_components/TopHeader";
 import React from "react";
 import { api } from "@/trpc/server";
-import Equipments from "./_components/Equipments";
+import EquipmentDetails from "./_components/EquipmentDetails";
 
-const page = async () => {
+interface pageProps {
+  params: { equipmentId: string };
+}
+
+const page = async ({ params }: pageProps) => {
   const [data, categories, courses] = await Promise.all([
-    api.equipment.getAllEquipments(),
+    api.equipment.getEquipment({ id: params.equipmentId }),
     api.equipment.getCategories(),
     api.courses.getAllCourses(),
   ]);
@@ -16,7 +20,12 @@ const page = async () => {
         pathName="Equipment Management / Equipment"
         pageName="Equipment"
       />
-      <Equipments equipments={data} categories={categories} courses={courses}/>
+      <EquipmentDetails
+        equipment={data.equipment}
+        inventoryItems={data.inventoryItems ?? []}
+        categories={categories}
+        courses={courses}
+      />
     </div>
   );
 };

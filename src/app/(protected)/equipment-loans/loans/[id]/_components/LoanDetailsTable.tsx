@@ -56,7 +56,7 @@ const LoanDetailsTable: React.FC<{
       if (loanData.issuedById !== null) {
         tempEquipmentObject.quantityCollected = 1;
       }
-      if (loanData.returnedToId !== null) {
+      if (equipment.status === "RETURNED") {
         tempEquipmentObject.quantityReturned = 1;
       }
       processedLoanData.push(tempEquipmentObject);
@@ -76,7 +76,7 @@ const LoanDetailsTable: React.FC<{
           processedLoanData[index]!.quantityCollected =
             processedLoanData[index]!.quantityCollected + 1;
         }
-        if (loanData.returnedToId !== null) {
+        if (equipment.status === "RETURNED") {
           processedLoanData[index]!.quantityReturned =
             processedLoanData[index]!.quantityReturned + 1;
         }

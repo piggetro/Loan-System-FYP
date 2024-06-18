@@ -21,7 +21,7 @@ export interface PreparationLoanType extends Loan {
   loanedBy: { name: string } | null;
 }
 
-const PreparationPage: React.FC<{
+const ReturnPage: React.FC<{
   allSemesters: { name: string }[];
 }> = ({ allSemesters }) => {
   const { data, refetch } = api.loanRequest.getLoansForReturn.useQuery();
@@ -80,4 +80,4 @@ const PreparationPage: React.FC<{
   );
 };
 
-export default PreparationPage;
+export default ReturnPage;

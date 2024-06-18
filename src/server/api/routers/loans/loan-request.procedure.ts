@@ -72,12 +72,13 @@ export const loanRequestRouter = createTRPCRouter({
               contains: input.searchInput,
             },
             course: {
-              some: {
+              every: {
                 courseId: referingCourseId,
               },
             },
           },
         });
+
         const loanItems = await ctx.db.loanItem.groupBy({
           by: ["equipmentId"],
           _count: {
@@ -89,6 +90,7 @@ export const loanRequestRouter = createTRPCRouter({
                 { status: null },
                 { status: "RETURNED" },
                 { status: "REQUEST_COLLECTION" },
+                { status: "CANCELLED" },
               ],
             },
             equipment: {
@@ -415,6 +417,7 @@ export const loanRequestRouter = createTRPCRouter({
             loanId: input.id,
           },
         });
+
         const arrayOfEquipmentIdReq: { equipmentId: string }[] = [];
         loanItemsRequested.forEach((loanitem) => {
           arrayOfEquipmentIdReq.push({ equipmentId: loanitem.equipmentId! });
@@ -441,6 +444,7 @@ export const loanRequestRouter = createTRPCRouter({
                 { status: null },
                 { status: "RETURNED" },
                 { status: "REQUEST_COLLECTION" },
+                { status: "CANCELLED" },
               ],
             },
             OR: arrayOfEquipmentIdReq,
@@ -623,6 +627,7 @@ export const loanRequestRouter = createTRPCRouter({
             variant: "destructive",
           };
         }
+
         //Link AssetNumber to LoanItem
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
         input.loanedItem.forEach(async (loanItem) => {
@@ -641,6 +646,7 @@ export const loanRequestRouter = createTRPCRouter({
             },
           });
         });
+
         await ctx.db.inventory.updateMany({
           data: {
             status: "LOANED",
@@ -770,41 +776,104 @@ export const loanRequestRouter = createTRPCRouter({
     }
   }),
   processLoanReturn: protectedProcedure
-    .input(z.object({ id: z.string().min(1) }))
+    .input(
+      z.object({
+        id: z.string().min(1),
+        loanItemsToReturn: z.array(
+          z.object({
+            equipmentId: z.string().min(1),
+            loanItemId: z.string().min(1),
+            description: z.string().min(1),
+            checklist: z.string().optional(),
+            assetNumber: z.string().min(1),
+            returned: z.string().min(1),
+          }),
+        ),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       try {
-        await ctx.db.inventory.updateMany({
-          where: {
-            loanItems: {
-              some: {
-                loanId: input.id,
+        let partialReturn = false;
+
+        input.loanItemsToReturn.forEach((loanItem) => {
+          if (loanItem.returned !== "Returned") partialReturn = true;
+        });
+        if (partialReturn) {
+          for (const loanItem of input.loanItemsToReturn) {
+            let loanItemStatus: "RETURNED" | "BROKEN" | "LOST" = "RETURNED";
+            let inventoryStatus: "AVAILABLE" | "BROKEN" | "LOST" = "AVAILABLE";
+            switch (loanItem.returned) {
+              case "Lost":
+                loanItemStatus = "LOST";
+                inventoryStatus = "LOST";
+                break;
+              case "Broken":
+                loanItemStatus = "BROKEN";
+                inventoryStatus = "BROKEN";
+                break;
+            }
+            await ctx.db.inventory.update({
+              where: {
+                assetNumber: loanItem.assetNumber,
+              },
+              data: { status: inventoryStatus },
+            });
+            await ctx.db.loanItem.update({
+              where: {
+                id: loanItem.loanItemId,
+              },
+              data: {
+                status: loanItemStatus,
+              },
+            });
+          }
+          await ctx.db.loan.update({
+            where: { id: input.id },
+            data: {
+              dateReturned: new Date(),
+              status: "PARTIAL_RETURN",
+              returnedToId: ctx.user.id,
+            },
+          });
+          return {
+            title: "Loan Partially Returned",
+            description: "Loan Status has been updated to Partially Returned",
+            variant: "default",
+          };
+        } else {
+          await ctx.db.inventory.updateMany({
+            where: {
+              loanItems: {
+                some: {
+                  loanId: input.id,
+                },
               },
             },
-          },
-          data: { status: "AVAILABLE" },
-        });
-        await ctx.db.loan.update({
-          where: { id: input.id },
-          data: {
-            dateReturned: new Date(),
-            status: "RETURNED",
-            returnedToId: ctx.user.id,
-          },
-        });
-        await ctx.db.loanItem.updateMany({
-          where: {
-            loanId: input.id,
-          },
-          data: {
-            status: "RETURNED",
-          },
-        });
+            data: { status: "AVAILABLE" },
+          });
 
-        return {
-          title: "Loan Returned Collected",
-          description: "Loan Status has been updated to Returned",
-          variant: "default",
-        };
+          await ctx.db.loanItem.updateMany({
+            where: {
+              loanId: input.id,
+            },
+            data: {
+              status: "RETURNED",
+            },
+          });
+          await ctx.db.loan.update({
+            where: { id: input.id },
+            data: {
+              dateReturned: new Date(),
+              status: "RETURNED",
+              returnedToId: ctx.user.id,
+            },
+          });
+          return {
+            title: "Loan Returned",
+            description: "Loan Status has been updated to Returned",
+            variant: "default",
+          };
+        }
       } catch (error) {
         console.log(error);
         return {
@@ -814,4 +883,21 @@ export const loanRequestRouter = createTRPCRouter({
         };
       }
     }),
+  getLostAndBrokenLoans: protectedProcedure.query(async ({ ctx }) => {
+    try {
+      const loanLostAndBroken = await ctx.db.loan.findMany({
+        where: {
+          status: "PARTIAL_RETURN",
+        },
+        include: {
+          loanedBy: { select: { name: true } },
+        },
+      });
+
+      return loanLostAndBroken;
+    } catch (err) {
+      console.log(err);
+      throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+    }
+  }),
 });
