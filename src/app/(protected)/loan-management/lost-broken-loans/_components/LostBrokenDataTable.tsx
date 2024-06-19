@@ -38,7 +38,7 @@ interface DataTableProps<TData, TValue> {
   allSemesters: { name: string }[];
 }
 
-export function CollectionDataTable<TData, TValue>({
+export function LostBrokenDataTable<TData, TValue>({
   columns,
   data,
   allSemesters,
@@ -105,36 +105,6 @@ export function CollectionDataTable<TData, TValue>({
                   {semester.name}
                 </SelectItem>
               ))}
-            </SelectGroup>
-          </SelectContent>
-        </Select>
-        <Select
-          onValueChange={(key) => {
-            if (key === "All") {
-              table.getColumn("status")?.setFilterValue("");
-            } else {
-              table.getColumn("status")?.setFilterValue(key);
-            }
-          }}
-        >
-          <SelectTrigger className="mr-4  w-1/4 min-w-44">
-            <SelectValue placeholder="Status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectGroup>
-              <SelectLabel>Semester</SelectLabel>
-              <SelectItem key={"All"} value={"All"}>
-                All
-              </SelectItem>
-              <SelectItem key={"RETURNED"} value={"RETURNED"}>
-                Returned
-              </SelectItem>{" "}
-              <SelectItem key={"CANCELLED"} value={"CANCELLED"}>
-                Cancelled
-              </SelectItem>{" "}
-              <SelectItem key={"REJECTED"} value={"REJECTED"}>
-                Rejected
-              </SelectItem>
             </SelectGroup>
           </SelectContent>
         </Select>

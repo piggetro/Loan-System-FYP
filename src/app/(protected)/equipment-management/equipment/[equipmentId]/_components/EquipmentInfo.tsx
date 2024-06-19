@@ -1,5 +1,3 @@
-"use client";
-
 import React, { useState } from "react";
 import {
   Form,
@@ -17,7 +15,6 @@ import { Input } from "@/app/_components/ui/input";
 import { Loader2 } from "lucide-react";
 import { api } from "@/trpc/react";
 import { useToast } from "@/app/_components/ui/use-toast";
-import { Equipment } from "./EquipmentColumns";
 import { Textarea } from "@/app/_components/ui/textarea";
 import {
   Select,
@@ -27,24 +24,23 @@ import {
   SelectValue,
 } from "@/app/_components/ui/select";
 import { Checkbox } from "@/app/_components/ui/checkbox";
+import { Category } from "../../_components/AddEquipment";
 import { Course } from "@/app/(protected)/school-admin/courses/_components/CoursesColumns";
-import InventoryItemsForm, {
-  InventoryItem,
-} from "@/app/_components/InventoryItemsForm";
 
-interface AddEquipmentProps {
-  setEquipment: React.Dispatch<React.SetStateAction<Equipment[]>>;
+interface EquipmentInfoProps {
+  equipment: Equipment;
+  setEquipment: React.Dispatch<React.SetStateAction<Equipment>>;
   categories: Category[];
   courses: Course[];
 }
 
-export type Category = {
+export type Equipment = {
   id: string;
   name: string;
-  subCategory: {
-    id: string;
-    name: string;
-  }[];
+  checkList: string;
+  courses: string[];
+  category: string;
+  subCategory: string;
 };
 
 const formSchema = z.object({
@@ -59,47 +55,49 @@ const formSchema = z.object({
     .min(1),
   course: z.array(z.string()),
 });
-
-const AddEquipment = ({
+const EquipmentInfo = ({
+  equipment,
   setEquipment,
   categories,
   courses,
-}: AddEquipmentProps) => {
+}: EquipmentInfoProps) => {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: "",
-      checkList: "",
-      category: "",
-      subCategory: "",
-      course: [],
+      name: equipment.name,
+      checkList: equipment.checkList,
+      category: equipment.category,
+      subCategory: equipment.subCategory,
+      course: equipment.courses,
     },
     mode: "onChange",
   });
 
   const { toast } = useToast();
-  const [selectedCategory, setSelectedCategory] = useState<string>("");
-  const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
-  const [valid, setValid] = useState<boolean>(false);
-  const [reset, setReset] = useState<boolean>(false);
+  const [disabled, setDisabled] = useState(true);
+  const [selectedCategory, setSelectedCategory] = useState<string>(
+    equipment.category,
+  );
 
-  const { mutate: addEquipment, isPending } =
-    api.equipment.addEquipment.useMutation({
+  const { mutate: updateEquipment, isPending } =
+    api.equipment.updateEquipment.useMutation({
       onSuccess: (data) => {
-        setEquipment((prev) => [...prev, data]);
+        setEquipment(data);
+        setSelectedCategory(data.category);
+        setDisabled(true);
         toast({
           title: "Success",
-          description: "Equipment added successfully",
+          description: "Equipment updated successfully",
         });
-        form.reset();
-        setInventoryItems([]);
-        setReset(true);
+        form.reset({
+          ...data,
+        });
       },
       onError: (err) => {
         console.log(err);
         toast({
           title: "Error",
-          description: "An error occurred while adding equipment",
+          description: "An error occurred while updating equipment",
           variant: "destructive",
         });
       },
@@ -108,12 +106,9 @@ const AddEquipment = ({
   const onSubmit: SubmitHandler<z.infer<typeof formSchema>> = (
     values: z.infer<typeof formSchema>,
   ) => {
-    addEquipment({
+    updateEquipment({
+      id: equipment.id,
       ...values,
-      inventoryItems: inventoryItems.map((item) => ({
-        ...item,
-        cost: parseFloat(item.cost),
-      })),
     });
   };
 
@@ -125,6 +120,7 @@ const AddEquipment = ({
           <div className="mr-4 flex-1 space-y-4">
             <FormField
               name="name"
+              disabled={disabled}
               control={form.control}
               render={({ field }) => (
                 <FormItem>
@@ -143,6 +139,7 @@ const AddEquipment = ({
                 <FormItem>
                   <FormLabel>Category</FormLabel>
                   <Select
+                    disabled={disabled}
                     onValueChange={(value) => {
                       field.onChange(value);
                       form.setValue(field.name, value);
@@ -169,12 +166,14 @@ const AddEquipment = ({
               )}
             />
             <FormField
+              disabled={disabled}
               control={form.control}
               name="subCategory"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Sub Category</FormLabel>
                   <Select
+                    disabled={disabled}
                     onValueChange={(value) => {
                       field.onChange(value);
                       form.setValue(field.name, value);
@@ -210,6 +209,7 @@ const AddEquipment = ({
 
           <div className="flex-1 space-y-4">
             <FormField
+              disabled={disabled}
               name="checkList"
               control={form.control}
               render={({ field }) => (
@@ -245,6 +245,7 @@ const AddEquipment = ({
                           >
                             <FormControl>
                               <Checkbox
+                                disabled={disabled}
                                 checked={field.value?.includes(course.id)}
                                 onCheckedChange={(checked) => {
                                   return checked
@@ -275,32 +276,34 @@ const AddEquipment = ({
           </div>
         </div>
       </Form>
-      <div>
-        <h3 className="mb-2 mt-7 text-lg font-semibold">
-          Add Equipment to Inventory
-        </h3>
-        <div className="w-3/4">
-          <InventoryItemsForm
-            setInventoryItems={setInventoryItems}
-            setValid={setValid}
-            reset={reset}
-            setReset={setReset}
-          />
-        </div>
-      </div>
       <div className="flex justify-end">
         <Button
           type="button"
-          disabled={!form.formState.isValid || !valid || isPending}
-          onClick={form.handleSubmit(onSubmit)}
+          onClick={() => {
+            if (!disabled) {
+              form.reset();
+              setSelectedCategory(equipment.category);
+            }
+            setDisabled(!disabled);
+          }}
           className="mt-2"
         >
-          {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          Confirm
+          {disabled ? "Edit" : "Cancel"}
         </Button>
+        {!disabled && (
+          <Button
+            type="button"
+            disabled={!form.formState.isValid || isPending}
+            onClick={form.handleSubmit(onSubmit)}
+            className="ms-2 mt-2"
+          >
+            {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Confirm
+          </Button>
+        )}
       </div>
     </div>
   );
 };
 
-export default AddEquipment;
+export default EquipmentInfo;
