@@ -12,10 +12,17 @@ import { useToast } from "@/app/_components/ui/use-toast";
 import CollectionLoanDialog from "@/app/(protected)/loan-management/_components/CollectionLoanDialog";
 import {
   AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
   AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
 } from "@/app/_components/ui/alert-dialog";
 import PreparationLoanDialog from "@/app/(protected)/loan-management/_components/PreparationLoanDialog";
 import ReturnLoanDialog from "@/app/(protected)/loan-management/_components/ReturnLoanDialog";
+import { Loader2 } from "lucide-react";
 
 const LoanDetails: React.FC<{
   id: string;
@@ -33,6 +40,7 @@ const LoanDetails: React.FC<{
   const [openPreparationDialog, setOpenPreparationDialog] =
     useState<boolean>(false);
   const [openReturnDialog, setOpenReturnDialog] = useState<boolean>(false);
+  const [openRequestDialog, setOpenRequestDialog] = useState<boolean>(false);
 
   const {
     refetch: userAccessRightsRefetch,
@@ -89,20 +97,34 @@ const LoanDetails: React.FC<{
   }, []);
 
   const onRequestForCollectionLoan = useCallback(() => {
+    setOpenRequestDialog(true);
+  }, []);
+  const executeRequestCollection = () => {
     setIsPendingRequestCollection(true);
     requestCollection
       .mutateAsync({ id: id })
-      .then(() => {
+      .then((results) => {
         setIsPendingRequestCollection(false);
-        toast({ title: "Request For Collection Is Successful" });
-        refresh();
+        if (results === "PREPARING") {
+          toast({
+            title: "Request For Collection is Successful",
+            description: "Loan is now Preparing",
+          });
+          refresh();
+        } else {
+          toast({
+            title: "Request Collection Was Unsuccessful",
+            description:
+              "The Equipment that you have requested is currently unavailable.\nAll Loan Request are subject to Equipment Availability",
+          });
+        }
       })
       .catch(() => {
         //handle error
         setIsPendingRequestCollection(false);
         toast({ title: "Something Unexpected Happened" });
       });
-  }, []);
+  };
   const onPrepareLoan = useCallback(() => {
     setOpenPreparationDialog(true);
   }, []);
@@ -135,6 +157,34 @@ const LoanDetails: React.FC<{
             }}
             id={id}
           />
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={openRequestDialog} onOpenChange={setOpenRequestDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Request Collection</AlertDialogTitle>
+            <AlertDialogDescription>
+              Subject to Item Availability. Once Requested please proceed to
+              Classroom: _____ From _____ to _____
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              onClick={() => {
+                setOpenRequestDialog(false);
+              }}
+            >
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                executeRequestCollection();
+              }}
+            >
+              Continue
+            </AlertDialogAction>
+          </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
 

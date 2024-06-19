@@ -38,10 +38,10 @@ const LoanPage: React.FC<{
   const { toast } = useToast();
   const router = useRouter();
   const [openCancelDialog, setOpenCancelDialog] = useState<boolean>(false);
+  const [openRequestDialog, setOpenRequestDialog] = useState<boolean>(false);
+  const [requestCollectionId, setRequestCollectionId] = useState<string>();
   const [pendingCancel, setPendingCancel] = useState<boolean>();
   const [cancelId, setCancelId] = useState<string>();
-  const [requestCollectionError, setRequestCollectionError] =
-    useState<boolean>(false);
   // const [loanPendingApprovalData, setLoanPendingApprovalData] = useState()
   const loanPendingApprovalData = data?.filter(
     (loan) => loan.status === "PENDING_APPROVAL",
@@ -102,9 +102,13 @@ const LoanPage: React.FC<{
     }
   };
   const onRequestCollection = useCallback((loanDetails: LoanTableDataType) => {
+    setOpenRequestDialog(true);
+    setRequestCollectionId(loanDetails.id);
+  }, []);
+  const executeRequestCollection = () => {
     //Request collection
     requestCollection
-      .mutateAsync({ id: loanDetails.id })
+      .mutateAsync({ id: requestCollectionId! })
       .then((results) => {
         if (results === "PREPARING") {
           toast({
@@ -115,7 +119,11 @@ const LoanPage: React.FC<{
             //handle error
           });
         } else {
-          setRequestCollectionError(true);
+          toast({
+            title: "Request Collection Was Unsuccessful",
+            description:
+              "The Equipment that you have requested is currently unavailable.\nAll Loan Request are subject to Equipment Availability",
+          });
         }
       })
       .catch(() => {
@@ -125,33 +133,19 @@ const LoanPage: React.FC<{
         });
         //handle error
       });
-  }, []);
+  };
   const PendingApprovalColumns = useMemo(
-    () => LoanPendingApprovalColumns({ onView, onCancel, onRequestCollection }),
+    () =>
+      LoanPendingApprovalColumns({
+        onView,
+        onCancel,
+        onRequestCollection,
+      }),
     [],
   );
 
   return (
     <div className="rounded-lg bg-white p-5 shadow-lg">
-      <AlertDialog
-        open={requestCollectionError}
-        onOpenChange={setRequestCollectionError}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              Request Collection Was Unsuccessful
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              The Equipment that you have requested is currently unavailable.
-              All Loan Request are subject to Equipment Availability
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Close</AlertDialogCancel>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
       <AlertDialog open={openCancelDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -172,6 +166,38 @@ const LoanPage: React.FC<{
             <AlertDialogAction
               onClick={() => {
                 executeCancel();
+              }}
+              disabled={pendingCancel}
+            >
+              Continue
+              {pendingCancel && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      <AlertDialog open={openRequestDialog} onOpenChange={setOpenRequestDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Request Collection</AlertDialogTitle>
+            <AlertDialogDescription>
+              Subject to Item Availability. Once Requested please proceed to
+              Classroom: _____ From _____ to _____
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              onClick={() => {
+                setOpenRequestDialog(false);
+              }}
+              disabled={pendingCancel}
+            >
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                executeRequestCollection();
               }}
               disabled={pendingCancel}
             >
