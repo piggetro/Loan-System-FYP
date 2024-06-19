@@ -1,20 +1,7 @@
-import TopHeaderComponent from "@/app/_components/TopHeader";
-import React from 'react';
-import { api } from "@/trpc/server";
-import StaffType from "./_components/StaffType";
+import React from "react";
 
-const page = async () => {
-  const data = await api.staffTypes.getAllStaffTypes();
-
-  return (
-    <div>
-      <TopHeaderComponent
-        pathName="School Admin / Staff Types"
-        pageName="Staff Types"
-      />
-      <StaffType data={data} />
-    </div>
-  );
+const page = () => {
+  return <div>profile</div>;
 };
 
 export default page;
