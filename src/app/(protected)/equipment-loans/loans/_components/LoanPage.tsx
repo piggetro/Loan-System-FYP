@@ -110,6 +110,7 @@ const LoanPage: React.FC<{
     requestCollection
       .mutateAsync({ id: requestCollectionId! })
       .then((results) => {
+        console.log(results);
         if (results === "PREPARING") {
           toast({
             title: "Request For Collection is Successful",

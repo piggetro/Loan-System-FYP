@@ -6,6 +6,8 @@ import { loanRouter } from "./routers/loans/loan.procedure";
 import { coursesRouter } from "./routers/school-admin/courses.procedure";
 import { organisationUnitsRouter } from "./routers/school-admin/organisation-units.procedure";
 import { equipmentRouter } from "./routers/equipment-management/equipment.procedure";
+import { staffTypesRouter } from "./routers/school-admin/staff-types.procedure";
+import { profileRouter } from "./routers/profile/profile.procedure";
 
 /**
  * This is the primary router for your server.
@@ -20,6 +22,8 @@ export const appRouter = createTRPCRouter({
   courses: coursesRouter,
   organisationUnits: organisationUnitsRouter,
   equipment: equipmentRouter,
+  staffTypes: staffTypesRouter,
+  profile: profileRouter,
 });
 
 // export type definition of API

@@ -5,11 +5,12 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { lucia } from "@/lib/auth";
-import { db } from "@/server/db";
+// import { db } from "@/server/db";
 import { validateRequest } from "@/lib/auth/validate-request";
 import { Argon2id } from "oslo/password";
 import sendRegistrationEmail from "../email/registration-email";
 import { generate } from "generate-password";
+import { db } from "@/database";
 
 export interface ActionResponse<T> {
   fieldError?: Partial<Record<keyof T, string | undefined>>;
@@ -17,12 +18,11 @@ export interface ActionResponse<T> {
 }
 
 export async function login(adminId: string, password: string) {
-  return await db.user
-    .findUnique({
-      where: {
-        id: adminId,
-      },
-    })
+  return db
+    .selectFrom("User")
+    .selectAll()
+    .where("User.id", "=", adminId)
+    .executeTakeFirst()
     .then(async (results) => {
       if (results == null || results.hashed_password == null) {
         return {
@@ -31,7 +31,6 @@ export async function login(adminId: string, password: string) {
           variant: "destructive",
         };
       }
-
       const validatePassword = await new Argon2id().verify(
         results.hashed_password,
         password,
@@ -46,6 +45,7 @@ export async function login(adminId: string, password: string) {
           sessionCookie.value,
           sessionCookie.attributes,
         );
+        return redirect("/");
       } else {
         return {
           title: "Login Failed",
@@ -80,16 +80,15 @@ export async function logout(): Promise<{ error: string }> {
     sessionCookie.value,
     sessionCookie.attributes,
   );
-  return redirect("login");
+  return redirect("/login");
 }
 
 export async function register(adminId: string, mobile: string) {
-  return await db.user
-    .findUnique({
-      where: {
-        id: adminId,
-      },
-    })
+  return db
+    .selectFrom("User")
+    .selectAll()
+    .where("User.id", "=", adminId)
+    .executeTakeFirst()
     .then(async (results) => {
       if (results == null) {
         return {
@@ -123,10 +122,14 @@ export async function register(adminId: string, mobile: string) {
       //Email Verification
       const hashed_password = await new Argon2id().hash(password);
       try {
-        await db.user.update({
-          where: { id: adminId },
-          data: { mobile: mobile, hashed_password: hashed_password },
-        });
+        await db
+          .updateTable("User")
+          .set({
+            mobile: mobile,
+            hashed_password: hashed_password,
+          })
+          .where("User.id", "=", adminId)
+          .executeTakeFirst();
         return {
           title: "Registration Successful",
           description: "You may now login",

@@ -64,10 +64,6 @@ export const NAVBAR_NAV_ITEMS: NavbarNavItem[] = [
         path: "/equipment-management/equipment",
       },
       {
-        title: "Inventory",
-        path: "/equipment-management/inventory",
-      },
-      {
         title: "Equipment Categories",
         path: "/equipment-management/equipment-categories",
       },

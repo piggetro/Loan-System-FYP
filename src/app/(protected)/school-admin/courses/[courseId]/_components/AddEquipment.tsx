@@ -49,7 +49,7 @@ const AddEquipment = ({
   const { mutate: addEquipment, isPending } =
     api.courses.addEquipmentToCourse.useMutation({
       onSuccess: (data) => {
-        setEquipments(data);
+        setEquipments((prev) => [...prev, ...data]);
         toast({
           title: "Success",
           description: "Equipment assigned to course successfully",

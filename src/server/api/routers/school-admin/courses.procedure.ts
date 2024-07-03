@@ -1,18 +1,13 @@
 import { TRPCError } from "@trpc/server";
 import { protectedProcedure, createTRPCRouter } from "../../trpc";
 import { z } from "zod";
+import { createId } from "@paralleldrive/cuid2";
+import { jsonArrayFrom } from "kysely/helpers/postgres";
 
 export const coursesRouter = createTRPCRouter({
   getAllCourses: protectedProcedure.query(async ({ ctx }) => {
     try {
-      return await ctx.db.course.findMany({
-        select: {
-          id: true,
-          name: true,
-          code: true,
-          active: true,
-        },
-      });
+      return await ctx.db.selectFrom("Course").selectAll().execute();
     } catch (err) {
       console.log(err);
       throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
@@ -22,11 +17,8 @@ export const coursesRouter = createTRPCRouter({
     .input(z.object({ id: z.string().min(1) }))
     .mutation(async ({ ctx, input }) => {
       try {
-        return await ctx.db.course.delete({
-          where: {
-            id: input.id,
-          },
-        });
+        await ctx.db.deleteFrom("Course").where("id", "=", input.id).execute();
+        return;
       } catch (err) {
         console.log(err);
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
@@ -34,12 +26,10 @@ export const coursesRouter = createTRPCRouter({
     }),
   getEquipments: protectedProcedure.query(async ({ ctx }) => {
     try {
-      return await ctx.db.equipment.findMany({
-        select: {
-          id: true,
-          name: true,
-        },
-      });
+      return await ctx.db
+        .selectFrom("Equipment")
+        .select(["id", "name"])
+        .execute();
     } catch (err) {
       console.log(err);
       throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
@@ -55,28 +45,30 @@ export const coursesRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       try {
-        const course = await ctx.db.course.create({
-          data: {
-            name: input.name,
-            code: input.code,
-            active: true,
-            equipment: {
-              create: input.equipments.map((equipment) => ({
-                equipment: {
-                  connect: {
-                    id: equipment,
-                  },
-                },
-              })),
-            },
-          },
+        const course = await ctx.db.transaction().execute(async (trx) => {
+          const course = await trx
+            .insertInto("Course")
+            .values({
+              id: createId(),
+              name: input.name,
+              code: input.code,
+              active: true,
+            })
+            .returningAll()
+            .executeTakeFirstOrThrow();
+          input.equipments.length &&
+            (await trx
+              .insertInto("EquipmentOnCourses")
+              .values(
+                input.equipments.map((equipment) => ({
+                  courseId: course.id,
+                  equipmentId: equipment,
+                })),
+              )
+              .execute());
+          return course;
         });
-        return {
-          id: course.id,
-          name: course.name,
-          code: course.code,
-          active: course.active,
-        };
+        return course;
       } catch (err) {
         console.log(err);
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
@@ -86,36 +78,40 @@ export const coursesRouter = createTRPCRouter({
     .input(z.object({ id: z.string().min(1) }))
     .query(async ({ ctx, input }) => {
       try {
-        const data = await ctx.db.course.findUnique({
-          where: {
-            id: input.id,
-          },
-          select: {
-            id: true,
-            name: true,
-            code: true,
-            active: true,
-            equipment: {
-              select: {
-                equipment: {
-                  select: {
-                    id: true,
-                    name: true,
-                  },
-                },
-              },
-            },
-          },
-        });
+        const data = await ctx.db
+          .selectFrom("Course")
+          .select((eb) => [
+            "id",
+            "name",
+            "code",
+            "active",
+            jsonArrayFrom(
+              eb
+                .selectFrom("EquipmentOnCourses")
+                .leftJoin(
+                  "Equipment",
+                  "EquipmentOnCourses.equipmentId",
+                  "Equipment.id",
+                )
+                .select(["Equipment.id", "Equipment.name"])
+                .where("EquipmentOnCourses.courseId", "=", input.id),
+            ).as("equipments"),
+          ])
+          .where("Course.id", "=", input.id)
+          .executeTakeFirst();
+
         return {
           course: {
             id: data?.id ?? "",
             name: data?.name ?? "",
             code: data?.code ?? "",
-            active: data?.active ?? false,
+            active: data?.active ?? true,
           },
           equipments:
-            data?.equipment.map((equipment) => equipment.equipment) ?? [],
+            data?.equipments.map((equipment) => ({
+              id: equipment.id ?? "",
+              name: equipment.name ?? "",
+            })) ?? [],
         };
       } catch (err) {
         console.log(err);
@@ -131,14 +127,12 @@ export const coursesRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       try {
-        return await ctx.db.equipmentOnCourses.delete({
-          where: {
-            equipmentId_courseId: {
-              equipmentId: input.equipmentId,
-              courseId: input.id,
-            },
-          },
-        });
+        await ctx.db
+          .deleteFrom("EquipmentOnCourses")
+          .where("courseId", "=", input.id)
+          .where("equipmentId", "=", input.equipmentId)
+          .execute();
+        return;
       } catch (err) {
         console.log(err);
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
@@ -153,25 +147,21 @@ export const coursesRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       try {
-        await ctx.db.equipmentOnCourses.createMany({
-          data: input.equipmentIds.map((equipmentId) => ({
-            courseId: input.id,
-            equipmentId,
-          })),
-        });
-        return await ctx.db.equipment.findMany({
-          where: {
-            course: {
-              some: {
-                courseId: input.id,
-              },
-            },
-          },
-          select: {
-            id: true,
-            name: true,
-          },
-        });
+        await ctx.db
+          .insertInto("EquipmentOnCourses")
+          .values(
+            input.equipmentIds.map((equipmentId) => ({
+              courseId: input.id,
+              equipmentId,
+            })),
+          )
+          .execute();
+
+        return await ctx.db
+          .selectFrom("Equipment")
+          .select(["id", "name"])
+          .where("id", "in", input.equipmentIds)
+          .execute();
       } catch (err) {
         console.log(err);
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
@@ -188,16 +178,16 @@ export const coursesRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       try {
-        return await ctx.db.course.update({
-          where: {
-            id: input.id,
-          },
-          data: {
+        return await ctx.db
+          .updateTable("Course")
+          .set({
             name: input.name,
             code: input.code,
             active: input.active,
-          },
-        });
+          })
+          .where("id", "=", input.id)
+          .returningAll()
+          .executeTakeFirstOrThrow();
       } catch (err) {
         console.log(err);
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
@@ -211,21 +201,18 @@ export const coursesRouter = createTRPCRouter({
     )
     .query(async ({ ctx, input }) => {
       try {
-        return await ctx.db.equipment.findMany({
-          where: {
-            NOT: {
-              course: {
-                some: {
-                  courseId: input.id,
-                },
-              },
-            },
-          },
-          select: {
-            id: true,
-            name: true,
-          },
-        });
+        return await ctx.db
+          .selectFrom("Equipment")
+          .select(["id", "name"])
+          .where(
+            "id",
+            "not in",
+            ctx.db
+              .selectFrom("EquipmentOnCourses")
+              .select("equipmentId")
+              .where("courseId", "=", input.id),
+          )
+          .execute();
       } catch (err) {
         console.log(err);
       }

@@ -2,14 +2,36 @@
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 import { Lucia, TimeSpan } from "lucia";
+import { Mysql2Adapter } from "@lucia-auth/adapter-mysql";
+import { type Session, type User } from "@/db/types";
+import { createPool } from "mysql2/promise";
+import { NodePostgresAdapter } from "@lucia-auth/adapter-postgresql";
+import { Pool } from "pg";
+import { Kysely, PostgresDialect } from "kysely";
 
-import { PrismaAdapter } from "@lucia-auth/adapter-prisma";
-import { PrismaClient } from "@prisma/client";
-import type { User } from "@prisma/client";
+// const pool = createPool({
+//   database: process.env.DB_NAME!,
+//   host: process.env.DB_HOST!,
+//   user: process.env.DB_USERNAME!,
+//   password: process.env.DB_PASSWORD!,
+//   port: Number(process.env.DB_PORT!),
+//   connectionLimit: 10,
+// });
+// const adapter = new Mysql2Adapter(pool, { user: "User", session: "Session" });
 
-const client = new PrismaClient();
+const pool = new Pool({
+  database: process.env.DB_NAME!,
+  host: process.env.DB_HOST!,
+  user: process.env.DB_USERNAME!,
+  password: process.env.DB_PASSWORD!,
+  port: Number(process.env.DB_PORT!),
+  max: 10,
+});
 
-const adapter = new PrismaAdapter(client.session, client.user);
+const adapter = new NodePostgresAdapter(pool, {
+  user: "User",
+  session: "Session",
+});
 
 export const lucia = new Lucia(adapter, {
   getUserAttributes: (attributes) => {

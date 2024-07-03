@@ -56,6 +56,7 @@ const ReviewLoanRequest: React.FC<LoanRequestType> = ({
         });
       },
       onError: (error) => {
+        console.log(error.data);
         toast({
           title: "Something Unexpected Happened",
           description: error.message,
@@ -145,6 +146,12 @@ const ReviewLoanRequest: React.FC<LoanRequestType> = ({
         </DialogClose>
         <Button
           onClick={() => {
+            console.log({
+              equipment: equipments,
+              remarks: remarks,
+              dueDate: returnDate,
+              approvingLecturerEmail: approvingLecturerEmail,
+            });
             createLoanRequest({
               equipment: equipments,
               remarks: remarks,

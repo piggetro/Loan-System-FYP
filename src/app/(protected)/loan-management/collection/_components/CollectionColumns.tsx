@@ -22,7 +22,9 @@ export const CollectionColumns = ({
     accessorKey: "loanedBy.name",
     id: "name",
     header: "Name",
-    cell: ({ row }) => <div className="">{row.getValue("name")}</div>,
+    cell: ({ row }) => (
+      <div className="">{row.getValue("name") ?? "Deleted User"}</div>
+    ),
   },
 
   {

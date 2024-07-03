@@ -1,36 +1,31 @@
 import { TRPCError } from "@trpc/server";
 import { protectedProcedure, createTRPCRouter } from "../../trpc";
-import { date, z } from "zod";
+import { z } from "zod";
+import { jsonArrayFrom } from "kysely/helpers/postgres";
+import { createId } from "@paralleldrive/cuid2";
 
 export const equipmentRouter = createTRPCRouter({
   getAllEquipments: protectedProcedure.query(async ({ ctx }) => {
     try {
-      const data = await ctx.db.equipment.findMany({
-        select: {
-          id: true,
-          name: true,
-          subCategory: {
-            select: {
-              name: true,
-              category: {
-                select: {
-                  name: true,
-                },
-              },
-            },
-          },
-          _count: {
-            select: {
-              inventory: true,
-            },
-          },
-        },
-      });
-      return data.map(({ _count, subCategory, ...equipment }) => ({
+      const data = await ctx.db
+        .selectFrom("Equipment")
+        .leftJoin("SubCategory", "Equipment.subCategoryId", "SubCategory.id")
+        .leftJoin("Category", "SubCategory.categoryId", "Category.id")
+        .leftJoin("Inventory", "Equipment.id", "Inventory.equipmentId")
+        .groupBy(["Equipment.id", "SubCategory.name", "Category.name"])
+        .select([
+          "Equipment.id",
+          "Equipment.name",
+          "SubCategory.name as subCategory",
+          "Category.name as category",
+          ctx.db.fn.count("Inventory.id").as("inventoryCount"),
+        ])
+        .execute();
+      return data.map((equipment) => ({
         ...equipment,
-        category: subCategory?.category.name ?? "",
-        subCategory: subCategory?.name ?? "",
-        inventoryCount: _count.inventory,
+        subCategory: equipment.subCategory ?? "",
+        category: equipment.category ?? "",
+        inventoryCount: parseInt(equipment.inventoryCount?.toString() ?? ""),
       }));
     } catch (err) {
       console.log(err);
@@ -41,11 +36,11 @@ export const equipmentRouter = createTRPCRouter({
     .input(z.object({ id: z.string() }))
     .mutation(async ({ ctx, input }) => {
       try {
-        await ctx.db.equipment.delete({
-          where: {
-            id: input.id,
-          },
-        });
+        await ctx.db
+          .deleteFrom("Equipment")
+          .where("id", "=", input.id)
+          .execute();
+        return;
       } catch (err) {
         console.log(err);
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
@@ -53,18 +48,19 @@ export const equipmentRouter = createTRPCRouter({
     }),
   getCategories: protectedProcedure.query(async ({ ctx }) => {
     try {
-      return await ctx.db.category.findMany({
-        select: {
-          id: true,
-          name: true,
-          subCategory: {
-            select: {
-              id: true,
-              name: true,
-            },
-          },
-        },
-      });
+      return await ctx.db
+        .selectFrom("Category")
+        .select((eb) => [
+          "id",
+          "name",
+          jsonArrayFrom(
+            eb
+              .selectFrom("SubCategory")
+              .select(["SubCategory.id", "SubCategory.name"])
+              .whereRef("SubCategory.categoryId", "=", eb.ref("Category.id")),
+          ).as("subCategory"),
+        ])
+        .execute();
     } catch (err) {
       console.log(err);
       throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
@@ -90,52 +86,70 @@ export const equipmentRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       try {
-        const { _count, subCategory, ...equipment } =
-          await ctx.db.equipment.create({
-            data: {
-              name: input.name,
-              checklist: input.checkList,
-              subCategoryId: input.subCategory,
-              course: {
-                create: input.course.map((course) => ({
-                  courseId: course,
-                })),
-              },
-              inventory: {
-                create: input.inventoryItems.map((item) => ({
-                  assetNumber: item.assetNumber,
-                  cost: item.cost,
-                  status: "AVAILABLE",
-                  datePurchased: item.datePurchased,
-                  warrantyExpiry: item.warrantyExpiry,
-                })),
-              },
-            },
-            select: {
-              id: true,
-              name: true,
-              subCategory: {
-                select: {
-                  name: true,
-                  category: {
-                    select: {
-                      name: true,
-                    },
-                  },
-                },
-              },
-              _count: {
-                select: {
-                  inventory: true,
-                },
-              },
-            },
-          });
+        const equipment = await ctx.db
+          .with("newEquipment", (db) =>
+            db
+              .insertInto("Equipment")
+              .values({
+                id: createId(),
+                name: input.name,
+                checklist: input.checkList,
+                subCategoryId: input.subCategory,
+                updatedAt: new Date(),
+              })
+              .returning(["id", "name", "subCategoryId"]),
+          )
+          .with("equipmentDetails", (db) =>
+            db
+              .selectFrom("newEquipment")
+              .leftJoin(
+                "SubCategory",
+                "newEquipment.subCategoryId",
+                "SubCategory.id",
+              )
+              .leftJoin("Category", "SubCategory.categoryId", "Category.id")
+              .select([
+                "newEquipment.id",
+                "newEquipment.name",
+                "SubCategory.name as subCategory",
+                "Category.name as category",
+              ]),
+          )
+          .selectFrom("equipmentDetails")
+          .selectAll()
+          .executeTakeFirstOrThrow();
+
+        input.inventoryItems.length &&
+          (await ctx.db
+            .insertInto("Inventory")
+            .values(
+              input.inventoryItems.map((item) => ({
+                id: createId(),
+                equipmentId: equipment.id,
+                assetNumber: item.assetNumber,
+                cost: item.cost.toFixed(2),
+                status: "AVAILABLE",
+                datePurchased: item.datePurchased,
+                warrantyExpiry: item.warrantyExpiry,
+              })),
+            )
+            .execute());
+
+        input.course.length &&
+          (await ctx.db
+            .insertInto("EquipmentOnCourses")
+            .values(
+              input.course.map((course) => ({
+                courseId: course,
+                equipmentId: equipment.id,
+              })),
+            )
+            .execute());
         return {
           ...equipment,
-          category: subCategory?.category.name ?? "",
-          subCategory: subCategory?.name ?? "",
-          inventoryCount: _count.inventory,
+          subCategory: equipment.subCategory ?? "",
+          category: equipment.category ?? "",
+          inventoryCount: input.inventoryItems.length,
         };
       } catch (err) {
         console.log(err);
@@ -146,49 +160,54 @@ export const equipmentRouter = createTRPCRouter({
     .input(z.object({ id: z.string() }))
     .query(async ({ ctx, input }) => {
       try {
-        const data = await ctx.db.equipment.findUnique({
-          where: {
-            id: input.id,
-          },
-          select: {
-            id: true,
-            name: true,
-            checklist: true,
-            course: {
-              select: {
-                courseId: true,
-              },
-            },
-            subCategory: {
-              select: {
-                id: true,
-                categoryId: true,
-              },
-            },
-            inventory: {
-              select: {
-                id: true,
-                assetNumber: true,
-                cost: true,
-                status: true,
-                datePurchased: true,
-                warrantyExpiry: true,
-              },
-            },
-          },
-        });
+        const [equipment, courses, inventory] = await Promise.all([
+          await ctx.db
+            .selectFrom("Equipment")
+            .leftJoin(
+              "SubCategory",
+              "Equipment.subCategoryId",
+              "SubCategory.id",
+            )
+            .leftJoin("Category", "SubCategory.categoryId", "Category.id")
+            .select([
+              "Equipment.id",
+              "Equipment.name",
+              "Equipment.checklist",
+              "SubCategory.id as subCategory",
+              "Category.id as category",
+            ])
+            .where("Equipment.id", "=", input.id)
+            .executeTakeFirst(),
+          ctx.db
+            .selectFrom("EquipmentOnCourses")
+            .select("courseId")
+            .where("equipmentId", "=", input.id)
+            .execute(),
+          await ctx.db
+            .selectFrom("Inventory")
+            .select([
+              "id",
+              "assetNumber",
+              "cost",
+              "status",
+              "datePurchased",
+              "warrantyExpiry",
+            ])
+            .where("equipmentId", "=", input.id)
+            .execute(),
+        ]);
         return {
           equipment: {
-            id: data?.id ?? "",
-            name: data?.name ?? "",
-            checkList: data?.checklist ?? "",
-            courses: data?.course.map((course) => course.courseId) ?? [],
-            subCategory: data?.subCategory?.id ?? "",
-            category: data?.subCategory?.categoryId ?? "",
+            id: equipment?.id ?? "",
+            name: equipment?.name ?? "",
+            checkList: equipment?.checklist ?? "",
+            subCategory: equipment?.subCategory ?? "",
+            category: equipment?.category ?? "",
+            courses: courses.map((course) => course.courseId),
           },
-          inventoryItems: data?.inventory.map((item) => ({
+          inventoryItems: inventory.map((item) => ({
             ...item,
-            cost: item.cost.toFixed(2),
+            cost: parseInt(item.cost).toFixed(2),
           })),
         };
       } catch (err) {
@@ -209,45 +228,43 @@ export const equipmentRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       try {
-        const data = await ctx.db.equipment.update({
-          where: {
-            id: input.id,
-          },
-          data: {
+        const equipment = await ctx.db
+          .updateTable("Equipment")
+          .set({
             name: input.name,
             checklist: input.checkList,
             subCategoryId: input.subCategory,
-            course: {
-              deleteMany: {},
-              create: input.course.map((course) => ({
-                courseId: course,
-              })),
-            },
-          },
-          select: {
-            id: true,
-            name: true,
-            checklist: true,
-            course: {
-              select: {
-                courseId: true,
-              },
-            },
-            subCategory: {
-              select: {
-                id: true,
-                categoryId: true,
-              },
-            },
-          },
-        });
+            updatedAt: new Date(),
+          })
+          .where("id", "=", input.id)
+          .returning(["id", "name", "checklist", "subCategoryId"])
+          .executeTakeFirst();
+
+        input.course.length &&
+          (await ctx.db.transaction().execute(async (trx) => {
+            await trx
+              .deleteFrom("EquipmentOnCourses")
+              .where("equipmentId", "=", input.id)
+              .execute();
+            await trx
+              .insertInto("EquipmentOnCourses")
+              .values(
+                input.course.map((course) => ({
+                  equipmentId: input.id,
+                  courseId: course,
+                })),
+              )
+              .execute();
+            return;
+          }));
+
         return {
-          id: data.id,
-          name: data.name,
-          checkList: data.checklist ?? "",
-          courses: data.course.map((course) => course.courseId),
-          subCategory: data.subCategory?.id ?? "",
-          category: data.subCategory?.categoryId ?? "",
+          id: equipment?.id ?? "",
+          name: equipment?.name ?? "",
+          checkList: equipment?.checklist ?? "",
+          subCategory: equipment?.subCategoryId ?? "",
+          category: input.category,
+          courses: input.course,
         };
       } catch (err) {
         console.log(err);
@@ -270,32 +287,31 @@ export const equipmentRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       try {
-        await ctx.db.inventory.createMany({
-          data: input.inventoryItems.map((item) => ({
-            equipmentId: input.id,
-            assetNumber: item.assetNumber,
-            cost: item.cost,
-            status: "AVAILABLE",
-            datePurchased: item.datePurchased,
-            warrantyExpiry: item.warrantyExpiry,
-          })),
-        });
-        const data = await ctx.db.inventory.findMany({
-          where: {
-            equipmentId: input.id,
-          },
-          select: {
-            id: true,
-            assetNumber: true,
-            cost: true,
-            status: true,
-            datePurchased: true,
-            warrantyExpiry: true,
-          },
-        });
+        const data = await ctx.db
+          .insertInto("Inventory")
+          .values(
+            input.inventoryItems.map((item) => ({
+              id: createId(),
+              equipmentId: input.id,
+              assetNumber: item.assetNumber,
+              cost: item.cost.toFixed(2),
+              status: "AVAILABLE",
+              datePurchased: item.datePurchased,
+              warrantyExpiry: item.warrantyExpiry,
+            })),
+          )
+          .returning([
+            "id",
+            "assetNumber",
+            "cost",
+            "status",
+            "datePurchased",
+            "warrantyExpiry",
+          ])
+          .execute();
         return data.map((item) => ({
           ...item,
-          cost: item.cost.toFixed(2),
+          cost: parseInt(item.cost).toFixed(2),
         }));
       } catch (err) {
         console.log(err);
@@ -315,29 +331,32 @@ export const equipmentRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       try {
-        const data = await ctx.db.inventory.update({
-          where: {
-            id: input.id,
-          },
-          data: {
+        const data = await ctx.db
+          .updateTable("Inventory")
+          .set({
             assetNumber: input.assetNumber,
-            cost: input.cost,
             status: input.status as "AVAILABLE" | "LOST" | "LOANED" | "BROKEN",
+            cost: input.cost.toFixed(2),
             datePurchased: input.datePurchased,
             warrantyExpiry: input.warrantyExpiry,
-          },
-          select: {
-            id: true,
-            assetNumber: true,
-            cost: true,
-            status: true,
-            datePurchased: true,
-            warrantyExpiry: true,
-          },
-        });
+          })
+          .where("id", "=", input.id)
+          .returning([
+            "id",
+            "assetNumber",
+            "cost",
+            "status",
+            "datePurchased",
+            "warrantyExpiry",
+          ])
+          .executeTakeFirst();
         return {
-          ...data,
-          cost: data.cost.toFixed(2),
+          id: data?.id ?? "",
+          assetNumber: data?.assetNumber ?? "",
+          status: data?.status ?? "",
+          dataPurchased: data?.datePurchased ?? new Date(),
+          warrantyExpiry: data?.warrantyExpiry ?? new Date(),
+          cost: parseInt(data?.cost ?? "").toFixed(2),
         };
       } catch (err) {
         console.log(err);
@@ -348,11 +367,66 @@ export const equipmentRouter = createTRPCRouter({
     .input(z.object({ id: z.string() }))
     .mutation(async ({ ctx, input }) => {
       try {
-        await ctx.db.inventory.delete({
-          where: {
-            id: input.id,
-          },
-        });
+        await ctx.db
+          .deleteFrom("Inventory")
+          .where("id", "=", input.id)
+          .execute();
+        return;
+      } catch (err) {
+        console.log(err);
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      }
+    }),
+  getGeneralSettings: protectedProcedure.query(async ({ ctx }) => {
+    try {
+      const data = await ctx.db
+        .selectFrom("GeneralSettings")
+        .selectAll()
+        .executeTakeFirst();
+      return {
+        timeOfCollection: {
+          start: data?.startTimeOfCollection ?? "",
+          end: data?.endTimeOfCollection ?? "",
+        },
+        requestForCollection: {
+          start: data?.startRequestForCollection ?? "",
+          end: data?.endRequestForCollection ?? "",
+        },
+        voidLoan: {
+          numberOfDays: data?.voidLoanNumberOfDays ?? 0,
+          timing: data?.voidLoanTiming ?? "",
+        },
+      };
+    } catch (err) {
+      console.log(err);
+      throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+    }
+  }),
+  updateGeneralSettings: protectedProcedure
+    .input(
+      z.object({
+        startTimeOfCollection: z.string().min(1),
+        endTimeOfCollection: z.string().min(1),
+        startRequestForCollection: z.string().min(1),
+        endRequestForCollection: z.string().min(1),
+        voidLoanNumberOfDays: z.number().min(1),
+        voidLoanTiming: z.string().min(1),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      try {
+        return await ctx.db
+          .updateTable("GeneralSettings")
+          .set({
+            startTimeOfCollection: input.startTimeOfCollection,
+            endTimeOfCollection: input.endTimeOfCollection,
+            startRequestForCollection: input.startRequestForCollection,
+            endRequestForCollection: input.endRequestForCollection,
+            voidLoanNumberOfDays: input.voidLoanNumberOfDays,
+            voidLoanTiming: input.voidLoanTiming,
+          })
+          .returningAll()
+          .executeTakeFirstOrThrow();
       } catch (err) {
         console.log(err);
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });

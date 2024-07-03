@@ -22,7 +22,6 @@ import {
 } from "@/app/_components/ui/alert-dialog";
 import PreparationLoanDialog from "@/app/(protected)/loan-management/_components/PreparationLoanDialog";
 import ReturnLoanDialog from "@/app/(protected)/loan-management/_components/ReturnLoanDialog";
-import { Loader2 } from "lucide-react";
 
 const LoanDetails: React.FC<{
   id: string;
@@ -220,26 +219,26 @@ const LoanDetails: React.FC<{
         <div className="mt-4 text-sm">
           <p className="flex">
             <span className="font-bold">Loaner:&nbsp;</span>
-            {!data.loanedBy ? "Deleted Account" : data.loanedBy.name}
+            {!data.loanedById ? "Deleted Account" : data.loanedByName}
           </p>
           <p className="flex">
             <span className="font-bold">Approved By:&nbsp;</span>
-            {data.approvedBy?.name ?? "-"}
+            {data.approvedByName ?? "-"}
           </p>
           <p className="flex">
             <span className="font-bold">Remark(s):&nbsp;</span> {data.remarks}
           </p>
           <p className="flex">
             <span className="font-bold">Prepared By:&nbsp;</span>
-            {data.preparedBy?.name ?? "-"}
+            {data.preparedByName ?? "-"}
           </p>
           <p className="flex">
             <span className="font-bold">Issued By:&nbsp;</span>
-            {data.issuedBy?.name ?? "-"}
+            {data.issuedByName ?? "-"}
           </p>
           <p className="flex">
             <span className="font-bold">Returned To:&nbsp;</span>
-            {data.returnedTo?.name ?? "-"}
+            {data.returnedToName ?? "-"}
           </p>
           <p className="flex">
             <span className="font-bold">Loan Status:&nbsp;</span> {data.status}

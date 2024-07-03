@@ -8,7 +8,6 @@ import { Label } from "@/app/_components/ui/label";
 import React, { useEffect, useState } from "react";
 import { EquipmentDataTable, SummaryDataTable } from "./DataTable";
 import { equipmentColumns, summaryColumns } from "./Columns";
-import { type Category, type SubCategory } from "@prisma/client";
 import { Dialog, DialogTrigger } from "@/app/_components/ui/dialog";
 import ReviewLoanRequest from "./ReviewLoanRequest";
 import { z } from "zod";
@@ -45,6 +44,7 @@ import { Textarea } from "@/app/_components/ui/textarea";
 import { useRouter } from "next/navigation";
 import { api } from "@/trpc/react";
 import { Skeleton } from "@/app/_components/ui/skeleton";
+import { type Category, type SubCategory } from "@/db/types";
 
 const formSchema = z.object({
   remarks: z.string().min(1, "Required").max(150),
@@ -52,10 +52,8 @@ const formSchema = z.object({
   approvingLecturer: z.string().min(1),
 });
 type ApprovingLecturersType = {
-  grantedUser: {
-    name: string;
-    email: string;
-  };
+  name: string;
+  email: string;
 };
 const LoanRequestComponent: React.FC<{
   categoriesAndSubCategories: {
@@ -110,6 +108,10 @@ const LoanRequestComponent: React.FC<{
           subCategory: updatedItems[indexOfItem]!.subCategory,
           quantityAvailable: updatedItems[indexOfItem]!.quantityAvailable,
         };
+        console.log(
+          updatedItems[indexOfItem]!.quantitySelected +
+            itemToAdd.quantitySelected,
+        );
         setSelectedEquipment(updatedItems);
       }
     } else {
@@ -159,10 +161,10 @@ const LoanRequestComponent: React.FC<{
   //Using email to assign approving lecturer name
   useEffect(() => {
     const lecturer = approvingLecturers.find((lecturer) => {
-      return lecturer.grantedUser.email === approvingLecturerEmail;
+      return lecturer.email === approvingLecturerEmail;
     });
     if (lecturer != undefined) {
-      setApprovingLecturer(lecturer?.grantedUser.name);
+      setApprovingLecturer(lecturer.name);
     }
   }, [approvingLecturerEmail]);
 
@@ -248,10 +250,10 @@ const LoanRequestComponent: React.FC<{
 
                                 {approvingLecturers.map((lecturer) => (
                                   <SelectItem
-                                    key={lecturer.grantedUser.email}
-                                    value={lecturer.grantedUser.email}
+                                    key={lecturer.email}
+                                    value={lecturer.email}
                                   >
-                                    {lecturer.grantedUser.name}
+                                    {lecturer.name}
                                   </SelectItem>
                                 ))}
                               </SelectGroup>

@@ -7,12 +7,43 @@ import {
   TableHeader,
   TableRow,
 } from "@/app/_components/ui/table";
-import { type LoanItem, type Equipment, type Loan } from "@prisma/client";
-interface ExtendedLoanItems extends LoanItem {
-  equipment: Equipment | null;
+import { type LoanStatus } from "@/db/enums";
+
+export interface EquipmentDetailsData {
+  id: string;
+  name: string;
+  photoPath: string | null;
+  updatedAt: Date | null;
+  subCategoryId: string | null;
+  checklist: string | null;
+  status: string | null;
 }
-interface LoanDetailsData extends Loan {
-  loanItems: ExtendedLoanItems[];
+
+export interface LoanDetailsData {
+  id: string;
+  loanId: string;
+  remarks: string;
+  dueDate: Date;
+  status: LoanStatus;
+  signature: string | null;
+  loanedById: string | null;
+  approvedById: string | null;
+  preparedById: string | null;
+  issuedById: string | null;
+  returnedToId: string | null;
+  approvingLecturerId: string | null;
+  dateCreated: Date;
+  collectionReferenceNumber: string | null;
+  datePrepared: Date | null;
+  dateIssued: Date | null;
+  dateCollected: Date | null;
+  dateReturned: Date | null;
+  loanedByName: string | null;
+  approvedByName: string | null;
+  preparedByName: string | null;
+  issuedByName: string | null;
+  returnedToName: string | null;
+  loanItems: EquipmentDetailsData[];
 }
 
 type EquipmentDataType = {
@@ -32,14 +63,14 @@ const LoanDetailsTable: React.FC<{
   const processedLoanData: EquipmentDataType[] = [];
   loanData.loanItems.forEach((equipment) => {
     const index = processedLoanData.findIndex(
-      (equipmentInArr) => equipmentInArr.id === equipment.equipment!.id,
+      (equipmentInArr) => equipmentInArr.id === equipment.id,
     );
 
     if (index === -1) {
       const tempEquipmentObject: EquipmentDataType = {
-        id: equipment.equipment!.id,
-        description: equipment.equipment!.name,
-        checklist: equipment.equipment!.checklist,
+        id: equipment.id,
+        description: equipment.name,
+        checklist: equipment.checklist,
         quantityRequested: 1,
         quantityApproved: 0,
         quantityPrepared: 0,

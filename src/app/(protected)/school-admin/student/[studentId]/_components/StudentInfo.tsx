@@ -140,7 +140,11 @@ const StudentInfo = ({
   const onSubmit: SubmitHandler<z.infer<typeof formSchema>> = (
     values: z.infer<typeof formSchema>,
   ) => {
-    updateStudent(values);
+    updateStudent({
+      ...values,
+      id: student.id,
+      newId: values.id,
+    });
   };
 
   return (

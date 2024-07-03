@@ -2,9 +2,27 @@ import TopHeaderComponent from "@/app/_components/TopHeader";
 import React from "react";
 import { api } from "@/trpc/server";
 import ApprovalManagementComponent from "./_components/ApprovalManagement";
-import { type Loan } from "@prisma/client";
+import { type LoanStatus } from "@/db/enums";
 
-export interface ApprovalManagementType extends Loan {
+export interface ApprovalManagementType {
+  id: string;
+  loanId: string;
+  remarks: string;
+  dueDate: Date;
+  status: LoanStatus;
+  signature: string | null;
+  loanedById: string | null;
+  approvedById: string | null;
+  preparedById: string | null;
+  issuedById: string | null;
+  returnedToId: string | null;
+  approvingLecturerId: string | null;
+  dateCreated: Date;
+  collectionReferenceNumber: string | null;
+  datePrepared: Date | null;
+  dateIssued: Date | null;
+  dateCollected: Date | null;
+  dateReturned: Date | null;
   loanedBy: {
     name: string;
   } | null;

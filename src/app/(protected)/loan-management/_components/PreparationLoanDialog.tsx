@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import {
   Table,
   TableBody,
@@ -20,7 +22,7 @@ import { Input } from "@/app/_components/ui/input";
 import { api } from "@/trpc/react";
 import { Skeleton } from "@/app/_components/ui/skeleton";
 import { useForm } from "react-hook-form";
-import { Loader2, X } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { z } from "zod";
 import { useToast } from "@/app/_components/ui/use-toast";
 import { Button } from "@/app/_components/ui/button";
@@ -40,14 +42,6 @@ const formSchema = z.object({
   ),
 });
 
-type PreparationDataType = {
-  equipmentId: string;
-  loanItemId: string;
-  description: string;
-  checklist: string | undefined;
-  assetNumber: string;
-};
-
 const PreparationLoanDialog: React.FC<{
   isDialogOpen: boolean;
   setIsDialogOpen: (value: boolean) => void;
@@ -62,15 +56,13 @@ const PreparationLoanDialog: React.FC<{
   const { toast: preparationLoanToast } = useToast();
 
   const processedLoanData = useMemo(() => {
-    return (
-      data?.loanItems.map((loanItem) => ({
-        equipmentId: loanItem.equipment!.id,
-        loanItemId: loanItem.id,
-        description: loanItem.equipment!.name,
-        checklist: loanItem.equipment!.checklist ?? "",
-        assetNumber: "",
-      })) ?? []
-    );
+    return data?.loanItems.map((loanItem) => ({
+      equipmentId: loanItem.equipment?.id ?? "",
+      loanItemId: loanItem.id,
+      description: loanItem.equipment!.name,
+      checklist: loanItem.equipment!.checklist ?? "",
+      assetNumber: "",
+    }));
   }, [data]);
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -79,7 +71,7 @@ const PreparationLoanDialog: React.FC<{
   });
 
   useEffect(() => {
-    if (id && data) {
+    if (id && data && processedLoanData) {
       form.reset({
         id: id,
         collectionRefNum: "",
@@ -184,7 +176,7 @@ const PreparationLoanDialog: React.FC<{
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {processedLoanData.map((loanItem, index) => (
+                    {processedLoanData!.map((loanItem, index) => (
                       <TableRow key={loanItem.equipmentId}>
                         <TableCell className="font-medium">
                           {loanItem.description}

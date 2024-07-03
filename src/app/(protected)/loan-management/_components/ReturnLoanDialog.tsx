@@ -18,9 +18,7 @@ import { Input } from "@/app/_components/ui/input";
 import {
   Select,
   SelectContent,
-  SelectGroup,
   SelectItem,
-  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@/app/_components/ui/select";
@@ -60,7 +58,7 @@ const ReturnLoanDialog: React.FC<{
       setProcessLoanData((prev) => [
         ...prev,
         {
-          equipmentId: loanItem.equipment!.id,
+          equipmentId: loanItem.equipment!.id ?? "",
           loanItemId: loanItem.id,
           description: loanItem.equipment!.name,
           checklist: loanItem.equipment!.checklist ?? "",
@@ -103,12 +101,12 @@ const ReturnLoanDialog: React.FC<{
       .then((results) => {
         setIsReturning(false);
         collectionLoanToast({
-          title: results.title,
-          description: results.description,
+          title: results!.title,
+          description: results!.description,
           // @ts-expect-error ggg
           variant: results.variant,
         });
-        if (results.variant != "destructive") {
+        if (results!.variant != "destructive") {
           closeDialog();
         }
       })

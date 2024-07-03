@@ -43,7 +43,7 @@ export default async function ProtectedLayout({
     }, []);
   }
 
-  const filteredNavItems = filterNavItems(NAVBAR_NAV_ITEMS, data!);
+  const filteredNavItems = filterNavItems(NAVBAR_NAV_ITEMS, data);
 
   const { user } = await validateRequest();
 

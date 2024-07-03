@@ -10,8 +10,8 @@ import { TRPCError, initTRPC } from "@trpc/server";
 import superjson from "superjson";
 import { ZodError } from "zod";
 import { validateRequest } from "@/lib/auth/validate-request";
+import { db } from "@/database";
 
-import { db } from "@/server/db";
 
 /**
  * 1. CONTEXT

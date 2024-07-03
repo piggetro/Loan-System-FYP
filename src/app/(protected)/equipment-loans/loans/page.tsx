@@ -1,11 +1,29 @@
 import TopHeaderComponent from "@/app/_components/TopHeader";
 import { api } from "@/trpc/server";
 import React from "react";
-import { type Loan } from "@prisma/client";
 import LoanPage from "./_components/LoanPage";
+import { type LoanStatus } from "@/db/enums";
 
-export interface LoanTableDataType extends Loan {
-  approvingLecturer: { name: string } | null;
+export interface LoanTableDataType {
+  id: string;
+  loanId: string;
+  remarks: string;
+  dueDate: Date;
+  status: LoanStatus;
+  signature: string | null;
+  loanedById: string | null;
+  approvedById: string | null;
+  preparedById: string | null;
+  issuedById: string | null;
+  returnedToId: string | null;
+  approvingLecturerId: string | null;
+  dateCreated: Date;
+  collectionReferenceNumber: string | null;
+  datePrepared: Date | null;
+  dateIssued: Date | null;
+  dateCollected: Date | null;
+  dateReturned: Date | null;
+  approvingLecturerName: string | null;
 }
 
 const page = async () => {

@@ -40,7 +40,7 @@ const AddInventoryItemsDialog = ({
   const { mutate: addInventoryItem, isPending } =
     api.equipment.addInventoryItem.useMutation({
       onSuccess: (data) => {
-        setEquipmentInventoryItems(data);
+        setEquipmentInventoryItems((prev) => [...prev, ...data]);
         toast({
           title: "Success",
           description: "Equipment added to inventory successfully",

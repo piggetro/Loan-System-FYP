@@ -44,10 +44,12 @@ export const LoanPendingApprovalColumns = ({
     cell: ({ row }) => <div className="">{row.getValue("status")}</div>,
   },
   {
-    accessorKey: "approvingLecturer.name",
-    id: "name",
+    accessorKey: "approvingLecturerName",
+    id: "approvingLecturerName",
     header: "Approving Lecturer",
-    cell: ({ row }) => <div className="">{row.getValue("name")}</div>,
+    cell: ({ row }) => (
+      <div className="">{row.getValue("approvingLecturerName")}</div>
+    ),
   },
   {
     id: "actions",

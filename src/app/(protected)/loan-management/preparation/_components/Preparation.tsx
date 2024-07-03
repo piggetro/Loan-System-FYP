@@ -3,14 +3,34 @@
 import { api } from "@/trpc/react";
 import React, { useCallback, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { type Loan } from "@prisma/client";
+
 import { PreparationColumns } from "./PreparationColumns";
 import { PreparationDataTable } from "./PreparationDataTable";
 import PreparationLoanDialog from "../../_components/PreparationLoanDialog";
 import { Skeleton } from "@/app/_components/ui/skeleton";
 import { useToast } from "@/app/_components/ui/use-toast";
+import { type Loan } from "@/db/types";
+import { type LoanStatus } from "@/db/enums";
 
-export interface PreparationLoanType extends Loan {
+export interface PreparationLoanType {
+  id: string;
+  loanId: string;
+  remarks: string;
+  dueDate: Date;
+  status: LoanStatus;
+  signature: string | null;
+  loanedById: string | null;
+  approvedById: string | null;
+  preparedById: string | null;
+  issuedById: string | null;
+  returnedToId: string | null;
+  approvingLecturerId: string | null;
+  dateCreated: Date;
+  collectionReferenceNumber: string | null;
+  datePrepared: Date | null;
+  dateIssued: Date | null;
+  dateCollected: Date | null;
+  dateReturned: Date | null;
   loanedBy: { name: string } | null;
 }
 
@@ -26,10 +46,10 @@ const PreparationPage: React.FC<{
   const [preperationId, setPreparationId] = useState<string>();
   // const [loanPendingApprovalData, setLoanPendingApprovalData] = useState()
   const { toast } = useToast();
-  const onView = useCallback((loanDetails: Loan) => {
+  const onView = useCallback((loanDetails: PreparationLoanType) => {
     router.push(`/equipment-loans/loans/${loanDetails.id}`);
   }, []);
-  const onPreparation = useCallback((loanDetails: Loan) => {
+  const onPreparation = useCallback((loanDetails: PreparationLoanType) => {
     setPreparationId(loanDetails.id);
     setOpenPreparationDialog(true);
   }, []);

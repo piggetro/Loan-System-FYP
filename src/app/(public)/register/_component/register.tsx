@@ -12,7 +12,6 @@ import { Loader2 } from "lucide-react";
 
 const RegisterComponent = () => {
   const router = useRouter();
-  const [isLoading] = useState<boolean>(false);
   const [adminId, setAdminId] = useState<string>("");
   const [mobile, setMobile] = useState<string>();
   const { toast } = useToast();
@@ -57,7 +56,7 @@ const RegisterComponent = () => {
   return (
     <div className="mx-auto w-1/3 min-w-96">
       <div className="mb-4 rounded-xl bg-white px-8 pb-8 pt-6 shadow-lg">
-        <h1 className="mb-4 text-2xl tracking-tight">Welcome</h1>
+        <h1 className="mb-4 text-2xl tracking-tight">Registration</h1>
 
         <form
           onSubmit={(e) => {
@@ -84,7 +83,7 @@ const RegisterComponent = () => {
               autoCapitalize="none"
               autoComplete="Admin Number"
               autoCorrect="off"
-              disabled={isLoading}
+              disabled={isPending}
               className="mb-3"
             />
             <div className="mb-2 flex items-center text-sm">
@@ -107,11 +106,11 @@ const RegisterComponent = () => {
               autoCapitalize="none"
               autoComplete="tel"
               autoCorrect="off"
-              disabled={isLoading}
+              disabled={isPending}
               className="mb-5"
             />
           </div>
-          <Button disabled={isLoading} className="w-full">
+          <Button disabled={isPending} className="w-full">
             {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Register
           </Button>

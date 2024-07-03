@@ -11,7 +11,6 @@ export async function POST(request: NextRequest) {
   if (cookieHeader?.includes("auth_session")) {
     const requestBody = (await request.json()) as RequestBody; // Safely cast after defining an expected type
     const data = await api.user.getAllAccessRights();
-
     // Ensure `data` and `requestBody.url` are properly checked
     if (
       data &&

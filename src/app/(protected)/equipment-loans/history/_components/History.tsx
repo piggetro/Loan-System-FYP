@@ -4,12 +4,31 @@ import React, { useCallback, useMemo } from "react";
 
 import { useRouter } from "next/navigation";
 
-import { type Loan } from "@prisma/client";
 import { HistoryColumns } from "./HistoryColumns";
 import { CollectionDataTable } from "./HistoryDataTable";
 import { Skeleton } from "@/app/_components/ui/skeleton";
+import { type Loan } from "@/db/types";
+import { type LoanStatus } from "@/db/enums";
 
-export interface HistoryLoanType extends Loan {
+export interface HistoryLoanType {
+  id: string;
+  loanId: string;
+  remarks: string;
+  dueDate: Date;
+  status: LoanStatus;
+  signature: string | null;
+  loanedById: string | null;
+  approvedById: string | null;
+  preparedById: string | null;
+  issuedById: string | null;
+  returnedToId: string | null;
+  approvingLecturerId: string | null;
+  dateCreated: Date;
+  collectionReferenceNumber: string | null;
+  datePrepared: Date | null;
+  dateIssued: Date | null;
+  dateCollected: Date | null;
+  dateReturned: Date | null;
   loanedBy: { name: string } | null;
   approvingLecturer: { name: string } | null;
 }
@@ -20,7 +39,7 @@ const HistoryPage: React.FC<{
 }> = ({ allSemesters, loanHistory }) => {
   const router = useRouter();
 
-  const onView = useCallback((loanDetails: Loan) => {
+  const onView = useCallback((loanDetails: HistoryLoanType) => {
     router.push(`/equipment-loans/loans/${loanDetails.id}`);
   }, []);
 

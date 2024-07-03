@@ -39,7 +39,7 @@ const AddAccessRight = ({
     data,
     refetch,
     isFetching: isloadingData,
-  } = api.schoolAdmin.getStaffAvailableAccessRights.useQuery(
+  } = api.schoolAdmin.getUserAvailableAccessRights.useQuery(
     {
       id: staffId,
     },

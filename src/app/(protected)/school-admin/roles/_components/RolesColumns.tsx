@@ -6,8 +6,8 @@ import RolesDataTableRowActions from "./RolesDataTableRowActions";
 export type Roles = {
   id: string;
   role: string;
-  accessRightsCount: number;
-  usersCount: number;
+  accessRightsCount: string | number | bigint;
+  usersCount: string | number | bigint;
 };
 
 interface roleColumnProps {

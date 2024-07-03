@@ -29,14 +29,18 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
       }),
     });
 
-    if (checkAuthorisation.status !== 200)
-      return NextResponse.redirect(new URL("/not-found", request.url));
-    //should change to login redirect and clear cookies
+    if (checkAuthorisation.status !== 200) {
+      const response = NextResponse.redirect(
+        new URL("/not-found", request.url),
+      );
+      response.cookies.delete("auth_session");
+
+      return response;
+    }
 
     return NextResponse.next();
   }
-
-  return NextResponse.redirect(new URL("/login", request.url));
+  return NextResponse.redirect(new URL("/not-found", request.url));
 }
 
 export const config = {
@@ -50,7 +54,7 @@ export const config = {
      * - Login
      * - Register
      */
-
+    "/",
     "/((?!api|_next/static|_next/image|login|register|not-found|favicon.ico).*)",
   ],
 };

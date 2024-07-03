@@ -2,11 +2,18 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-    provider = "prisma-client-js"
+    provider = "prisma-kysely"
+
+    // Optionally provide a destination directory for the generated file
+    // and a filename of your choice
+    output       = "../src/db"
+    fileName     = "types.ts"
+    // Optionally generate runtime enums to a separate file
+    enumFileName = "enums.ts"
 }
 
 datasource db {
-    provider = "mysql"
+    provider = "postgresql"
     // NOTE: When using mysql or sqlserver, uncomment the @db.Text annotations in model Account below
     // Further reading:
     // https://next-auth.js.org/adapters/prisma#create-the-prisma-schema
@@ -15,10 +22,10 @@ datasource db {
 }
 
 model Session {
-    id        String   @id
-    userId    String
-    expiresAt DateTime
-    user      User     @relation(references: [id], fields: [userId], onDelete: Cascade)
+    id         String   @id
+    user_id    String
+    expires_at DateTime
+    user       User     @relation(references: [id], fields: [user_id], onDelete: Cascade)
 }
 
 model User {
@@ -37,14 +44,11 @@ model User {
     courseId              String?
     role                  Role?              @relation(fields: [roleId], references: [id], onDelete: SetNull)
     roleId                String?
-    announcement          Announcement[]
     loansLoanedBy         Loan[]             @relation("UserLoans_LoanedBy")
     loansApprovedBy       Loan[]             @relation("UserLoans_ApprovedBy")
     loansPreparedBy       Loan[]             @relation("UserLoans_PreparedBy")
     loansIssuedBy         Loan[]             @relation("UserLoans_IssuedBy")
     loansReturnedTo       Loan[]             @relation("UserLoans_ReturnedTo")
-    alertIssuedBy         Alert[]            @relation("UserAlert_IssuedBy")
-    alertReceivedBy       Alert[]            @relation("UserAlert_ReceivedBy")
     accessRightsGranted   UserAccessRights[] @relation("UserAccessRights_GrantedUser")
     accessRightsGrantedBy UserAccessRights[] @relation("UserAccessRights_GrantedBy")
     session               Session[]
@@ -76,16 +80,16 @@ model SubCategory {
 }
 
 model Equipment {
-    id                 String               @id @default(cuid())
-    name               String
-    photoPath          String?
-    updatedAt          DateTime             @updatedAt
-    subCategory        SubCategory?         @relation(fields: [subCategoryId], references: [id], onDelete: SetNull)
-    subCategoryId      String?
-    inventory          Inventory[]
-    loanItems          LoanItem[]
-    checklist          String?
-    course EquipmentOnCourses[]
+    id            String               @id @default(cuid())
+    name          String
+    photoPath     String?
+    updatedAt     DateTime             @updatedAt
+    subCategory   SubCategory?         @relation(fields: [subCategoryId], references: [id], onDelete: SetNull)
+    subCategoryId String?
+    inventory     Inventory[]
+    loanItems     LoanItem[]
+    checklist     String?
+    course        EquipmentOnCourses[]
 }
 
 model Inventory {
@@ -113,7 +117,7 @@ model Loan {
     remarks                   String
     dueDate                   DateTime
     status                    LoanStatus
-    signature                 String?        @db.Text
+    signature                 String?        
     loanedBy                  User?          @relation("UserLoans_LoanedBy", fields: [loanedById], references: [id], onDelete: SetNull)
     approvingLecturer         User?          @relation(fields: [approvingLecturerId], references: [id], onDelete: SetNull)
     approvedBy                User?          @relation("UserLoans_ApprovedBy", fields: [approvedById], references: [id], onDelete: SetNull)
@@ -238,11 +242,11 @@ model Holiday {
 }
 
 model Course {
-    id                 String               @id @default(cuid())
-    name               String
-    code               String
-    active             Boolean
-    user               User[]
+    id        String               @id @default(cuid())
+    name      String
+    code      String
+    active    Boolean
+    user      User[]
     equipment EquipmentOnCourses[]
 }
 
@@ -267,29 +271,12 @@ model StaffType {
     user User[]
 }
 
-model SchoolDetails {
-    schoolName  String  @id @default(cuid())
-    address     String?
-    url         String?
-    phoneNumber String?
-    faxNumber   String?
-    email       String
-}
-
-model Announcement {
-    id           String   @id @default(cuid())
-    announcement String
-    createdBy    User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
-    createdAt    DateTime @default(now())
-    updatedAt    DateTime @updatedAt
-    userId       String?
-}
-
-model Alert {
-    id           String  @id @default(cuid())
-    alert        String
-    issuedBy     User?   @relation("UserAlert_IssuedBy", fields: [issuedById], references: [id], onDelete: SetNull)
-    receivedBy   User    @relation("UserAlert_ReceivedBy", fields: [receivedById], references: [id], onDelete: Cascade)
-    issuedById   String?
-    receivedById String
+model GeneralSettings {
+    id String @id @default(cuid())
+    startTimeOfCollection String
+    endTimeOfCollection String
+    startRequestForCollection String
+    endRequestForCollection String
+    voidLoanNumberOfDays Int
+    voidLoanTiming String
 }

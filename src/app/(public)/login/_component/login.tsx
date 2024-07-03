@@ -8,7 +8,7 @@ import { Input } from "@/app/_components/ui/input";
 import { useToast } from "@/app/_components/ui/use-toast";
 import { login } from "@/lib/auth/actions";
 import { useRouter } from "next/navigation";
-import { Loader2 } from "lucide-react";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
 
 const LoginComponent = () => {
   const router = useRouter();
@@ -82,12 +82,16 @@ const LoginComponent = () => {
                 Password
               </Label>
               <div
-                className="flex w-1/2 justify-end font-medium hover:cursor-pointer"
+                className="flex w-1/2 items-center justify-end font-medium hover:cursor-pointer"
                 onClick={() => {
                   setShowPassword(!showPassword);
                 }}
               >
-                Show Password
+                {showPassword ? (
+                  <EyeOff className="h-5 w-5" />
+                ) : (
+                  <Eye className="h-5 w-5" />
+                )}
               </div>
             </div>
             <Input

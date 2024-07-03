@@ -47,7 +47,7 @@ const CollectionLoanDialog: React.FC<{
 
   data?.loanItems.forEach((loanItem) => {
     processedLoanData.push({
-      equipmentId: loanItem.equipment!.id,
+      equipmentId: loanItem.equipment!.id ?? "",
       loanItemId: loanItem.id,
       description: loanItem.equipment!.name,
       checklist: loanItem.equipment!.checklist ?? "",

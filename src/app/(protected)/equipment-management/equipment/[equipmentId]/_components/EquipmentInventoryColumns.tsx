@@ -28,6 +28,7 @@ export const equipmentInventoryItemColumns = ({
   {
     accessorKey: "cost",
     header: "Cost",
+    cell: (props) => <span>${props.cell.getValue() as string}</span>,
   },
   {
     accessorKey: "status",

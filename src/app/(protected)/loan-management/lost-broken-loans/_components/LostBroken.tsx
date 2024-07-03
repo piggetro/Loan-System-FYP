@@ -4,11 +4,30 @@ import React, { useCallback, useMemo } from "react";
 
 import { useRouter } from "next/navigation";
 
-import { type Loan } from "@prisma/client";
 import { LostBrokenColumns } from "./LostBrokenColumns";
 import { LostBrokenDataTable } from "./LostBrokenDataTable";
 import { Skeleton } from "@/app/_components/ui/skeleton";
-export interface LostBrokenLoanType extends Loan {
+
+import { type LoanStatus } from "@/db/enums";
+export interface LostBrokenLoanType {
+  id: string;
+  loanId: string;
+  remarks: string;
+  dueDate: Date;
+  status: LoanStatus;
+  signature: string | null;
+  loanedById: string | null;
+  approvedById: string | null;
+  preparedById: string | null;
+  issuedById: string | null;
+  returnedToId: string | null;
+  approvingLecturerId: string | null;
+  dateCreated: Date;
+  collectionReferenceNumber: string | null;
+  datePrepared: Date | null;
+  dateIssued: Date | null;
+  dateCollected: Date | null;
+  dateReturned: Date | null;
   loanedBy: { name: string } | null;
 }
 
@@ -18,7 +37,7 @@ const LostBrokenPage: React.FC<{
 }> = ({ allSemesters, lostAndBrokenLoanData }) => {
   const router = useRouter();
 
-  const onView = useCallback((loanDetails: Loan) => {
+  const onView = useCallback((loanDetails: LostBrokenLoanType) => {
     router.push(`/equipment-loans/loans/${loanDetails.id}`);
   }, []);
 

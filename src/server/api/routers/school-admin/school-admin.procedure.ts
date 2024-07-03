@@ -2,11 +2,13 @@ import { TRPCError } from "@trpc/server";
 import { protectedProcedure, createTRPCRouter } from "../../trpc";
 import { z } from "zod";
 import { Argon2id } from "oslo/password";
+import { createId } from "@paralleldrive/cuid2";
+import { jsonArrayFrom } from "kysely/helpers/postgres";
 
 export const schoolAdminRouter = createTRPCRouter({
   getAccessRights: protectedProcedure.query(async ({ ctx }) => {
     try {
-      return await ctx.db.accessRights.findMany();
+      return await ctx.db.selectFrom("AccessRights").selectAll().execute();
     } catch (err) {
       console.log(err);
       throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
@@ -22,15 +24,15 @@ export const schoolAdminRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       try {
-        return await ctx.db.accessRights.update({
-          where: {
-            id: input.id,
-          },
-          data: {
+        return await ctx.db
+          .updateTable("AccessRights")
+          .set({
             pageName: input.pageName,
             pageLink: input.pageLink,
-          },
-        });
+          })
+          .where("id", "=", input.id)
+          .returning(["id", "pageName", "pageLink"])
+          .executeTakeFirstOrThrow();
       } catch (err) {
         console.log(err);
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
@@ -40,11 +42,11 @@ export const schoolAdminRouter = createTRPCRouter({
     .input(z.object({ id: z.string().min(1) }))
     .mutation(async ({ ctx, input }) => {
       try {
-        return await ctx.db.accessRights.delete({
-          where: {
-            id: input.id,
-          },
-        });
+        await ctx.db
+          .deleteFrom("AccessRights")
+          .where("id", "=", input.id)
+          .executeTakeFirst();
+        return;
       } catch (err) {
         console.log(err);
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
@@ -56,12 +58,19 @@ export const schoolAdminRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       try {
-        return await ctx.db.accessRights.create({
-          data: {
+        return await ctx.db
+          .insertInto("AccessRights")
+          .values({
+            id: createId(),
             pageName: input.pageName,
             pageLink: input.pageLink,
-          },
-        });
+          })
+          .returning([
+            "AccessRights.id",
+            "AccessRights.pageName",
+            "AccessRights.pageLink",
+          ])
+          .executeTakeFirstOrThrow();
       } catch (err) {
         console.log(err);
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
@@ -69,24 +78,25 @@ export const schoolAdminRouter = createTRPCRouter({
     }),
   getAllRoles: protectedProcedure.query(async ({ ctx }) => {
     try {
-      const data = await ctx.db.role.findMany({
-        select: {
-          id: true,
-          role: true,
-          _count: {
-            select: {
-              accessRights: true,
-              users: true,
-            },
-          },
-        },
-      });
-      return data.map((role) => ({
-        id: role.id,
-        role: role.role,
-        accessRightsCount: role._count.accessRights,
-        usersCount: role._count.users,
-      }));
+      return await ctx.db
+        .selectFrom("Role")
+        .leftJoin(
+          "AccessRightsOnRoles",
+          "Role.id",
+          "AccessRightsOnRoles.roleId",
+        )
+        .leftJoin("User", "Role.id", "User.roleId")
+        .select([
+          "Role.id",
+          "Role.role",
+          ctx.db.fn
+            .count("AccessRightsOnRoles.accessRightId")
+            .distinct()
+            .as("accessRightsCount"),
+          ctx.db.fn.count("User.id").distinct().as("usersCount"),
+        ])
+        .groupBy("Role.id")
+        .execute();
     } catch (err) {
       console.log(err);
       throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
@@ -96,11 +106,11 @@ export const schoolAdminRouter = createTRPCRouter({
     .input(z.object({ id: z.string().min(1) }))
     .mutation(async ({ ctx, input }) => {
       try {
-        return await ctx.db.role.delete({
-          where: {
-            id: input.id,
-          },
-        });
+        await ctx.db
+          .deleteFrom("Role")
+          .where("id", "=", input.id)
+          .executeTakeFirst();
+        return;
       } catch (err) {
         console.log(err);
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
@@ -115,20 +125,24 @@ export const schoolAdminRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       try {
-        const role = await ctx.db.role.create({
-          data: {
+        const role = await ctx.db
+          .insertInto("Role")
+          .values({
+            id: createId(),
             role: input.role,
-            accessRights: {
-              create: input.accessRights.map((accessRight) => ({
-                accessRight: {
-                  connect: {
-                    id: accessRight,
-                  },
-                },
-              })),
-            },
-          },
-        });
+          })
+          .returning(["Role.id", "Role.role"])
+          .executeTakeFirstOrThrow();
+
+        await ctx.db
+          .insertInto("AccessRightsOnRoles")
+          .values(
+            input.accessRights.map((accessRightId) => ({
+              roleId: role.id,
+              accessRightId: accessRightId,
+            })),
+          )
+          .execute();
         return {
           id: role.id,
           role: role.role,
@@ -142,39 +156,31 @@ export const schoolAdminRouter = createTRPCRouter({
     }),
   getAllStaff: protectedProcedure.query(async ({ ctx }) => {
     try {
-      const data = await ctx.db.user.findMany({
-        where: {
-          NOT: {
-            organizationUnit: null,
-            staffType: null,
-          },
-        },
-        select: {
-          id: true,
-          email: true,
-          name: true,
-          organizationUnit: {
-            select: {
-              name: true,
-            },
-          },
-          staffType: {
-            select: {
-              name: true,
-            },
-          },
-          role: {
-            select: {
-              role: true,
-            },
-          },
-        },
-      });
+      const data = await ctx.db
+        .selectFrom("User")
+        .leftJoin(
+          "OrganizationUnit",
+          "User.organizationUnitId",
+          "OrganizationUnit.id",
+        )
+        .leftJoin("StaffType", "User.staffTypeId", "StaffType.id")
+        .leftJoin("Role", "User.roleId", "Role.id")
+        .select([
+          "User.id",
+          "User.email",
+          "User.name",
+          "OrganizationUnit.name as organizationUnit",
+          "StaffType.name as staffType",
+          "Role.role as role",
+        ])
+        .where("User.organizationUnitId", "is not", null)
+        .where("User.staffTypeId", "is not", null)
+        .execute();
       return data.map((staff) => ({
         ...staff,
-        organizationUnit: staff.organizationUnit?.name ?? "",
-        staffType: staff.staffType?.name ?? "",
-        role: staff.role?.role ?? "",
+        organizationUnit: staff.organizationUnit ?? "",
+        staffType: staff.staffType ?? "",
+        role: staff.role ?? "",
       }));
     } catch (err) {
       console.log(err);
@@ -185,11 +191,11 @@ export const schoolAdminRouter = createTRPCRouter({
     .input(z.object({ id: z.string().min(1) }))
     .mutation(async ({ ctx, input }) => {
       try {
-        return await ctx.db.user.delete({
-          where: {
-            id: input.id,
-          },
-        });
+        await ctx.db
+          .deleteFrom("User")
+          .where("id", "=", input.id)
+          .executeTakeFirst();
+        return;
       } catch (err) {
         console.log(err);
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
@@ -197,7 +203,7 @@ export const schoolAdminRouter = createTRPCRouter({
     }),
   getAllOrganizationUnits: protectedProcedure.query(async ({ ctx }) => {
     try {
-      return await ctx.db.organizationUnit.findMany();
+      return await ctx.db.selectFrom("OrganizationUnit").selectAll().execute();
     } catch (err) {
       console.log(err);
       throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
@@ -205,7 +211,7 @@ export const schoolAdminRouter = createTRPCRouter({
   }),
   getAllStaffTypes: protectedProcedure.query(async ({ ctx }) => {
     try {
-      return await ctx.db.staffType.findMany();
+      return await ctx.db.selectFrom("StaffType").selectAll().execute();
     } catch (err) {
       console.log(err);
       throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
@@ -224,66 +230,80 @@ export const schoolAdminRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       try {
-        const data = await ctx.db.user.create({
-          data: {
-            id: input.id,
-            email: input.email,
-            name: input.name,
-            organizationUnit: {
-              connect: {
-                id: input.organizationUnit,
-              },
-            },
-            staffType: {
-              connect: {
-                id: input.staffType,
-              },
-            },
-            role: {
-              connect: {
-                id: input.role,
-              },
-            },
-          },
-          select: {
-            id: true,
-            email: true,
-            name: true,
-            organizationUnit: {
-              select: {
-                name: true,
-              },
-            },
-            staffType: {
-              select: {
-                name: true,
-              },
-            },
-            role: {
-              select: {
-                role: true,
-                accessRights: {
-                  select: {
-                    accessRightId: true,
-                  },
-                },
-              },
-            },
-          },
-        });
-        await ctx.db.userAccessRights.createMany({
-          data:
-            data.role?.accessRights.map((accessRight) => ({
-              accessRightId: accessRight.accessRightId,
-              grantedUserId: input.id,
-              grantedById: ctx.user.id,
-            })) ?? [],
-        });
+        const accessRights = await ctx.db
+          .selectFrom("AccessRightsOnRoles")
+          .select(["accessRightId"])
+          .where("roleId", "=", input.role)
+          .execute();
+
+        const accessRightsToBeAdded = accessRights.map((accessRight) => ({
+          id: createId(),
+          accessRightId: accessRight.accessRightId,
+          grantedUserId: input.id,
+          grantedById: ctx.user.id,
+        }));
+
+        const [result] = await ctx.db
+          .with("newStaff", (db) =>
+            db
+              .insertInto("User")
+              .values({
+                id: input.id,
+                email: input.email,
+                name: input.name,
+                organizationUnitId: input.organizationUnit,
+                staffTypeId: input.staffType,
+                roleId: input.role,
+              })
+              .returning([
+                "User.id",
+                "User.email",
+                "User.name",
+                "User.organizationUnitId",
+                "User.staffTypeId",
+                "User.roleId",
+              ]),
+          )
+          .with("staffDetails", (db) =>
+            db
+              .selectFrom("newStaff")
+              .leftJoin(
+                "OrganizationUnit",
+                "newStaff.organizationUnitId",
+                "OrganizationUnit.id",
+              )
+              .leftJoin("StaffType", "newStaff.staffTypeId", "StaffType.id")
+              .leftJoin("Role", "newStaff.roleId", "Role.id")
+              .select([
+                "newStaff.id",
+                "newStaff.email",
+                "newStaff.name",
+                "OrganizationUnit.name as organizationUnit",
+                "StaffType.name as staffType",
+                "Role.role as role",
+              ]),
+          )
+          .with("accessRights", (db) =>
+            db.insertInto("UserAccessRights").values(accessRightsToBeAdded),
+          )
+          .selectFrom("staffDetails")
+          .select([
+            "staffDetails.id",
+            "staffDetails.email",
+            "staffDetails.name",
+            "staffDetails.organizationUnit",
+            "staffDetails.staffType",
+            "staffDetails.role",
+          ])
+          .execute();
+
         return {
-          ...data,
-          organizationUnit: data.organizationUnit?.name ?? "",
-          staffType: data.staffType?.name ?? "",
-          role: data.role?.role ?? "",
+          id: result?.id ?? "",
+          email: result?.email ?? "",
+          name: result?.name ?? "",
+          organizationUnit: result?.organizationUnit ?? "",
+          staffType: result?.staffType ?? "",
+          role: result?.role ?? "",
         };
       } catch (err) {
         console.log(err);
@@ -294,51 +314,28 @@ export const schoolAdminRouter = createTRPCRouter({
     .input(z.object({ id: z.string().min(1) }))
     .query(async ({ ctx, input }) => {
       try {
-        const data = await ctx.db.user.findUnique({
-          where: {
-            id: input.id,
-          },
-          select: {
-            id: true,
-            email: true,
-            mobile: true,
-            name: true,
-            organizationUnit: {
-              select: {
-                id: true,
-              },
-            },
-            staffType: {
-              select: {
-                id: true,
-              },
-            },
-            role: {
-              select: {
-                id: true,
-              },
-            },
-            accessRightsGranted: {
-              select: {
-                accessRight: true,
-              },
-            },
-          },
-        });
+        const user = await ctx.db
+          .selectFrom("User")
+          .select([
+            "User.id",
+            "User.email",
+            "User.name",
+            "User.mobile",
+            "User.organizationUnitId as organizationUnit",
+            "User.staffTypeId as staffType",
+            "User.roleId as role",
+          ])
+          .where("User.id", "=", input.id)
+          .executeTakeFirst();
+
         return {
-          id: data?.id ?? "",
-          email: data?.email ?? "",
-          mobile: data?.mobile ?? "",
-          name: data?.name ?? "",
-          organizationUnit: data?.organizationUnit?.id ?? "",
-          staffType: data?.staffType?.id ?? "",
-          role: data?.role?.id ?? "",
-          accessRightsGranted:
-            data?.accessRightsGranted.map((accessRight) => ({
-              id: accessRight.accessRight.id,
-              pageName: accessRight.accessRight.pageName,
-              pageLink: accessRight.accessRight.pageLink,
-            })) ?? [],
+          id: user?.id ?? "",
+          email: user?.email ?? "",
+          name: user?.name ?? "",
+          mobile: user?.mobile ?? "",
+          organizationUnit: user?.organizationUnit ?? "",
+          staffType: user?.staffType ?? "",
+          role: user?.role ?? "",
         };
       } catch (err) {
         console.log(err);
@@ -349,31 +346,29 @@ export const schoolAdminRouter = createTRPCRouter({
     .input(z.object({ id: z.string().min(1) }))
     .query(async ({ ctx, input }) => {
       try {
-        const data = await ctx.db.user.findUnique({
-          where: {
-            id: input.id,
-          },
-          select: {
-            accessRightsGranted: {
-              select: {
-                accessRight: true,
-                grantedBy: {
-                  select: {
-                    name: true,
-                  },
-                },
-              },
-            },
-          },
-        });
-        return (
-          data?.accessRightsGranted.map((accessRight) => ({
-            id: accessRight.accessRight.id,
-            pageName: accessRight.accessRight.pageName,
-            pageLink: accessRight.accessRight.pageLink,
-            grantedBy: accessRight.grantedBy.name,
-          })) ?? []
-        );
+        const data = await ctx.db
+          .selectFrom("UserAccessRights")
+          .leftJoin("User", "UserAccessRights.grantedById", "User.id")
+          .leftJoin(
+            "AccessRights",
+            "UserAccessRights.accessRightId",
+            "AccessRights.id",
+          )
+          .select([
+            "AccessRights.id",
+            "AccessRights.pageName",
+            "AccessRights.pageLink",
+            "User.name as grantedBy",
+          ])
+          .where("UserAccessRights.grantedUserId", "=", input.id)
+          .execute();
+
+        return data.map((accessRight) => ({
+          id: accessRight.id ?? "",
+          pageName: accessRight.pageName ?? "",
+          pageLink: accessRight.pageLink ?? "",
+          grantedBy: accessRight.grantedBy ?? "",
+        }));
       } catch (err) {
         console.log(err);
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
@@ -383,6 +378,7 @@ export const schoolAdminRouter = createTRPCRouter({
     .input(
       z.object({
         id: z.string().min(1),
+        newId: z.string().min(1),
         name: z.string().min(1),
         email: z.string().email(),
         mobile: z
@@ -401,30 +397,31 @@ export const schoolAdminRouter = createTRPCRouter({
         const hashed_password =
           input.password?.trim() && (await new Argon2id().hash(input.password));
 
-        const role = await ctx.db.user.findUnique({
-          where: {
-            id: input.id,
-          },
-          select: {
-            roleId: true,
-          },
-        });
+        const role = await ctx.db
+          .selectFrom("User")
+          .select(["User.roleId"])
+          .where("User.id", "=", input.id)
+          .executeTakeFirst();
 
         if (role?.roleId !== input.role) {
+          console.log("Role changed", role?.roleId, input.role);
           const [existingAccessRights, oldAccessRights, newAccessRights] =
             await Promise.all([
-              ctx.db.userAccessRights.findMany({
-                where: { grantedUserId: input.id },
-                select: { accessRightId: true },
-              }),
-              ctx.db.accessRightsOnRoles.findMany({
-                where: { roleId: role?.roleId ?? "" },
-                select: { accessRightId: true },
-              }),
-              ctx.db.accessRightsOnRoles.findMany({
-                where: { roleId: input.role },
-                select: { accessRightId: true },
-              }),
+              ctx.db
+                .selectFrom("UserAccessRights")
+                .select(["accessRightId"])
+                .where("grantedUserId", "=", input.id)
+                .execute(),
+              ctx.db
+                .selectFrom("AccessRightsOnRoles")
+                .select(["accessRightId"])
+                .where("roleId", "=", role?.roleId ?? "")
+                .execute(),
+              ctx.db
+                .selectFrom("AccessRightsOnRoles")
+                .select(["accessRightId"])
+                .where("roleId", "=", input.role)
+                .execute(),
             ]);
 
           const independentAccessRights = existingAccessRights.filter(
@@ -442,99 +439,78 @@ export const schoolAdminRouter = createTRPCRouter({
               ),
           );
 
-          await ctx.db.$transaction([
-            ctx.db.userAccessRights.deleteMany({
-              where: {
-                grantedUserId: input.id,
-                accessRightId: {
-                  in: oldAccessRights.map(
-                    (accessRight) => accessRight.accessRightId,
-                  ),
-                },
-              },
-            }),
-            ctx.db.userAccessRights.createMany({
-              data: accessRightsToBeAdded.map((accessRight) => ({
-                accessRightId: accessRight.accessRightId,
-                grantedUserId: input.id,
-                grantedById: ctx.user.id,
-              })),
-            }),
-          ]);
+          await ctx.db.transaction().execute(async (trx) => {
+            await trx
+              .deleteFrom("UserAccessRights")
+              .where("grantedUserId", "=", input.id)
+              .where(
+                "accessRightId",
+                "in",
+                oldAccessRights.map((accessRight) => accessRight.accessRightId),
+              )
+              .execute();
+            await trx
+              .insertInto("UserAccessRights")
+              .values(
+                accessRightsToBeAdded.map((accessRight) => ({
+                  id: createId(),
+                  accessRightId: accessRight.accessRightId,
+                  grantedUserId: input.id,
+                  grantedById: ctx.user.id,
+                })),
+              )
+              .execute();
+            return;
+          });
         }
-        const staff = await ctx.db.user.update({
-          where: {
-            id: input.id,
-          },
-          data: {
-            id: input.id,
+
+        const staff = await ctx.db
+          .updateTable("User")
+          .set({
+            id: input.newId,
             name: input.name,
             email: input.email,
             mobile: input.mobile?.trim() === "" ? null : input.mobile,
             ...(hashed_password && { hashed_password }),
-            organizationUnit: {
-              connect: {
-                id: input.organizationUnit,
-              },
-            },
-            staffType: {
-              connect: {
-                id: input.staffType,
-              },
-            },
-            role: {
-              connect: {
-                id: input.role,
-              },
-            },
-          },
-          select: {
-            id: true,
-            email: true,
-            mobile: true,
-            name: true,
-            organizationUnit: {
-              select: {
-                id: true,
-              },
-            },
-            staffType: {
-              select: {
-                id: true,
-              },
-            },
-            role: {
-              select: {
-                id: true,
-              },
-            },
-            accessRightsGranted: {
-              select: {
-                accessRight: true,
-                grantedBy: {
-                  select: {
-                    name: true,
-                  },
-                },
-              },
-            },
-          },
-        });
+            organizationUnitId: input.organizationUnit,
+            staffTypeId: input.staffType,
+            roleId: input.role,
+          })
+          .where("id", "=", input.id)
+          .returning(["User.id", "User.email", "User.name", "User.mobile"])
+          .executeTakeFirst();
+
+        const returnedAccessRights = await ctx.db
+          .selectFrom("UserAccessRights")
+          .leftJoin(
+            "AccessRights",
+            "UserAccessRights.accessRightId",
+            "AccessRights.id",
+          )
+          .leftJoin("User", "UserAccessRights.grantedById", "User.id")
+          .select([
+            "AccessRights.id",
+            "AccessRights.pageName",
+            "AccessRights.pageLink",
+            "User.name as grantedBy",
+          ])
+          .where("UserAccessRights.grantedUserId", "=", input.newId)
+          .execute();
+
         return {
           id: staff?.id ?? "",
           email: staff?.email ?? "",
-          mobile: staff?.mobile ?? "",
           name: staff?.name ?? "",
-          organizationUnit: staff?.organizationUnit?.id ?? "",
-          staffType: staff?.staffType?.id ?? "",
-          role: staff?.role?.id ?? "",
-          accessRights:
-            staff?.accessRightsGranted.map((accessRight) => ({
-              id: accessRight.accessRight.id,
-              pageName: accessRight.accessRight.pageName,
-              pageLink: accessRight.accessRight.pageLink,
-              grantedBy: accessRight.grantedBy.name,
-            })) ?? [],
+          mobile: staff?.mobile ?? "",
+          organizationUnit: input.organizationUnit,
+          staffType: input.staffType,
+          role: input.role,
+          accessRights: returnedAccessRights.map((accessRight) => ({
+            id: accessRight.id ?? "",
+            pageName: accessRight.pageName ?? "",
+            pageLink: accessRight.pageLink ?? "",
+            grantedBy: accessRight.grantedBy ?? "",
+          })),
         };
       } catch (err) {
         console.log(err);
@@ -545,48 +521,39 @@ export const schoolAdminRouter = createTRPCRouter({
     .input(z.object({ id: z.string().min(1), staffId: z.string().min(1) }))
     .mutation(async ({ ctx, input }) => {
       try {
-        const userAccessRight = await ctx.db.userAccessRights.findFirst({
-          where: {
-            accessRightId: input.id,
-            grantedUserId: input.staffId,
-          },
-          select: {
-            id: true,
-          },
-        });
-        return await ctx.db.userAccessRights.delete({
-          where: {
-            id: userAccessRight?.id,
-          },
-        });
+        await ctx.db
+          .deleteFrom("UserAccessRights")
+          .where("grantedUserId", "=", input.staffId)
+          .where("accessRightId", "=", input.id)
+          .execute();
+        return;
       } catch (err) {
         console.log(err);
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
       }
     }),
-  getStaffAvailableAccessRights: protectedProcedure
+  getUserAvailableAccessRights: protectedProcedure
     .input(z.object({ id: z.string().min(1) }))
     .query(async ({ ctx, input }) => {
       try {
-        const [allAccessRights, userAccessRights] = await Promise.all([
-          ctx.db.accessRights.findMany(),
-          ctx.db.userAccessRights.findMany({
-            where: {
-              grantedUserId: input.id,
-            },
-            select: {
-              accessRightId: true,
-            },
-          }),
-        ]);
-
-        return allAccessRights.filter(
-          (accessRight) =>
-            !userAccessRights.some(
-              (userAccessRight) =>
-                userAccessRight.accessRightId === accessRight.id,
+        return await ctx.db
+          .selectFrom("AccessRights")
+          .selectAll()
+          .where(({ not, selectFrom, exists }) =>
+            not(
+              exists(
+                selectFrom("UserAccessRights")
+                  .select("UserAccessRights.accessRightId")
+                  .whereRef(
+                    "UserAccessRights.accessRightId",
+                    "=",
+                    "AccessRights.id",
+                  )
+                  .where("UserAccessRights.grantedUserId", "=", input.id),
+              ),
             ),
-        );
+          )
+          .execute();
       } catch (err) {
         console.log(err);
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
@@ -601,37 +568,40 @@ export const schoolAdminRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       try {
-        await ctx.db.userAccessRights.createMany({
-          data: input.accessRights.map((accessRight) => ({
-            accessRightId: accessRight,
-            grantedUserId: input.id,
-            grantedById: ctx.user.id,
-          })),
-        });
-        const data = await ctx.db.userAccessRights.findMany({
-          where: {
-            grantedUserId: input.id,
-          },
-          select: {
-            grantedBy: {
-              select: {
-                name: true,
-              },
-            },
-            accessRight: {
-              select: {
-                id: true,
-                pageName: true,
-                pageLink: true,
-              },
-            },
-          },
+        const data = await ctx.db.transaction().execute(async (trx) => {
+          await trx
+            .insertInto("UserAccessRights")
+            .values(
+              input.accessRights.map((accessRight) => ({
+                id: createId(),
+                accessRightId: accessRight,
+                grantedUserId: input.id,
+                grantedById: ctx.user.id,
+              })),
+            )
+            .execute();
+          return await trx
+            .selectFrom("UserAccessRights")
+            .leftJoin(
+              "AccessRights",
+              "UserAccessRights.accessRightId",
+              "AccessRights.id",
+            )
+            .leftJoin("User", "UserAccessRights.grantedById", "User.id")
+            .select([
+              "AccessRights.id",
+              "AccessRights.pageName",
+              "AccessRights.pageLink",
+              "User.name as grantedBy",
+            ])
+            .where("UserAccessRights.grantedUserId", "=", input.id)
+            .execute();
         });
         return data.map((accessRight) => ({
-          id: accessRight.accessRight.id,
-          pageName: accessRight.accessRight.pageName,
-          pageLink: accessRight.accessRight.pageLink,
-          grantedBy: accessRight.grantedBy.name,
+          id: accessRight.id ?? "",
+          pageName: accessRight.pageName ?? "",
+          pageLink: accessRight.pageLink ?? "",
+          grantedBy: accessRight.grantedBy ?? "",
         }));
       } catch (err) {
         console.log(err);
@@ -642,34 +612,37 @@ export const schoolAdminRouter = createTRPCRouter({
     .input(z.object({ roleId: z.string().min(1) }))
     .query(async ({ ctx, input }) => {
       try {
-        const role = await ctx.db.role.findUnique({
-          where: {
-            id: input.roleId,
-          },
-          select: {
-            id: true,
-            role: true,
-            accessRights: {
-              select: {
-                accessRight: {
-                  select: {
-                    id: true,
-                    pageName: true,
-                    pageLink: true,
-                  },
-                },
-              },
-            },
-          },
-        });
+        const data = await ctx.db
+          .selectFrom("Role")
+          .select((eb) => [
+            "id",
+            "role",
+            jsonArrayFrom(
+              eb
+                .selectFrom("AccessRightsOnRoles")
+                .leftJoin(
+                  "AccessRights",
+                  "AccessRightsOnRoles.accessRightId",
+                  "AccessRights.id",
+                )
+                .select([
+                  "AccessRights.id",
+                  "AccessRights.pageName",
+                  "AccessRights.pageLink",
+                ])
+                .where("roleId", "=", input.roleId),
+            ).as("accessRights"),
+          ])
+          .where("id", "=", input.roleId)
+          .executeTakeFirst();
         return {
-          id: role?.id ?? "",
-          role: role?.role ?? "",
+          id: data?.id ?? "",
+          role: data?.role ?? "",
           accessRights:
-            role?.accessRights.map((accessRight) => ({
-              id: accessRight.accessRight.id,
-              pageName: accessRight.accessRight.pageName,
-              pageLink: accessRight.accessRight.pageLink,
+            data?.accessRights.map((accessRight) => ({
+              id: accessRight.id ?? "",
+              pageName: accessRight.pageName ?? "",
+              pageLink: accessRight.pageLink ?? "",
             })) ?? [],
         };
       } catch (err) {
@@ -681,14 +654,14 @@ export const schoolAdminRouter = createTRPCRouter({
     .input(z.object({ id: z.string().min(1), role: z.string().min(1) }))
     .mutation(async ({ ctx, input }) => {
       try {
-        return await ctx.db.role.update({
-          where: {
-            id: input.id,
-          },
-          data: {
+        return await ctx.db
+          .updateTable("Role")
+          .set({
             role: input.role,
-          },
-        });
+          })
+          .where("id", "=", input.id)
+          .returning(["id", "role"])
+          .executeTakeFirstOrThrow();
       } catch (err) {
         console.log(err);
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
@@ -700,14 +673,12 @@ export const schoolAdminRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       try {
-        return await ctx.db.accessRightsOnRoles.delete({
-          where: {
-            accessRightId_roleId: {
-              accessRightId: input.accessRightId,
-              roleId: input.roleId,
-            },
-          },
-        });
+        await ctx.db
+          .deleteFrom("AccessRightsOnRoles")
+          .where("roleId", "=", input.roleId)
+          .where("accessRightId", "=", input.accessRightId)
+          .execute();
+        return;
       } catch (err) {
         console.log(err);
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
@@ -717,25 +688,24 @@ export const schoolAdminRouter = createTRPCRouter({
     .input(z.object({ roleId: z.string().min(1) }))
     .query(async ({ ctx, input }) => {
       try {
-        const [allAccessRights, roleAccessRights] = await Promise.all([
-          ctx.db.accessRights.findMany(),
-          ctx.db.accessRightsOnRoles.findMany({
-            where: {
-              roleId: input.roleId,
-            },
-            select: {
-              accessRightId: true,
-            },
-          }),
-        ]);
-
-        return allAccessRights.filter(
-          (accessRight) =>
-            !roleAccessRights.some(
-              (roleAccessRight) =>
-                roleAccessRight.accessRightId === accessRight.id,
+        return await ctx.db
+          .selectFrom("AccessRights")
+          .selectAll()
+          .where(({ not, selectFrom, exists }) =>
+            not(
+              exists(
+                selectFrom("AccessRightsOnRoles")
+                  .select("AccessRightsOnRoles.accessRightId")
+                  .whereRef(
+                    "AccessRightsOnRoles.accessRightId",
+                    "=",
+                    "AccessRights.id",
+                  )
+                  .where("AccessRightsOnRoles.roleId", "=", input.roleId),
+              ),
             ),
-        );
+          )
+          .execute();
       } catch (err) {
         console.log(err);
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
@@ -750,30 +720,36 @@ export const schoolAdminRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       try {
-        await ctx.db.accessRightsOnRoles.createMany({
-          data: input.accessRights.map((accessRight) => ({
-            accessRightId: accessRight,
-            roleId: input.roleId,
-          })),
+        const data = await ctx.db.transaction().execute(async (trx) => {
+          await trx
+            .insertInto("AccessRightsOnRoles")
+            .values(
+              input.accessRights.map((accessRight) => ({
+                roleId: input.roleId,
+                accessRightId: accessRight,
+              })),
+            )
+            .execute();
+          return await trx
+            .selectFrom("AccessRightsOnRoles")
+            .leftJoin(
+              "AccessRights",
+              "AccessRightsOnRoles.accessRightId",
+              "AccessRights.id",
+            )
+            .select([
+              "AccessRights.id",
+              "AccessRights.pageName",
+              "AccessRights.pageLink",
+            ])
+            .where("AccessRightsOnRoles.roleId", "=", input.roleId)
+            .execute();
         });
-        const data = await ctx.db.accessRightsOnRoles.findMany({
-          where: {
-            roleId: input.roleId,
-          },
-          select: {
-            accessRight: {
-              select: {
-                id: true,
-                pageName: true,
-                pageLink: true,
-              },
-            },
-          },
-        });
+
         return data.map((accessRight) => ({
-          id: accessRight.accessRight.id,
-          pageName: accessRight.accessRight.pageName,
-          pageLink: accessRight.accessRight.pageLink,
+          id: accessRight.id ?? "",
+          pageName: accessRight.pageName ?? "",
+          pageLink: accessRight.pageLink ?? "",
         }));
       } catch (err) {
         console.log(err);
@@ -782,29 +758,25 @@ export const schoolAdminRouter = createTRPCRouter({
     }),
   getAllStudents: protectedProcedure.query(async ({ ctx }) => {
     try {
-      const data = await ctx.db.user.findMany({
-        where: {
-          staffType: null,
-        },
-        select: {
-          id: true,
-          email: true,
-          name: true,
-          batch: true,
-          graduationDate: true,
-          course: {
-            select: {
-              name: true,
-            },
-          },
-        },
-      });
+      const data = await ctx.db
+        .selectFrom("User")
+        .leftJoin("Course", "User.courseId", "Course.id")
+        .select([
+          "User.id",
+          "User.email",
+          "User.name",
+          "User.graduationDate",
+          "Course.name as course",
+          "User.batch",
+        ])
+        .where("User.staffTypeId", "is", null)
+        .execute();
       return data.map((student) => ({
         ...student,
-        batch: student.batch!,
+        batch: student.batch ?? "",
+        course: student.course ?? "",
         graduationDate:
           student.graduationDate?.toLocaleDateString("en-SG") ?? "",
-        course: student.course?.name ?? "",
       }));
     } catch (err) {
       console.log(err);
@@ -813,16 +785,11 @@ export const schoolAdminRouter = createTRPCRouter({
   }),
   getAllActiveCourses: protectedProcedure.query(async ({ ctx }) => {
     try {
-      return await ctx.db.course.findMany({
-        where: {
-          active: true,
-        },
-        select: {
-          id: true,
-          name: true,
-          code: true,
-        },
-      });
+      return await ctx.db
+        .selectFrom("Course")
+        .select(["id", "name", "code"])
+        .where("active", "=", true)
+        .execute();
     } catch (err) {
       console.log(err);
       throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
@@ -841,68 +808,82 @@ export const schoolAdminRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       try {
-        const role = await ctx.db.role.findFirstOrThrow({
-          where: {
-            role: "Student",
-          },
-        });
-        const data = await ctx.db.user.create({
-          data: {
-            id: input.id,
-            email: input.email,
-            name: input.name,
-            course: {
-              connect: {
-                id: input.course,
-              },
-            },
-            batch: input.batch,
-            graduationDate: input.graduationDate,
-            role: {
-              connect: {
-                id: role.id,
-              },
-            },
-          },
-          select: {
-            id: true,
-            email: true,
-            name: true,
-            batch: true,
-            graduationDate: true,
-            course: {
-              select: {
-                name: true,
-              },
-            },
-            role: {
-              select: {
-                role: true,
-                accessRights: {
-                  select: {
-                    accessRightId: true,
-                  },
-                },
-              },
-            },
-          },
-        });
-        await ctx.db.userAccessRights.createMany({
-          data:
-            data.role?.accessRights.map((accessRight) => ({
-              accessRightId: accessRight.accessRightId,
-              grantedUserId: input.id,
-              grantedById: ctx.user.id,
-            })) ?? [],
-        });
+        const role = await ctx.db
+          .selectFrom("Role")
+          .select((eb) => [
+            "id",
+            "role",
+            jsonArrayFrom(
+              eb
+                .selectFrom("AccessRightsOnRoles")
+                .select(["AccessRightsOnRoles.accessRightId"])
+                .whereRef("AccessRightsOnRoles.roleId", "=", eb.ref("Role.id")),
+            ).as("accessRights"),
+          ])
+          .where("role", "=", "Student")
+          .executeTakeFirstOrThrow();
+
+        const student = await ctx.db
+          .with("newStudent", (db) =>
+            db
+              .insertInto("User")
+              .values({
+                id: input.id,
+                email: input.email,
+                name: input.name,
+                courseId: input.course,
+                batch: input.batch,
+                graduationDate: input.graduationDate,
+                roleId: role.id,
+              })
+              .returning([
+                "User.id",
+                "User.email",
+                "User.name",
+                "User.courseId",
+                "User.batch",
+                "User.graduationDate",
+              ]),
+          )
+          .with("studentDetails", (db) =>
+            db
+              .selectFrom("newStudent")
+              .leftJoin("Course", "newStudent.courseId", "Course.id")
+              .select([
+                "newStudent.id",
+                "newStudent.email",
+                "newStudent.name",
+                "Course.name as course",
+                "newStudent.batch",
+                "newStudent.graduationDate",
+              ]),
+          )
+          .with("accessRights", (db) =>
+            db.insertInto("UserAccessRights").values(
+              role.accessRights.map((accessRight) => ({
+                id: createId(),
+                accessRightId: accessRight.accessRightId ?? "",
+                grantedUserId: input.id,
+                grantedById: ctx.user.id,
+              })),
+            ),
+          )
+          .selectFrom("studentDetails")
+          .select([
+            "studentDetails.id",
+            "studentDetails.email",
+            "studentDetails.name",
+            "studentDetails.course",
+            "studentDetails.batch",
+            "studentDetails.graduationDate",
+          ])
+          .executeTakeFirstOrThrow();
         return {
-          id: data.id,
-          email: data.email,
-          name: data.name,
-          batch: data.batch ?? "",
+          ...student,
+          batch: student?.batch ?? "",
+          course: student?.course ?? "",
           graduationDate:
-            data.graduationDate?.toLocaleDateString("en-SG") ?? "",
-          course: data.course?.name ?? "",
+            student?.graduationDate?.toLocaleDateString("en-SG") ?? "",
         };
       } catch (err) {
         console.log(err);
@@ -913,11 +894,11 @@ export const schoolAdminRouter = createTRPCRouter({
     .input(z.object({ id: z.string().min(1) }))
     .mutation(async ({ ctx, input }) => {
       try {
-        return await ctx.db.user.delete({
-          where: {
-            id: input.id,
-          },
-        });
+        await ctx.db
+          .deleteFrom("User")
+          .where("id", "=", input.id)
+          .executeTakeFirst();
+        return;
       } catch (err) {
         console.log(err);
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
@@ -927,43 +908,28 @@ export const schoolAdminRouter = createTRPCRouter({
     .input(z.object({ id: z.string().min(1) }))
     .query(async ({ ctx, input }) => {
       try {
-        const data = await ctx.db.user.findUnique({
-          where: {
-            id: input.id,
-          },
-          select: {
-            id: true,
-            email: true,
-            mobile: true,
-            name: true,
-            batch: true,
-            graduationDate: true,
-            course: {
-              select: {
-                id: true,
-              },
-            },
-            accessRightsGranted: {
-              select: {
-                accessRight: true,
-              },
-            },
-          },
-        });
+        const user = await ctx.db
+          .selectFrom("User")
+          .select([
+            "id",
+            "email",
+            "name",
+            "mobile",
+            "courseId as course",
+            "batch",
+            "graduationDate",
+          ])
+          .where("id", "=", input.id)
+          .executeTakeFirst();
+
         return {
-          id: data?.id ?? "",
-          email: data?.email ?? "",
-          mobile: data?.mobile ?? "",
-          name: data?.name ?? "",
-          batch: data?.batch ?? "",
-          graduationDate: data?.graduationDate ?? new Date(),
-          course: data?.course?.id ?? "",
-          accessRightsGranted:
-            data?.accessRightsGranted.map((accessRight) => ({
-              id: accessRight.accessRight.id,
-              pageName: accessRight.accessRight.pageName,
-              pageLink: accessRight.accessRight.pageLink,
-            })) ?? [],
+          id: user?.id ?? "",
+          email: user?.email ?? "",
+          name: user?.name ?? "",
+          mobile: user?.mobile ?? "",
+          course: user?.course ?? "",
+          batch: user?.batch ?? "",
+          graduationDate: user?.graduationDate ?? new Date(),
         };
       } catch (err) {
         console.log(err);
@@ -974,31 +940,29 @@ export const schoolAdminRouter = createTRPCRouter({
     .input(z.object({ id: z.string().min(1) }))
     .query(async ({ ctx, input }) => {
       try {
-        const data = await ctx.db.user.findUnique({
-          where: {
-            id: input.id,
-          },
-          select: {
-            accessRightsGranted: {
-              select: {
-                accessRight: true,
-                grantedBy: {
-                  select: {
-                    name: true,
-                  },
-                },
-              },
-            },
-          },
-        });
-        return (
-          data?.accessRightsGranted.map((accessRight) => ({
-            id: accessRight.accessRight.id,
-            pageName: accessRight.accessRight.pageName,
-            pageLink: accessRight.accessRight.pageLink,
-            grantedBy: accessRight.grantedBy.name,
-          })) ?? []
-        );
+        const data = await ctx.db
+          .selectFrom("UserAccessRights")
+          .leftJoin("User", "UserAccessRights.grantedById", "User.id")
+          .leftJoin(
+            "AccessRights",
+            "UserAccessRights.accessRightId",
+            "AccessRights.id",
+          )
+          .select([
+            "AccessRights.id",
+            "AccessRights.pageName",
+            "AccessRights.pageLink",
+            "User.name as grantedBy",
+          ])
+          .where("UserAccessRights.grantedUserId", "=", input.id)
+          .execute();
+
+        return data.map((accessRight) => ({
+          id: accessRight.id ?? "",
+          pageName: accessRight.pageName ?? "",
+          pageLink: accessRight.pageLink ?? "",
+          grantedBy: accessRight.grantedBy ?? "",
+        }));
       } catch (err) {
         console.log(err);
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
@@ -1008,6 +972,7 @@ export const schoolAdminRouter = createTRPCRouter({
     .input(
       z.object({
         id: z.string().min(1),
+        newId: z.string().min(1),
         name: z.string().min(1),
         email: z.string().email(),
         mobile: z
@@ -1026,45 +991,36 @@ export const schoolAdminRouter = createTRPCRouter({
         const hashed_password =
           input.password?.trim() && (await new Argon2id().hash(input.password));
 
-        const student = await ctx.db.user.update({
-          where: {
-            id: input.id,
-          },
-          data: {
-            id: input.id,
+        const student = await ctx.db
+          .updateTable("User")
+          .set({
+            id: input.newId,
             name: input.name,
             email: input.email,
             mobile: input.mobile?.trim() === "" ? null : input.mobile,
             ...(hashed_password && { hashed_password }),
             batch: input.batch,
             graduationDate: input.graduationDate,
-            course: {
-              connect: {
-                id: input.course,
-              },
-            },
-          },
-          select: {
-            id: true,
-            email: true,
-            mobile: true,
-            name: true,
-            batch: true,
-            graduationDate: true,
-            course: {
-              select: {
-                id: true,
-              },
-            },
-          },
-        });
+            courseId: input.course,
+          })
+          .where("id", "=", input.id)
+          .returning([
+            "id",
+            "email",
+            "name",
+            "mobile",
+            "courseId",
+            "batch",
+            "graduationDate",
+          ])
+          .executeTakeFirst();
         return {
           id: student?.id ?? "",
           email: student?.email ?? "",
-          mobile: student?.mobile ?? "",
           name: student?.name ?? "",
+          mobile: student?.mobile ?? "",
+          course: student?.courseId ?? "",
           batch: student?.batch ?? "",
-          course: student?.course?.id ?? "",
           graduationDate: student?.graduationDate ?? new Date(),
         };
       } catch (err) {
@@ -1081,37 +1037,40 @@ export const schoolAdminRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       try {
-        await ctx.db.userAccessRights.createMany({
-          data: input.accessRights.map((accessRight) => ({
-            accessRightId: accessRight,
-            grantedUserId: input.id,
-            grantedById: ctx.user.id,
-          })),
-        });
-        const data = await ctx.db.userAccessRights.findMany({
-          where: {
-            grantedUserId: input.id,
-          },
-          select: {
-            grantedBy: {
-              select: {
-                name: true,
-              },
-            },
-            accessRight: {
-              select: {
-                id: true,
-                pageName: true,
-                pageLink: true,
-              },
-            },
-          },
+        const data = await ctx.db.transaction().execute(async (trx) => {
+          await trx
+            .insertInto("UserAccessRights")
+            .values(
+              input.accessRights.map((accessRight) => ({
+                id: createId(),
+                accessRightId: accessRight,
+                grantedUserId: input.id,
+                grantedById: ctx.user.id,
+              })),
+            )
+            .execute();
+          return await trx
+            .selectFrom("UserAccessRights")
+            .leftJoin(
+              "AccessRights",
+              "UserAccessRights.accessRightId",
+              "AccessRights.id",
+            )
+            .leftJoin("User", "UserAccessRights.grantedById", "User.id")
+            .select([
+              "AccessRights.id",
+              "AccessRights.pageName",
+              "AccessRights.pageLink",
+              "User.name as grantedBy",
+            ])
+            .where("UserAccessRights.grantedUserId", "=", input.id)
+            .execute();
         });
         return data.map((accessRight) => ({
-          id: accessRight.accessRight.id,
-          pageName: accessRight.accessRight.pageName,
-          pageLink: accessRight.accessRight.pageLink,
-          grantedBy: accessRight.grantedBy.name,
+          id: accessRight.id ?? "",
+          pageName: accessRight.pageName ?? "",
+          pageLink: accessRight.pageLink ?? "",
+          grantedBy: accessRight.grantedBy ?? "",
         }));
       } catch (err) {
         console.log(err);
@@ -1122,20 +1081,12 @@ export const schoolAdminRouter = createTRPCRouter({
     .input(z.object({ id: z.string().min(1), studentId: z.string().min(1) }))
     .mutation(async ({ ctx, input }) => {
       try {
-        const userAccessRight = await ctx.db.userAccessRights.findFirst({
-          where: {
-            accessRightId: input.id,
-            grantedUserId: input.studentId,
-          },
-          select: {
-            id: true,
-          },
-        });
-        return await ctx.db.userAccessRights.delete({
-          where: {
-            id: userAccessRight?.id,
-          },
-        });
+        await ctx.db
+          .deleteFrom("UserAccessRights")
+          .where("grantedUserId", "=", input.studentId)
+          .where("accessRightId", "=", input.id)
+          .execute();
+        return;
       } catch (err) {
         console.log(err);
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });

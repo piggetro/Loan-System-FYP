@@ -6,7 +6,6 @@ import React, { useCallback, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { useToast } from "@/app/_components/ui/use-toast";
-import { type Loan } from "@prisma/client";
 import { PreparationColumns } from "./ReturnColumns";
 import { ReturnDataTable } from "./ReturnDataTable";
 import { Skeleton } from "@/app/_components/ui/skeleton";
@@ -16,8 +15,27 @@ import {
   AlertDialogContent,
 } from "@/app/_components/ui/alert-dialog";
 import ReturnLoanDialog from "../../_components/ReturnLoanDialog";
+import { type LoanStatus } from "@/db/enums";
 
-export interface PreparationLoanType extends Loan {
+export interface PreparationLoanType {
+  id: string;
+  loanId: string;
+  remarks: string;
+  dueDate: Date;
+  status: LoanStatus;
+  signature: string | null;
+  loanedById: string | null;
+  approvedById: string | null;
+  preparedById: string | null;
+  issuedById: string | null;
+  returnedToId: string | null;
+  approvingLecturerId: string | null;
+  dateCreated: Date;
+  collectionReferenceNumber: string | null;
+  datePrepared: Date | null;
+  dateIssued: Date | null;
+  dateCollected: Date | null;
+  dateReturned: Date | null;
   loanedBy: { name: string } | null;
 }
 
@@ -31,10 +49,10 @@ const ReturnPage: React.FC<{
   const [openReturnDialog, setOpenReturnDialog] = useState<boolean>(false);
   const [returnId, setReturnId] = useState<string>("");
 
-  const onView = useCallback((loanDetails: Loan) => {
+  const onView = useCallback((loanDetails: PreparationLoanType) => {
     router.push(`/equipment-loans/loans/${loanDetails.id}`);
   }, []);
-  const onReturn = useCallback((loanDetails: Loan) => {
+  const onReturn = useCallback((loanDetails: PreparationLoanType) => {
     setReturnId(loanDetails.id);
     setOpenReturnDialog(true);
   }, []);

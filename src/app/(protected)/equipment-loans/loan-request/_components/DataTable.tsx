@@ -31,8 +31,8 @@ import {
 import { useState } from "react";
 import { Input } from "@/app/_components/ui/input";
 import React from "react";
-import { type Category, type SubCategory } from "@prisma/client";
 import { Button } from "@/app/_components/ui/button";
+import { type Category, type SubCategory } from "@/db/types";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
