@@ -223,7 +223,7 @@ export const equipmentRouter = createTRPCRouter({
         checkList: z.string().optional(),
         category: z.string().min(1),
         subCategory: z.string().min(1),
-        course: z.array(z.string().min(1)),
+        courses: z.array(z.string().min(1)),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -240,23 +240,23 @@ export const equipmentRouter = createTRPCRouter({
           .returning(["id", "name", "checklist", "subCategoryId"])
           .executeTakeFirst();
 
-        input.course.length &&
-          (await ctx.db.transaction().execute(async (trx) => {
-            await trx
-              .deleteFrom("EquipmentOnCourses")
-              .where("equipmentId", "=", input.id)
-              .execute();
-            await trx
+        await ctx.db.transaction().execute(async (trx) => {
+          await trx
+            .deleteFrom("EquipmentOnCourses")
+            .where("equipmentId", "=", input.id)
+            .execute();
+          input.courses.length &&
+            (await trx
               .insertInto("EquipmentOnCourses")
               .values(
-                input.course.map((course) => ({
+                input.courses.map((course) => ({
                   equipmentId: input.id,
                   courseId: course,
                 })),
               )
-              .execute();
-            return;
-          }));
+              .execute());
+          return;
+        });
 
         return {
           id: equipment?.id ?? "",
@@ -264,7 +264,7 @@ export const equipmentRouter = createTRPCRouter({
           checkList: equipment?.checklist ?? "",
           subCategory: equipment?.subCategoryId ?? "",
           category: input.category,
-          courses: input.course,
+          courses: input.courses,
         };
       } catch (err) {
         console.log(err);

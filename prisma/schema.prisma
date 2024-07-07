@@ -230,7 +230,6 @@ model Semesters {
     name         String
     startDate    DateTime
     endDate      DateTime
-    numberOfDays Int
 }
 
 model Holiday {
@@ -238,7 +237,6 @@ model Holiday {
     name         String
     startDate    DateTime
     endDate      DateTime
-    numberOfDays Int
 }
 
 model Course {

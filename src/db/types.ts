@@ -51,7 +51,6 @@ export type Holiday = {
     name: string;
     startDate: Timestamp;
     endDate: Timestamp;
-    numberOfDays: number;
 };
 export type Inventory = {
     id: string;
@@ -102,7 +101,6 @@ export type Semesters = {
     name: string;
     startDate: Timestamp;
     endDate: Timestamp;
-    numberOfDays: number;
 };
 export type Session = {
     id: string;

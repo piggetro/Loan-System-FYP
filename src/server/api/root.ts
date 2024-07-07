@@ -8,6 +8,7 @@ import { organisationUnitsRouter } from "./routers/school-admin/organisation-uni
 import { equipmentRouter } from "./routers/equipment-management/equipment.procedure";
 import { staffTypesRouter } from "./routers/school-admin/staff-types.procedure";
 import { profileRouter } from "./routers/profile/profile.procedure";
+import { semesterHolidayRouter } from "./routers/school-admin/semester-holiday.procedure";
 
 /**
  * This is the primary router for your server.
@@ -24,6 +25,7 @@ export const appRouter = createTRPCRouter({
   equipment: equipmentRouter,
   staffTypes: staffTypesRouter,
   profile: profileRouter,
+  semesterHoliday: semesterHolidayRouter,
 });
 
 // export type definition of API

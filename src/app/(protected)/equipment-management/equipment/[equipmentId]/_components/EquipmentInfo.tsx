@@ -53,7 +53,7 @@ const formSchema = z.object({
   subCategory: z
     .string({ required_error: "Please select a sub category" })
     .min(1),
-  course: z.array(z.string()),
+  courses: z.array(z.string()),
 });
 const EquipmentInfo = ({
   equipment,
@@ -68,7 +68,7 @@ const EquipmentInfo = ({
       checkList: equipment.checkList,
       category: equipment.category,
       subCategory: equipment.subCategory,
-      course: equipment.courses,
+      courses: equipment.courses,
     },
     mode: "onChange",
   });
@@ -89,9 +89,7 @@ const EquipmentInfo = ({
           title: "Success",
           description: "Equipment updated successfully",
         });
-        form.reset({
-          ...data,
-        });
+        form.reset(data);
       },
       onError: (err) => {
         console.log(err);
@@ -224,7 +222,7 @@ const EquipmentInfo = ({
             />
             <FormField
               control={form.control}
-              name="course"
+              name="courses"
               render={() => (
                 <FormItem>
                   <div className="mb-4">
@@ -236,7 +234,7 @@ const EquipmentInfo = ({
                     <FormField
                       key={course.id}
                       control={form.control}
-                      name="course"
+                      name="courses"
                       render={({ field }) => {
                         return (
                           <FormItem
