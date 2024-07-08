@@ -137,6 +137,25 @@ const StudentInfo = ({
       },
     });
 
+  const { mutate: deleteStudent, isPending: isDeleting } =
+    api.schoolAdmin.deleteStudent.useMutation({
+      onSuccess: () => {
+        window.location.href = "/school-admin/student";
+        toast({
+          title: "Success",
+          description: "Student deleted successfully",
+        });
+      },
+      onError: (err) => {
+        console.log(err);
+        toast({
+          title: "Error",
+          description: "An error occurred while deleting student",
+          variant: "destructive",
+        });
+      },
+    });
+
   const onSubmit: SubmitHandler<z.infer<typeof formSchema>> = (
     values: z.infer<typeof formSchema>,
   ) => {
@@ -315,6 +334,9 @@ const StudentInfo = ({
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start">
                       <Calendar
+                        captionLayout="dropdown-buttons"
+                        fromYear={2005}
+                        toYear={2040}
                         mode="single"
                         selected={field.value}
                         onSelect={field.onChange}
@@ -329,6 +351,17 @@ const StudentInfo = ({
         </div>
       </Form>
       <div className="flex justify-end">
+        <Button
+          variant="destructive"
+          className="me-2 mt-2"
+          disabled={isDeleting}
+          onClick={() => {
+            deleteStudent({ id: student.id });
+          }}
+        >
+          {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          Delete
+        </Button>
         <Button
           type="button"
           onClick={() => {

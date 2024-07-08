@@ -12,7 +12,11 @@ const page = async ({ params }: pageProps) => {
 
   return (
     <div>
-      <TopHeaderComponent pathName="School Admin / Roles" pageName="Roles" />
+      <TopHeaderComponent
+        pathName="School Admin / Roles"
+        pageName="Roles"
+        goBackLink="/school-admin/roles"
+      />
       <div>
         <RoleDetails role={role} />
       </div>

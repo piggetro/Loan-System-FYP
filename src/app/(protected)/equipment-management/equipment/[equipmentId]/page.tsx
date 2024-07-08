@@ -19,6 +19,7 @@ const page = async ({ params }: pageProps) => {
       <TopHeaderComponent
         pathName="Equipment Management / Equipment"
         pageName="Equipment"
+        goBackLink="/equipment-management/equipment"
       />
       <EquipmentDetails
         equipment={data.equipment}

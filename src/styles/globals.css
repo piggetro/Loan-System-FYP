@@ -49,6 +49,10 @@
   }
 }
 
+.rdp-vhidden {
+  @apply hidden;
+}
+
 /* *::-webkit-scrollbar {
   width: 5px; 
 }

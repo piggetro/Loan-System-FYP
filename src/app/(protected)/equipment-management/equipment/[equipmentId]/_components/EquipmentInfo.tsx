@@ -101,6 +101,25 @@ const EquipmentInfo = ({
       },
     });
 
+  const { mutate: deleteEquipment, isPending: isDeleting } =
+    api.equipment.deleteEquipment.useMutation({
+      onSuccess: () => {
+        window.location.href = "/equipment-management/equipment";
+        toast({
+          title: "Equipment Deleted",
+          description: "The equipment has been deleted successfully",
+        });
+      },
+      onError: (err) => {
+        console.log(err);
+        toast({
+          title: "Error",
+          description: "An error occurred while deleting the equipment",
+          variant: "destructive",
+        });
+      },
+    });
+
   const onSubmit: SubmitHandler<z.infer<typeof formSchema>> = (
     values: z.infer<typeof formSchema>,
   ) => {
@@ -275,6 +294,17 @@ const EquipmentInfo = ({
         </div>
       </Form>
       <div className="flex justify-end">
+        <Button
+          variant="destructive"
+          className="me-2 mt-2"
+          disabled={isDeleting}
+          onClick={() => {
+            deleteEquipment({ id: equipment.id });
+          }}
+        >
+          {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          Delete
+        </Button>
         <Button
           type="button"
           onClick={() => {

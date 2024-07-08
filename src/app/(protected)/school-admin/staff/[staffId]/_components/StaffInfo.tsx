@@ -150,6 +150,25 @@ const StaffInfo = ({
       },
     });
 
+  const { mutate: deleteStaff, isPending: isDeleting } =
+    api.schoolAdmin.deleteStaff.useMutation({
+      onSuccess: () => {
+        window.location.href = "/school-admin/staff";
+        toast({
+          title: "Success",
+          description: "Staff deleted successfully",
+        });
+      },
+      onError: (err) => {
+        console.log(err);
+        toast({
+          title: "Error",
+          description: "An error occurred while deleting staff",
+          variant: "destructive",
+        });
+      },
+    });
+
   const onSubmit: SubmitHandler<z.infer<typeof formSchema>> = (
     values: z.infer<typeof formSchema>,
   ) => {
@@ -339,6 +358,17 @@ const StaffInfo = ({
         </div>
       </Form>
       <div className="flex justify-end">
+        <Button
+          variant="destructive"
+          className="me-2 mt-2"
+          disabled={isDeleting}
+          onClick={() => {
+            deleteStaff({ id: staff.id });
+          }}
+        >
+          {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          Delete
+        </Button>
         <Button
           type="button"
           onClick={() => {

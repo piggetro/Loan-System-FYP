@@ -84,6 +84,25 @@ const CourseInfo = ({ course, setCouse }: CourseInfoProps) => {
       },
     });
 
+  const { mutate: deleteCourse, isPending: isDeleting } =
+    api.courses.deleteCourse.useMutation({
+      onSuccess: () => {
+        window.location.href = "/school-admin/courses";
+        toast({
+          title: "Success",
+          description: "Course deleted successfully",
+        });
+      },
+      onError: (err) => {
+        console.log(err);
+        toast({
+          title: "Error",
+          description: "An error occurred while deleting course",
+          variant: "destructive",
+        });
+      },
+    });
+
   const onSubmit: SubmitHandler<z.infer<typeof formSchema>> = (
     values: z.infer<typeof formSchema>,
   ) => {
@@ -167,6 +186,17 @@ const CourseInfo = ({ course, setCouse }: CourseInfoProps) => {
         </div>
       </Form>
       <div className="flex justify-end">
+        <Button
+          variant="destructive"
+          className="me-2 mt-2"
+          disabled={isDeleting}
+          onClick={() => {
+            deleteCourse({ id: course.id });
+          }}
+        >
+          {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          Delete
+        </Button>
         <Button
           type="button"
           onClick={() => {

@@ -28,6 +28,7 @@ const page = async ({ params }: pageProps) => {
       <TopHeaderComponent
         pathName="School Admin / Student"
         pageName="Student"
+        goBackLink="/school-admin/student"
       />
       <div>
         <StudentDetails

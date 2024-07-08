@@ -249,6 +249,9 @@ const AddStaff = ({ setStudent, courses, batches }: AddStaffProps) => {
                     <PopoverContent className="w-auto p-0" align="start">
                       <Calendar
                         mode="single"
+                        captionLayout="dropdown-buttons"
+                        fromYear={2005}
+                        toYear={2040}
                         selected={field.value}
                         onSelect={field.onChange}
                       />

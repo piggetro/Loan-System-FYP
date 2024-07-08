@@ -63,6 +63,25 @@ const RoleInfo = ({ role, setRole }: RoleInfoProps) => {
       },
     });
 
+  const { mutate: deleteRole, isPending: isDeleting } =
+    api.schoolAdmin.deleteRole.useMutation({
+      onSuccess: () => {
+        window.location.href = "/school-admin/roles";
+        toast({
+          title: "Success",
+          description: "Role deleted successfully",
+        });
+      },
+      onError: (err) => {
+        console.log(err);
+        toast({
+          title: "Error",
+          description: "An error occurred while deleting role",
+          variant: "destructive",
+        });
+      },
+    });
+
   const onSubmit: SubmitHandler<z.infer<typeof formSchema>> = (
     values: z.infer<typeof formSchema>,
   ) => {
@@ -91,6 +110,17 @@ const RoleInfo = ({ role, setRole }: RoleInfoProps) => {
         </div>
       </Form>
       <div className="flex justify-end">
+        <Button
+          variant="destructive"
+          className="me-2 mt-2"
+          disabled={isDeleting}
+          onClick={() => {
+            deleteRole({ id: role.id });
+          }}
+        >
+          {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          Delete
+        </Button>
         <Button
           type="button"
           onClick={() => {

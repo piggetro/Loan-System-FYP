@@ -24,6 +24,7 @@ const loanPage = async ({ params }: pageProps) => {
       <TopHeaderComponent
         pageName="Loan Details"
         pathName="Equipment Loans / Loan Details"
+        goBackLink="/equipment-loans/loans"
       />
       <LoanDetails id={params.id} />
     </div>

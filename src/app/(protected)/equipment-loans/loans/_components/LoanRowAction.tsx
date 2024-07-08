@@ -57,7 +57,7 @@ export const LoanTablePendingApprovalRowActionsProps = <TData,>({
             onClick={() => {
               onCancel(row.original);
             }}
-            className="text-primary text-red-500"
+            className="text-red-500 focus:bg-red-100 focus:text-red-500"
           >
             Cancel Request
           </DropdownMenuItem>
