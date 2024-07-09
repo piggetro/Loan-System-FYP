@@ -350,6 +350,9 @@ const LoanRequestComponent: React.FC<{
                           </PopoverTrigger>
                           <PopoverContent className="w-auto p-0" align="start">
                             <Calendar
+                              captionLayout="dropdown-buttons"
+                              fromYear={2005}
+                              toYear={2040}
                               mode="single"
                               selected={field.value}
                               onSelect={field.onChange}
