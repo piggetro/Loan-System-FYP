@@ -145,6 +145,7 @@ const LoanDetails: React.FC<{
       </div>
     );
   }
+  console.log(data);
   return (
     <div className="w-full">
       <AlertDialog open={openCollectLoanDialog}>

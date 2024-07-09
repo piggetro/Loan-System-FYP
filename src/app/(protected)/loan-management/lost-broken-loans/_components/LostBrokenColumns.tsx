@@ -14,33 +14,15 @@ export const LostBrokenColumns = ({
   {
     accessorKey: "loanId",
     header: "Loan ID",
-    cell: ({ row }) => <div className="w-96">{row.getValue("loanId")}</div>,
+    cell: ({ row }) => <div className="w-20">{row.getValue("loanId")}</div>,
   },
   {
-    accessorKey: "loanedBy.name",
+    accessorKey: "name",
     id: "name",
     header: "Name",
     cell: ({ row }) => <div className="">{row.getValue("name")}</div>,
   },
 
-  {
-    accessorKey: "dateCreated",
-    header: "Date Requested",
-    cell: ({ row }) => (
-      <div className="" suppressHydrationWarning>
-        {new Date(row.getValue("dateCreated")).toLocaleDateString()}
-      </div>
-    ),
-  },
-  {
-    accessorKey: "dueDate",
-    header: "Due Date",
-    cell: ({ row }) => (
-      <div className="" suppressHydrationWarning>
-        {new Date(row.getValue("dueDate")).toLocaleDateString()}
-      </div>
-    ),
-  },
   {
     accessorKey: "status",
     header: "Status",
@@ -48,17 +30,26 @@ export const LostBrokenColumns = ({
       <div className="flex items-center">
         <div
           className={`mr-2 h-3 w-3 rounded-full ${
-            row.getValue("status") === "COLLECTED" ||
-            row.getValue("status") === "RETURNED"
+            row.getValue("status") === "Approved"
               ? "bg-green-500"
-              : row.getValue("status") === "REJECTED" ||
-                  row.getValue("status") === "CANCELLED" ||
-                  row.getValue("status") === "OVERDUE"
-                ? "bg-red-500"
-                : "bg-yellow-500"
+              : row.getValue("status") === "Pending" ||
+                  row.getValue("status") === "Awaiting Request"
+                ? "bg-yellow-500"
+                : "bg-red-500"
           }`}
         ></div>
         <span>{toStartCase(row.getValue("status"))}</span>
+      </div>
+    ),
+  },
+  {
+    accessorKey: "remarks",
+    header: "Remarks",
+    cell: ({ row }) => (
+      <div className="grow">
+        {row.getValue("remarks") === ""
+          ? "No Outstanding Remarks"
+          : row.getValue("remarks")}
       </div>
     ),
   },

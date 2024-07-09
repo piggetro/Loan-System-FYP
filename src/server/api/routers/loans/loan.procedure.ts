@@ -3,7 +3,7 @@ import { TRPCError } from "@trpc/server";
 import { protectedProcedure, createTRPCRouter } from "../../trpc";
 import { z } from "zod";
 import { type LoanDetailsData } from "@/app/(protected)/equipment-loans/loans/[id]/_components/LoanDetailsTable";
-import { jsonObjectFrom } from "kysely/helpers/postgres";
+import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 
 export const loanRouter = createTRPCRouter({
   verifyLoanById: protectedProcedure
@@ -52,11 +52,13 @@ export const loanRouter = createTRPCRouter({
                 .select("Loan.id")
                 .where("Loan.approvingLecturerId", "=", ctx.user.id)
                 .where("Loan.status", "=", "PENDING_APPROVAL")
+                .where("Loan.id", "=", input.id)
                 .as("userAllowedToApproveLoan"),
               ctx.db
                 .selectFrom("Loan")
                 .select("Loan.id")
                 .where("Loan.loanedById", "=", ctx.user.id)
+                .where("Loan.id", "=", input.id)
                 .as("usersOwnLoan"),
             ])
             .where("Loan.id", "=", input.id)
@@ -196,4 +198,181 @@ export const loanRouter = createTRPCRouter({
       throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
     }
   }),
+  getUserLostAndBrokenLoans: protectedProcedure.query(async ({ ctx }) => {
+    try {
+      const lostAndBrokenLoan = await ctx.db
+        .selectFrom("Loan")
+        .selectAll("Loan")
+        .innerJoin("LoanItem", "Loan.id", "LoanItem.loanId")
+        .select((eb) => [
+          jsonArrayFrom(
+            eb
+              .selectFrom("WaiveRequest")
+              .whereRef("WaiveRequest.loanId", "=", "Loan.id")
+              .selectAll(),
+          ).as("outstandingItems"),
+          eb
+            .selectFrom("User")
+            .whereRef("User.id", "=", "Loan.loanedById")
+            .select("User.name")
+            .as("loanedByName"),
+        ])
+        .where("LoanItem.status", "in", [
+          "BROKEN",
+          "LOST",
+          "MISSING_CHECKLIST_ITEMS",
+        ])
+        .where("Loan.loanedById", "=", ctx.user.id)
+        .distinctOn("Loan.id")
+        .execute();
+
+      const data = lostAndBrokenLoan.map((item) => {
+        let remarks = "";
+        const statusArray: string[] = [];
+
+        item.outstandingItems.forEach((outstandingItem) => {
+          if (
+            outstandingItem.status === "AWAITING_REQUEST" ||
+            outstandingItem.status === "REJECTED"
+          ) {
+            remarks += outstandingItem.remarks;
+          }
+          statusArray.push(outstandingItem.status!);
+        });
+        let status;
+
+        if (
+          (statusArray.includes("AWAITING_REQUEST") &&
+            statusArray.includes("APPROVED")) ||
+          (statusArray.includes("AWAITING_REQUEST") &&
+            statusArray.includes("REJECTED")) ||
+          (statusArray.includes("AWAITING_REQUEST") &&
+            statusArray.includes("PENDING")) ||
+          (statusArray.includes("PENDING") &&
+            statusArray.includes("REJECTED")) ||
+          (statusArray.includes("PENDING") &&
+            statusArray.includes("APPROVED")) ||
+          statusArray.every(
+            (status) => status === "APPROVED" || status === "REJECTED",
+          )
+        ) {
+          status = "Partially Outstanding";
+        } else if (statusArray.every((status) => status === "APPROVED")) {
+          status = "Approved";
+        } else if (statusArray.every((status) => status === "PENDING")) {
+          status = "Pending";
+        } else if (
+          statusArray.every((status) => status === "AWAITING_REQUEST")
+        ) {
+          status = "Awaiting Request";
+        }
+
+        return {
+          id: item.id,
+          loanId: item.loanId,
+          status: status,
+          remarks: remarks,
+        };
+      });
+      console.log(data);
+      return data;
+    } catch (err) {
+      console.log(err);
+      throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+    }
+  }),
+  verifyLostBrokenLoanByLoanId: protectedProcedure
+    .input(z.object({ id: z.string().min(1) }))
+    .query(async ({ ctx, input }) => {
+      try {
+        const lostAndBrokenHistory = await ctx.db
+          .selectFrom("Loan")
+          .selectAll("Loan")
+          .innerJoin("LoanItem", "Loan.id", "LoanItem.loanId")
+          .where("LoanItem.status", "in", [
+            "BROKEN",
+            "LOST",
+            "MISSING_CHECKLIST_ITEMS",
+          ])
+          .where("Loan.id", "=", input.id)
+          .distinctOn("Loan.id")
+          .executeTakeFirstOrThrow();
+
+        return lostAndBrokenHistory;
+      } catch (err) {
+        console.log(err);
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      }
+    }),
+  getLostBrokenLoanByLoanId: protectedProcedure
+    .input(z.object({ id: z.string().min(1) }))
+    .query(async ({ ctx, input }) => {
+      try {
+        try {
+          const data = await ctx.db
+            .selectFrom("WaiveRequest")
+            .leftJoin("Loan", "Loan.id", "WaiveRequest.loanId")
+            .selectAll("WaiveRequest")
+            .select((eb) => [
+              jsonObjectFrom(
+                eb
+                  .selectFrom("User")
+                  .select("User.name")
+                  .whereRef("Loan.loanedById", "=", "User.id"),
+              ).as("loanedBy"),
+              jsonObjectFrom(
+                eb
+                  .selectFrom("User")
+                  .select("User.name")
+                  .whereRef("Loan.approvedById", "=", "User.id"),
+              ).as("approvedBy"),
+              jsonObjectFrom(
+                eb
+                  .selectFrom("User")
+                  .select("User.name")
+                  .whereRef("Loan.preparedById", "=", "User.id"),
+              ).as("preparedBy"),
+              jsonObjectFrom(
+                eb
+                  .selectFrom("User")
+                  .select("User.name")
+                  .whereRef("Loan.issuedById", "=", "User.id"),
+              ).as("issuedBy"),
+              jsonObjectFrom(
+                eb
+                  .selectFrom("User")
+                  .select("User.name")
+                  .whereRef("Loan.returnedToId", "=", "User.id"),
+              ).as("returnedTo"),
+              "Loan.loanId as loanId",
+              jsonArrayFrom(
+                eb
+                  .selectFrom("WaiveRequest")
+                  .leftJoin(
+                    "LoanItem",
+                    "LoanItem.id",
+                    "WaiveRequest.loanItemId",
+                  )
+                  .leftJoin("Equipment", "Equipment.id", "LoanItem.equipmentId")
+                  .selectAll("WaiveRequest")
+                  .select([
+                    "Equipment.name as equipment_name",
+                    "Equipment.checklist as equipment_checklist",
+                  ])
+                  .where("WaiveRequest.loanId", "=", input.id),
+              ).as("loanItems") ?? "",
+            ])
+            .where("WaiveRequest.loanId", "=", input.id)
+            .executeTakeFirstOrThrow();
+          console.log(data);
+          return data;
+        } catch (err) {
+          console.log(err);
+          throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+        }
+      } catch (err) {
+        console.log(err);
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      }
+    }),
 });

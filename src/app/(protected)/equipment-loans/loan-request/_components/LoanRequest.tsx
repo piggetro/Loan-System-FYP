@@ -35,7 +35,7 @@ import {
   FormItem,
   FormMessage,
 } from "@/app/_components/ui/form";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, ChevronsUpDown } from "lucide-react";
 import { Calendar } from "@/app/_components/ui/calendar";
 import { type Inventory } from "../page";
 import { cn } from "@/lib/utils";
@@ -45,6 +45,14 @@ import { useRouter } from "next/navigation";
 import { api } from "@/trpc/react";
 import { Skeleton } from "@/app/_components/ui/skeleton";
 import { type Category, type SubCategory } from "@/db/types";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/app/_components/ui/command";
 
 const formSchema = z.object({
   remarks: z.string().min(1, "Required").max(150),
@@ -66,6 +74,8 @@ const LoanRequestComponent: React.FC<{
   const [approvingLecturer, setApprovingLecturer] = useState<string>("");
   const [approvingLecturerEmail, setApprovingLecturerEmail] =
     useState<string>("");
+  const [openLecturerDropDown, setOpenLecturerDropDown] =
+    useState<boolean>(false);
   const [searchInput, setSearchInput] = useState<string>("");
   const [debouncerIsLoading, setDebouncerIsLoading] = useState<boolean>(false);
   const [reviewLoanRequestOpen, setReviewLoanRequestOpen] =
@@ -108,10 +118,6 @@ const LoanRequestComponent: React.FC<{
           subCategory: updatedItems[indexOfItem]!.subCategory,
           quantityAvailable: updatedItems[indexOfItem]!.quantityAvailable,
         };
-        console.log(
-          updatedItems[indexOfItem]!.quantitySelected +
-            itemToAdd.quantitySelected,
-        );
         setSelectedEquipment(updatedItems);
       }
     } else {
@@ -231,36 +237,83 @@ const LoanRequestComponent: React.FC<{
                       control={form.control}
                       name="approvingLecturer"
                       render={({ field }) => (
-                        <FormItem className="flex items-center gap-3">
-                          <Select
-                            onValueChange={(value) => {
-                              field.onChange(value);
-                              setApprovingLecturerEmail(value);
-                            }}
-                            defaultValue={field.value}
-                          >
-                            <FormControl>
-                              <SelectTrigger className=" w-1/4 min-w-44">
-                                <SelectValue placeholder="Lecturer Name" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectGroup>
-                                <SelectLabel>Lecturer Name</SelectLabel>
+                        <Popover
+                          open={openLecturerDropDown}
+                          onOpenChange={setOpenLecturerDropDown}
+                        >
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="outline"
+                              role="combobox"
+                              aria-expanded={openLecturerDropDown}
+                              className="w-[250px] justify-between"
+                            >
+                              {approvingLecturerEmail
+                                ? approvingLecturers.find(
+                                    (lecturer) =>
+                                      lecturer.email === approvingLecturerEmail,
+                                  )?.name
+                                : "Select framework Lecturer"}
+                              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-[250px] p-0">
+                            <Command>
+                              <CommandInput placeholder="Search Lecturer" />
+                              <CommandList>
+                                <CommandEmpty>No framework found.</CommandEmpty>
+                                <CommandGroup>
+                                  {approvingLecturers.map((lecturer) => {
+                                    return (
+                                      <CommandItem
+                                        key={lecturer.email}
+                                        value={lecturer.email}
+                                        onSelect={(currentValue) => {
+                                          setApprovingLecturerEmail(
+                                            currentValue,
+                                          );
+                                          setOpenLecturerDropDown(false);
+                                        }}
+                                      >
+                                        {lecturer.name}
+                                      </CommandItem>
+                                    );
+                                  })}
+                                </CommandGroup>
+                              </CommandList>
+                            </Command>
+                          </PopoverContent>
+                        </Popover>
+                        // <FormItem className="flex items-center gap-3">
+                        //   <Select
+                        //     onValueChange={(value) => {
+                        //       field.onChange(value);
+                        //       setApprovingLecturerEmail(value);
+                        //     }}
+                        //     defaultValue={field.value}
+                        //   >
+                        //     <FormControl>
+                        //       <SelectTrigger className=" w-1/4 min-w-44">
+                        //         <SelectValue placeholder="Lecturer Name" />
+                        //       </SelectTrigger>
+                        //     </FormControl>
+                        //     <SelectContent>
+                        //       <SelectGroup>
+                        //         <SelectLabel>Lecturer Name</SelectLabel>
 
-                                {approvingLecturers.map((lecturer) => (
-                                  <SelectItem
-                                    key={lecturer.email}
-                                    value={lecturer.email}
-                                  >
-                                    {lecturer.name}
-                                  </SelectItem>
-                                ))}
-                              </SelectGroup>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage className="h-7" />
-                        </FormItem>
+                        //         {approvingLecturers.map((lecturer) => (
+                        //           <SelectItem
+                        //             key={lecturer.email}
+                        //             value={lecturer.email}
+                        //           >
+                        //             {lecturer.name}
+                        //           </SelectItem>
+                        //         ))}
+                        //       </SelectGroup>
+                        //     </SelectContent>
+                        //   </Select>
+                        //   <FormMessage className="h-7" />
+                        // </FormItem>
                       )}
                     />
                   </div>

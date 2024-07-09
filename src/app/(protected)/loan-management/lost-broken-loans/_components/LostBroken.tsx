@@ -8,27 +8,12 @@ import { LostBrokenColumns } from "./LostBrokenColumns";
 import { LostBrokenDataTable } from "./LostBrokenDataTable";
 import { Skeleton } from "@/app/_components/ui/skeleton";
 
-import { type LoanStatus } from "@/db/enums";
 export interface LostBrokenLoanType {
   id: string;
   loanId: string;
+  status: string | undefined;
   remarks: string;
-  dueDate: Date;
-  status: LoanStatus;
-  signature: string | null;
-  loanedById: string | null;
-  approvedById: string | null;
-  preparedById: string | null;
-  issuedById: string | null;
-  returnedToId: string | null;
-  approvingLecturerId: string | null;
-  dateCreated: Date;
-  collectionReferenceNumber: string | null;
-  datePrepared: Date | null;
-  dateIssued: Date | null;
-  dateCollected: Date | null;
-  dateReturned: Date | null;
-  loanedBy: { name: string } | null;
+  name: string;
 }
 
 const LostBrokenPage: React.FC<{
@@ -38,7 +23,7 @@ const LostBrokenPage: React.FC<{
   const router = useRouter();
 
   const onView = useCallback((loanDetails: LostBrokenLoanType) => {
-    router.push(`/equipment-loans/loans/${loanDetails.id}`);
+    router.push(`/loan-management/waiver/${loanDetails.id}`);
   }, []);
 
   const LostBrokenTableColumns = useMemo(

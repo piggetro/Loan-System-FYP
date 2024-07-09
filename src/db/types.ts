@@ -55,6 +55,7 @@ export type Holiday = {
 export type Inventory = {
     id: string;
     assetNumber: string;
+    remarks: string | null;
     datePurchased: Timestamp | null;
     warrantyExpiry: Timestamp | null;
     cost: string;
@@ -145,8 +146,12 @@ export type VerificationToken = {
 export type WaiveRequest = {
     id: string;
     loanId: string;
+    reason: string | null;
+    remarks: string | null;
+    dateIssued: Generated<Timestamp>;
     status: WaiveRequestStatus;
     approvedByUserId: string | null;
+    loanItemId: string;
 };
 export type DB = {
     AccessRights: AccessRights;

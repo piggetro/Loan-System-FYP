@@ -95,6 +95,7 @@ model Equipment {
 model Inventory {
     id             String          @id @default(cuid())
     assetNumber    String          @unique
+    remarks        String?
     datePurchased  DateTime?
     warrantyExpiry DateTime?
     cost           Decimal
@@ -109,6 +110,7 @@ enum EquipmentStatus {
     BROKEN
     LOANED
     AVAILABLE
+    MISSING_CHECKLIST_ITEMS
 }
 
 model Loan {
@@ -117,7 +119,7 @@ model Loan {
     remarks                   String
     dueDate                   DateTime
     status                    LoanStatus
-    signature                 String?        
+    signature                 String?
     loanedBy                  User?          @relation("UserLoans_LoanedBy", fields: [loanedById], references: [id], onDelete: SetNull)
     approvingLecturer         User?          @relation(fields: [approvingLecturerId], references: [id], onDelete: SetNull)
     approvedBy                User?          @relation("UserLoans_ApprovedBy", fields: [approvedById], references: [id], onDelete: SetNull)
@@ -151,6 +153,7 @@ enum LoanStatus {
     RETURNED
     OVERDUE
     PARTIAL_RETURN
+    MISSING
 }
 
 model LoanItem {
@@ -162,6 +165,7 @@ model LoanItem {
     loanedInventory Inventory?         @relation(fields: [inventoryId], references: [id], onDelete: SetNull)
     inventoryId     String?
     status          LoanedItemsStatus?
+    WaiveRequest    WaiveRequest[]
 }
 
 enum LoanedItemsStatus {
@@ -173,18 +177,25 @@ enum LoanedItemsStatus {
     BROKEN
     LOST
     CANCELLED
+    MISSING_CHECKLIST_ITEMS
 }
 
 model WaiveRequest {
     id               String             @id @default(cuid())
     loan             Loan               @relation(fields: [loanId], references: [id])
     loanId           String
+    loanItem         LoanItem           @relation(fields: [loanItemId], references: [id])
+    reason           String?
+    remarks          String?
+    dateIssued       DateTime           @default(now())
     status           WaiveRequestStatus
     approvedBy       User?              @relation(fields: [approvedByUserId], references: [id], onDelete: SetNull)
     approvedByUserId String?
+    loanItemId       String
 }
 
 enum WaiveRequestStatus {
+    AWAITING_REQUEST
     PENDING
     APPROVED
     REJECTED
@@ -226,17 +237,17 @@ model UserAccessRights {
 }
 
 model Semesters {
-    id           String   @id @default(cuid())
-    name         String
-    startDate    DateTime
-    endDate      DateTime
+    id        String   @id @default(cuid())
+    name      String
+    startDate DateTime
+    endDate   DateTime
 }
 
 model Holiday {
-    id           String   @id @default(cuid())
-    name         String
-    startDate    DateTime
-    endDate      DateTime
+    id        String   @id @default(cuid())
+    name      String
+    startDate DateTime
+    endDate   DateTime
 }
 
 model Course {
@@ -270,11 +281,11 @@ model StaffType {
 }
 
 model GeneralSettings {
-    id String @id @default(cuid())
-    startTimeOfCollection String
-    endTimeOfCollection String
+    id                        String @id @default(cuid())
+    startTimeOfCollection     String
+    endTimeOfCollection       String
     startRequestForCollection String
-    endRequestForCollection String
-    voidLoanNumberOfDays Int
-    voidLoanTiming String
+    endRequestForCollection   String
+    voidLoanNumberOfDays      Int
+    voidLoanTiming            String
 }

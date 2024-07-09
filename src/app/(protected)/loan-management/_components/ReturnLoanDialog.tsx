@@ -22,6 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/app/_components/ui/select";
+import { Textarea } from "@/app/_components/ui/textarea";
 
 type ReturnDataType = {
   equipmentId: string;
@@ -30,6 +31,8 @@ type ReturnDataType = {
   checklist: string | undefined;
   assetNumber: string;
   returned: string;
+  remarks: string | undefined;
+  disabled: boolean;
 };
 
 const ReturnLoanDialog: React.FC<{
@@ -63,7 +66,9 @@ const ReturnLoanDialog: React.FC<{
           description: loanItem.equipment!.name,
           checklist: loanItem.equipment!.checklist ?? "",
           assetNumber: loanItem.loanedInventory!.assetNumber,
-          returned: "Not Returned",
+          returned: loanItem.status!,
+          remarks: loanItem.loanedInventory?.remarks ?? undefined,
+          disabled: loanItem.status !== "COLLECTED" ? true : false,
         },
       ]);
     });
@@ -101,12 +106,12 @@ const ReturnLoanDialog: React.FC<{
       .then((results) => {
         setIsReturning(false);
         collectionLoanToast({
-          title: results!.title,
-          description: results!.description,
+          title: results.title,
+          description: results.description,
           // @ts-expect-error ggg
           variant: results.variant,
         });
-        if (results!.variant != "destructive") {
+        if (results.variant != "destructive") {
           closeDialog();
         }
       })
@@ -199,6 +204,7 @@ const ReturnLoanDialog: React.FC<{
                 <TableCell>{loanItem.assetNumber}</TableCell>
                 <TableCell>
                   <Select
+                    disabled={loanItem.disabled}
                     value={loanItem.returned}
                     onValueChange={(value) => {
                       setProcessLoanData((prevItems) => {
@@ -213,12 +219,35 @@ const ReturnLoanDialog: React.FC<{
                     </SelectTrigger>
 
                     <SelectContent>
-                      <SelectItem value="Not Returned">Not Returned</SelectItem>
-                      <SelectItem value="Returned">Returned</SelectItem>
-                      <SelectItem value="Lost">Lost</SelectItem>
-                      <SelectItem value="Broken">Broken</SelectItem>
+                      <SelectItem value="COLLECTED">Not Returned</SelectItem>
+                      <SelectItem value="RETURNED">Returned</SelectItem>
+                      <SelectItem value="LOST">Lost</SelectItem>
+                      <SelectItem value="BROKEN">Broken</SelectItem>
+                      <SelectItem value="MISSING_CHECKLIST_ITEMS">
+                        Penalty For Checklist
+                      </SelectItem>
                     </SelectContent>
                   </Select>
+                </TableCell>
+                <TableCell
+                  className={
+                    loanItem.returned === "MISSING_CHECKLIST_ITEMS"
+                      ? ""
+                      : "hidden"
+                  }
+                >
+                  <Textarea
+                    disabled={loanItem.disabled}
+                    value={loanItem.remarks}
+                    onChange={(e) => {
+                      setProcessLoanData((prevItems) => {
+                        const updatedItems = [...prevItems];
+                        updatedItems[index]!.remarks = e.target.value;
+                        return updatedItems;
+                      });
+                    }}
+                    className="w-48"
+                  />
                 </TableCell>
               </TableRow>
             ))}
@@ -272,9 +301,6 @@ const ReturnLoanDialog: React.FC<{
           onClick={() => {
             onSubmit();
           }}
-          disabled={
-            processedLoanData.length !== returnedItemLength || isReturning
-          }
         >
           {isReturning && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           Process Return

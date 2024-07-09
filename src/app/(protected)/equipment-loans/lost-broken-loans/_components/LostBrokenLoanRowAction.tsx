@@ -1,4 +1,4 @@
-import { type Row } from "@tanstack/react-table";
+import { Row } from "@tanstack/react-table";
 import React from "react";
 import {
   DropdownMenu,
@@ -9,16 +9,17 @@ import {
 } from "@/app/_components/ui/dropdown-menu";
 import { Button } from "@/app/_components/ui/button";
 import { MoreHorizontal } from "lucide-react";
+import { api } from "@/trpc/react";
 
-interface LostBrokenRowActionsProps<TData> {
+interface LostBrokenLoanTableRowActionsProps<TData> {
   row: Row<TData>;
-  onView: (id: TData) => void;
+  onView: (value: TData) => void;
 }
 
-export const LostBrokenRowActionsProps = <TData,>({
+export const LostBrokenLoanTableRowActionsProps = <TData,>({
   row,
   onView,
-}: LostBrokenRowActionsProps<TData>) => {
+}: LostBrokenLoanTableRowActionsProps<TData>) => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -34,7 +35,7 @@ export const LostBrokenRowActionsProps = <TData,>({
             onView(row.original);
           }}
         >
-          View Waive Request
+          View Loan
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

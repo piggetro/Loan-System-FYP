@@ -2,7 +2,8 @@ export const EquipmentStatus = {
     LOST: "LOST",
     BROKEN: "BROKEN",
     LOANED: "LOANED",
-    AVAILABLE: "AVAILABLE"
+    AVAILABLE: "AVAILABLE",
+    MISSING_CHECKLIST_ITEMS: "MISSING_CHECKLIST_ITEMS"
 } as const;
 export type EquipmentStatus = (typeof EquipmentStatus)[keyof typeof EquipmentStatus];
 export const LoanStatus = {
@@ -15,7 +16,8 @@ export const LoanStatus = {
     CANCELLED: "CANCELLED",
     RETURNED: "RETURNED",
     OVERDUE: "OVERDUE",
-    PARTIAL_RETURN: "PARTIAL_RETURN"
+    PARTIAL_RETURN: "PARTIAL_RETURN",
+    MISSING: "MISSING"
 } as const;
 export type LoanStatus = (typeof LoanStatus)[keyof typeof LoanStatus];
 export const LoanedItemsStatus = {
@@ -26,10 +28,12 @@ export const LoanedItemsStatus = {
     RETURNED: "RETURNED",
     BROKEN: "BROKEN",
     LOST: "LOST",
-    CANCELLED: "CANCELLED"
+    CANCELLED: "CANCELLED",
+    MISSING_CHECKLIST_ITEMS: "MISSING_CHECKLIST_ITEMS"
 } as const;
 export type LoanedItemsStatus = (typeof LoanedItemsStatus)[keyof typeof LoanedItemsStatus];
 export const WaiveRequestStatus = {
+    AWAITING_REQUEST: "AWAITING_REQUEST",
     PENDING: "PENDING",
     APPROVED: "APPROVED",
     REJECTED: "REJECTED"
