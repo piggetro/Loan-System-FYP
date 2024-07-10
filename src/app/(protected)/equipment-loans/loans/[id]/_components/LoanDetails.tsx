@@ -223,6 +223,10 @@ const LoanDetails: React.FC<{
             {!data.loanedById ? "Deleted Account" : data.loanedByName}
           </p>
           <p className="flex">
+            <span className="font-bold">Approving Lecturer:&nbsp;</span>
+            {data.approvingLecturerName ?? "-"}
+          </p>
+          <p className="flex">
             <span className="font-bold">Approved By:&nbsp;</span>
             {data.approvedByName ?? "-"}
           </p>

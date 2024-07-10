@@ -40,8 +40,7 @@ const ReturnLoanDialog: React.FC<{
   id: string;
 }> = ({ closeDialog, id }) => {
   const [isReturning, setIsReturning] = useState<boolean>(false);
-  const [partialReturn, setPartialReturn] = useState<boolean>(false);
-  const { isFetching, data, isFetched } =
+  const { isFetching, data, isFetched, refetch } =
     api.loanRequest.getReadyLoanById.useQuery({
       id: id,
     });
@@ -68,7 +67,12 @@ const ReturnLoanDialog: React.FC<{
           assetNumber: loanItem.loanedInventory!.assetNumber,
           returned: loanItem.status!,
           remarks: loanItem.loanedInventory?.remarks ?? undefined,
-          disabled: loanItem.status !== "COLLECTED" ? true : false,
+          disabled:
+            data?.status === "COLLECTED"
+              ? false
+              : loanItem.status! !== "COLLECTED"
+                ? true
+                : false,
         },
       ]);
     });
@@ -104,6 +108,12 @@ const ReturnLoanDialog: React.FC<{
     processLoanCollection
       .mutateAsync({ id: id, loanItemsToReturn: processedLoanData })
       .then((results) => {
+        refetch().catch(() => {
+          collectionLoanToast({
+            title: "An error occurred",
+            description: "Please refresh page to see updated details",
+          });
+        });
         setIsReturning(false);
         collectionLoanToast({
           title: results.title,
@@ -133,7 +143,7 @@ const ReturnLoanDialog: React.FC<{
       </div>
     );
   }
-
+  console.log(processedLoanData);
   return (
     <div className="w-7/8 h-full overflow-y-scroll p-5">
       <div className="flex">

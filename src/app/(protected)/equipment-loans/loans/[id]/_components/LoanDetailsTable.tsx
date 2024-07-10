@@ -43,6 +43,7 @@ export interface LoanDetailsData {
   preparedByName: string | null;
   issuedByName: string | null;
   returnedToName: string | null;
+  approvingLecturerName: string | null;
   loanItems: EquipmentDetailsData[];
 }
 

@@ -27,7 +27,7 @@ const LostBrokenLoanComponent: React.FC<{
   const TableColumns = useMemo(() => LostBrokenLoanColumns({ onView }), []);
 
   return (
-    <div className="bg-white">
+    <div className="rounded-md bg-white shadow-lg">
       <div className="mt-2 rounded-md bg-white px-6 py-4">
         <LostBrokenLoanTable
           data={loanRequestsData}

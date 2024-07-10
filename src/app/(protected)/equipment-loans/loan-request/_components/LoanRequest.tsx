@@ -248,12 +248,12 @@ const LoanRequestComponent: React.FC<{
                               aria-expanded={openLecturerDropDown}
                               className="w-[250px] justify-between"
                             >
-                              {approvingLecturerEmail
+                              {field.value
                                 ? approvingLecturers.find(
                                     (lecturer) =>
                                       lecturer.email === approvingLecturerEmail,
                                   )?.name
-                                : "Select framework Lecturer"}
+                                : "Select Lecturer"}
                               <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                             </Button>
                           </PopoverTrigger>
@@ -261,7 +261,7 @@ const LoanRequestComponent: React.FC<{
                             <Command>
                               <CommandInput placeholder="Search Lecturer" />
                               <CommandList>
-                                <CommandEmpty>No framework found.</CommandEmpty>
+                                <CommandEmpty>No Lecturer Found</CommandEmpty>
                                 <CommandGroup>
                                   {approvingLecturers.map((lecturer) => {
                                     return (
@@ -272,6 +272,7 @@ const LoanRequestComponent: React.FC<{
                                           setApprovingLecturerEmail(
                                             currentValue,
                                           );
+                                          field.onChange(currentValue);
                                           setOpenLecturerDropDown(false);
                                         }}
                                       >
@@ -283,37 +284,8 @@ const LoanRequestComponent: React.FC<{
                               </CommandList>
                             </Command>
                           </PopoverContent>
+                          <FormMessage className="h-7" />
                         </Popover>
-                        // <FormItem className="flex items-center gap-3">
-                        //   <Select
-                        //     onValueChange={(value) => {
-                        //       field.onChange(value);
-                        //       setApprovingLecturerEmail(value);
-                        //     }}
-                        //     defaultValue={field.value}
-                        //   >
-                        //     <FormControl>
-                        //       <SelectTrigger className=" w-1/4 min-w-44">
-                        //         <SelectValue placeholder="Lecturer Name" />
-                        //       </SelectTrigger>
-                        //     </FormControl>
-                        //     <SelectContent>
-                        //       <SelectGroup>
-                        //         <SelectLabel>Lecturer Name</SelectLabel>
-
-                        //         {approvingLecturers.map((lecturer) => (
-                        //           <SelectItem
-                        //             key={lecturer.email}
-                        //             value={lecturer.email}
-                        //           >
-                        //             {lecturer.name}
-                        //           </SelectItem>
-                        //         ))}
-                        //       </SelectGroup>
-                        //     </SelectContent>
-                        //   </Select>
-                        //   <FormMessage className="h-7" />
-                        // </FormItem>
                       )}
                     />
                   </div>

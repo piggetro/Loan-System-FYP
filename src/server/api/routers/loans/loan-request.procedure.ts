@@ -144,7 +144,8 @@ export const loanRequestRouter = createTRPCRouter({
         [];
 
       const dueDateFormatted = input.dueDate;
-      const approvingEmail = input.approvingLecturerEmail;
+      dueDateFormatted.setUTCHours(23, 59, 59, 0);
+      console.log(dueDateFormatted);
       const todayDate = new Date();
 
       try {
@@ -171,7 +172,7 @@ export const loanRequestRouter = createTRPCRouter({
           .executeTakeFirstOrThrow();
         await db.transaction().execute(async (trx) => {
           //Creating Loan
-          const loanInsert = await ctx.db
+          const loanInsert = await trx
             .insertInto("Loan")
             .values({
               id: createId(),
@@ -198,7 +199,7 @@ export const loanRequestRouter = createTRPCRouter({
             }
           });
           //Inserting Loan Items
-          await ctx.db.insertInto("LoanItem").values(loanItems).execute();
+          await trx.insertInto("LoanItem").values(loanItems).execute();
         });
 
         return "Success";
@@ -244,9 +245,7 @@ export const loanRequestRouter = createTRPCRouter({
           .where("Loan.approvingLecturerId", "=", ctx.user.id)
           .where("Loan.status", "=", "PENDING_APPROVAL")
           .execute();
-        console.log(1);
-        console.log(userApprovalManagementLoanRequests[0]?.loanItems);
-        console.log(2);
+
         // loan.findMany({
         //   where: {
         //     approvingLecturerId: ctx.user.id,
@@ -725,7 +724,7 @@ export const loanRequestRouter = createTRPCRouter({
         //Link AssetNumber to LoanItem
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
         input.loanedItem.forEach(async (loanItem) => {
-          const test = await trx
+          await trx
             .updateTable("LoanItem")
             .set((eb) => ({
               inventoryId: eb
@@ -736,7 +735,6 @@ export const loanRequestRouter = createTRPCRouter({
             }))
             .where("LoanItem.id", "=", loanItem.loanItemId)
             .execute();
-          console.log(test);
         });
 
         await Promise.all([
@@ -1174,5 +1172,82 @@ export const loanRequestRouter = createTRPCRouter({
       console.log(err);
       throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
     }
+  }),
+  getUserOutstandingLoans: protectedProcedure.query(async ({ ctx }) => {
+    const data = await ctx.db
+      .selectFrom("User")
+      .select((eb) => [
+        jsonArrayFrom(
+          eb
+            .selectFrom("Loan")
+            .select(["Loan.loanId", "Loan.id"])
+            .whereRef("Loan.loanedById", "=", "User.id")
+            .where("Loan.dueDate", "<", new Date())
+            .where("Loan.status", "in", ["COLLECTED", "PARTIAL_RETURN"]),
+        ).as("overdueLoans"),
+        jsonArrayFrom(
+          eb
+            .selectFrom("Loan")
+            .select((eb) => [
+              jsonArrayFrom(
+                eb
+                  .selectFrom("WaiveRequest")
+                  .whereRef("WaiveRequest.loanId", "=", "Loan.id")
+                  .selectAll(),
+              ).as("outstandingItems"),
+              "Loan.id",
+              "Loan.loanId",
+            ])
+            .whereRef("Loan.loanedById", "=", "User.id")
+            .innerJoin("LoanItem", "Loan.id", "LoanItem.loanId")
+            .where("LoanItem.status", "in", [
+              "BROKEN",
+              "LOST",
+              "MISSING_CHECKLIST_ITEMS",
+            ])
+            .distinctOn("Loan.id"),
+        ).as("outstandingLoans"),
+      ])
+      .where("User.id", "=", ctx.user.id)
+      .executeTakeFirstOrThrow();
+    if (data.outstandingLoans.length === 0 && data.overdueLoans.length === 0) {
+      return undefined;
+    }
+    console.log(data);
+    const updateedOutstandingData = data.outstandingLoans.map((item) => {
+      let remarks = "";
+      const statusArray: string[] = [];
+
+      item.outstandingItems.forEach((outstandingItem) => {
+        if (
+          outstandingItem.status === "AWAITING_REQUEST" ||
+          outstandingItem.status === "REJECTED"
+        ) {
+          remarks += outstandingItem.remarks;
+        }
+        statusArray.push(outstandingItem.status);
+      });
+      let status;
+
+      if (statusArray.every((status) => status === "APPROVED")) {
+        status = "Approved";
+      } else if (statusArray.every((status) => status === "PENDING")) {
+        status = "Pending";
+      } else if (statusArray.every((status) => status === "AWAITING_REQUEST")) {
+        status = "Awaiting Request";
+      } else {
+        status = "Partially Outstanding";
+      }
+      return {
+        id: item.id,
+        loanId: item.loanId,
+        status: status,
+        remarks: remarks,
+      };
+    });
+    return {
+      overdueLoans: data.overdueLoans,
+      outstandingLoans: updateedOutstandingData,
+    };
   }),
 });

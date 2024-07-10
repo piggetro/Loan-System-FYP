@@ -64,6 +64,9 @@ const LostBrokenLoanDetails: React.FC<{
   const [isSubmitEnabled, setIsSubmitEnabled] = useState<boolean>(false);
   const [processedLostBrokenLoanData, setProcessedLostBrokenLoanData] =
     useState<LostBrokenLoanItemDataType[]>();
+  const [processedLostBrokenItems, setProcessedLostBrokenItems] =
+    useState<{ id: string; reason: string; status: string }[]>();
+
   const { toast } = useToast();
   //Get the Loan
   const { isFetching, refetch, data } =
@@ -83,8 +86,8 @@ const LostBrokenLoanDetails: React.FC<{
     resolver: zodResolver(formSchema),
     mode: "onChange",
   });
-  const processedLostBrokenItems = useMemo(() => {
-    return data?.loanItems.map((item) => {
+  useEffect(() => {
+    const proccessedData = data?.loanItems.map((item) => {
       if (item.status === "AWAITING_REQUEST") setIsSubmitEnabled(true);
 
       return {
@@ -93,7 +96,8 @@ const LostBrokenLoanDetails: React.FC<{
         status: item.status,
       };
     });
-  }, [data, refetch]);
+    setProcessedLostBrokenItems(proccessedData);
+  }, [data]);
 
   useEffect(() => {
     if (id && data && processedLostBrokenItems) {
@@ -121,6 +125,7 @@ const LostBrokenLoanDetails: React.FC<{
           description: "You Will be notified once Waiver has been reviewed",
         });
         refresh();
+        setIsSubmitEnabled(false);
       })
       .catch((error) => {
         toast({ title: error });

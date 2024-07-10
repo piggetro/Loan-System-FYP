@@ -76,7 +76,6 @@ export const loanRouter = createTRPCRouter({
             accessRightsArray.push(accessRight.pageName);
           }
         });
-        console.log(accessRightsArray);
 
         return accessRightsArray;
       } catch (err) {
@@ -95,6 +94,7 @@ export const loanRouter = createTRPCRouter({
           .leftJoin("User as pb", "pb.id", "Loan.preparedById")
           .leftJoin("User as ib", "ib.id", "Loan.issuedById")
           .leftJoin("User as rt", "rt.id", "Loan.returnedToId")
+          .leftJoin("User as al", "al.id", "Loan.approvingLecturerId")
 
           .selectAll("Loan")
           .select([
@@ -103,6 +103,7 @@ export const loanRouter = createTRPCRouter({
             "pb.name as preparedByName",
             "ib.name as issuedByName",
             "rt.name as returnedToName",
+            "al.name as approvingLecturerName",
           ])
           .where("Loan.id", "=", input.id)
           .executeTakeFirstOrThrow();
@@ -241,23 +242,7 @@ export const loanRouter = createTRPCRouter({
         });
         let status;
 
-        if (
-          (statusArray.includes("AWAITING_REQUEST") &&
-            statusArray.includes("APPROVED")) ||
-          (statusArray.includes("AWAITING_REQUEST") &&
-            statusArray.includes("REJECTED")) ||
-          (statusArray.includes("AWAITING_REQUEST") &&
-            statusArray.includes("PENDING")) ||
-          (statusArray.includes("PENDING") &&
-            statusArray.includes("REJECTED")) ||
-          (statusArray.includes("PENDING") &&
-            statusArray.includes("APPROVED")) ||
-          statusArray.every(
-            (status) => status === "APPROVED" || status === "REJECTED",
-          )
-        ) {
-          status = "Partially Outstanding";
-        } else if (statusArray.every((status) => status === "APPROVED")) {
+        if (statusArray.every((status) => status === "APPROVED")) {
           status = "Approved";
         } else if (statusArray.every((status) => status === "PENDING")) {
           status = "Pending";
@@ -265,6 +250,8 @@ export const loanRouter = createTRPCRouter({
           statusArray.every((status) => status === "AWAITING_REQUEST")
         ) {
           status = "Awaiting Request";
+        } else {
+          status = "Partially Outstanding";
         }
 
         return {
@@ -274,7 +261,7 @@ export const loanRouter = createTRPCRouter({
           remarks: remarks,
         };
       });
-      console.log(data);
+
       return data;
     } catch (err) {
       console.log(err);
@@ -364,7 +351,7 @@ export const loanRouter = createTRPCRouter({
             ])
             .where("WaiveRequest.loanId", "=", input.id)
             .executeTakeFirstOrThrow();
-          console.log(data);
+
           return data;
         } catch (err) {
           console.log(err);
@@ -375,4 +362,27 @@ export const loanRouter = createTRPCRouter({
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
       }
     }),
+  getOverdueLoans: protectedProcedure.query(async ({ ctx }) => {
+    try {
+      const overdueLoans = await ctx.db
+        .selectFrom("Loan")
+        .selectAll("Loan")
+        .select((eb) => [
+          eb
+            .selectFrom("User")
+            .whereRef("User.id", "=", "Loan.issuedById")
+            .select("User.name")
+            .as("issuedByname"),
+        ])
+        .where("Loan.dueDate", "<", new Date())
+        .where("Loan.loanedById", "=", ctx.user.id)
+        .where("Loan.status", "in", ["COLLECTED", "PARTIAL_RETURN"])
+        .execute();
+
+      return overdueLoans;
+    } catch (err) {
+      console.log(err);
+      throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+    }
+  }),
 });

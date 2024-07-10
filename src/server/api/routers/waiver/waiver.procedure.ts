@@ -68,7 +68,7 @@ export const waiverRouter = createTRPCRouter({
           ),
         )
         .execute();
-      console.log(data);
+
       return data;
     } catch (err) {
       console.log(err);
@@ -94,7 +94,7 @@ export const waiverRouter = createTRPCRouter({
             .executeTakeFirstOrThrow();
           await trx
             .updateTable("Inventory")
-            .set({ status: "AVAILABLE" })
+            .set({ status: "AVAILABLE", remarks: null })
             .where("Inventory.id", "=", updateLoanItem.inventoryId)
             .execute();
         });
