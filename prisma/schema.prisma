@@ -90,6 +90,7 @@ model Equipment {
     loanItems     LoanItem[]
     checklist     String?
     course        EquipmentOnCourses[]
+    active        Boolean
 }
 
 model Inventory {
@@ -103,6 +104,7 @@ model Inventory {
     equipment      Equipment?      @relation(fields: [equipmentId], references: [id], onDelete: Cascade)
     equipmentId    String?
     loanItems      LoanItem[]
+    active         Boolean
 }
 
 enum EquipmentStatus {

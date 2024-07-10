@@ -32,6 +32,7 @@ export type Equipment = {
     updatedAt: Timestamp;
     subCategoryId: string | null;
     checklist: string | null;
+    active: boolean;
 };
 export type EquipmentOnCourses = {
     equipmentId: string;
@@ -61,6 +62,7 @@ export type Inventory = {
     cost: string;
     status: EquipmentStatus;
     equipmentId: string | null;
+    active: boolean;
 };
 export type Loan = {
     id: string;

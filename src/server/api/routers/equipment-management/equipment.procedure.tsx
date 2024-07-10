@@ -18,16 +18,22 @@ export const equipmentRouter = createTRPCRouter({
           "Equipment.name",
           "SubCategory.name as subCategory",
           "Category.name as category",
-          ctx.db.fn.count("Inventory.id").as("totalCount"),
           ctx.db.fn
             .count("Inventory.id")
+            .filterWhere("Inventory.active", "=", true)
+            .as("totalCount"),
+          ctx.db.fn
+            .count("Inventory.id")
+            .filterWhere("Inventory.active", "=", true)
             .filterWhere("Inventory.status", "=", "AVAILABLE")
             .as("availableCount"),
           ctx.db.fn
             .count("Inventory.id")
+            .filterWhere("Inventory.active", "=", true)
             .filterWhere("Inventory.status", "!=", "AVAILABLE")
             .as("unavailableCount"),
         ])
+        .where("Equipment.active", "=", true)
         .execute();
       return data.map((equipment) => ({
         ...equipment,
@@ -49,7 +55,8 @@ export const equipmentRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       try {
         await ctx.db
-          .deleteFrom("Equipment")
+          .updateTable("Equipment")
+          .set({ active: false })
           .where("id", "=", input.id)
           .execute();
         return;
@@ -264,6 +271,7 @@ export const equipmentRouter = createTRPCRouter({
                 checklist: input.checkList,
                 subCategoryId: input.subCategory,
                 updatedAt: new Date(),
+                active: true,
               })
               .returning(["id", "name", "subCategoryId"]),
           )
@@ -299,6 +307,7 @@ export const equipmentRouter = createTRPCRouter({
                 status: "AVAILABLE",
                 datePurchased: item.datePurchased,
                 warrantyExpiry: item.warrantyExpiry,
+                active: true,
               })),
             )
             .execute());
@@ -347,11 +356,18 @@ export const equipmentRouter = createTRPCRouter({
               "Category.id as category",
             ])
             .where("Equipment.id", "=", input.id)
+            .where("Equipment.active", "=", true)
             .executeTakeFirst(),
-          ctx.db
+          await ctx.db
             .selectFrom("EquipmentOnCourses")
-            .select("courseId")
-            .where("equipmentId", "=", input.id)
+            .leftJoin(
+              "Equipment",
+              "EquipmentOnCourses.equipmentId",
+              "Equipment.id",
+            )
+            .select("EquipmentOnCourses.courseId")
+            .where("EquipmentOnCourses.equipmentId", "=", input.id)
+            .where("Equipment.active", "=", true)
             .execute(),
           await ctx.db
             .selectFrom("Inventory")
@@ -364,6 +380,7 @@ export const equipmentRouter = createTRPCRouter({
               "warrantyExpiry",
             ])
             .where("equipmentId", "=", input.id)
+            .where("active", "=", true)
             .execute(),
         ]);
         return {
@@ -468,6 +485,7 @@ export const equipmentRouter = createTRPCRouter({
               status: "AVAILABLE",
               datePurchased: item.datePurchased,
               warrantyExpiry: item.warrantyExpiry,
+              active: true,
             })),
           )
           .returning([
@@ -538,7 +556,8 @@ export const equipmentRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       try {
         await ctx.db
-          .deleteFrom("Inventory")
+          .updateTable("Inventory")
+          .set({ active: false })
           .where("id", "=", input.id)
           .execute();
         return;
