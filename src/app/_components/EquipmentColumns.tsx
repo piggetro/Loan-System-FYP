@@ -6,16 +6,28 @@ import AddEquipmentDataTableRowActions from "./AddEquipmentDataTableRowActions";
 export type Equipment = {
   id: string;
   name: string;
+  category: string | null;
+  subCategory: string | null;
 };
 
 interface EquipmentColumnProps {
   onDelete: (value: Equipment) => void;
 }
 
-export const equipmentColumns = ({ onDelete }: EquipmentColumnProps): ColumnDef<Equipment>[] => [
+export const equipmentColumns = ({
+  onDelete,
+}: EquipmentColumnProps): ColumnDef<Equipment>[] => [
   {
     accessorKey: "name",
     header: "Equipment Name",
+  },
+  {
+    accessorKey: "category",
+    header: "Category",
+  },
+  {
+    accessorKey: "subCategory",
+    header: "Sub Category",
   },
   {
     id: "actions",

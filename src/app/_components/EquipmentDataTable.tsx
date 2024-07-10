@@ -7,6 +7,8 @@ import {
   getCoreRowModel,
   getFilteredRowModel,
   getPaginationRowModel,
+  getSortedRowModel,
+  SortingState,
   useReactTable,
 } from "@tanstack/react-table";
 import {
@@ -21,6 +23,16 @@ import { Button } from "@/app/_components/ui/button";
 import { Input } from "@/app/_components/ui/input";
 import { useEffect, useState } from "react";
 import type { Equipment } from "./AddEquipmentColumns";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "./ui/select";
+import { api } from "@/trpc/react";
 
 interface EquipmentDataTableProps<TData, TValue> {
   data: TData[];
@@ -35,18 +47,24 @@ export function EquipmentDataTable<TData, TValue>({
 }: EquipmentDataTableProps<TData, TValue>) {
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [rowSelection, setRowSelection] = useState({});
+  const [sorting, setSorting] = useState<SortingState>([]);
+
+  const { data: categories } = api.equipment.getCategories.useQuery();
 
   const table = useReactTable({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
-    onColumnFiltersChange: setColumnFilters,
     getFilteredRowModel: getFilteredRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    onColumnFiltersChange: setColumnFilters,
     onRowSelectionChange: setRowSelection,
+    onSortingChange: setSorting,
     state: {
       columnFilters,
       rowSelection,
+      sorting,
     },
   });
 
@@ -61,7 +79,7 @@ export function EquipmentDataTable<TData, TValue>({
 
   return (
     <div>
-      <div className="flex items-center">
+      <div className="flex items-center space-x-4">
         <Input
           placeholder="Look for Equipment..."
           value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
@@ -70,6 +88,84 @@ export function EquipmentDataTable<TData, TValue>({
           }
           className="max-w-sm"
         />
+        <Select
+          onValueChange={(key) => {
+            if (key === "A - Z") {
+              setSorting([{ id: "name", desc: false }]);
+            } else if (key === "Z - A") {
+              setSorting([{ id: "name", desc: true }]);
+            }
+          }}
+        >
+          <SelectTrigger className="mr-4 w-1/4 min-w-44">
+            <SelectValue placeholder="Sort Equipment Name" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectGroup>
+              <SelectLabel>Sort Equipment Name</SelectLabel>
+              <SelectItem key={"A - Z"} value={"A - Z"}>
+                A - Z
+              </SelectItem>
+              <SelectItem key={"Z - A"} value={"Z - A"}>
+                Z - A
+              </SelectItem>
+            </SelectGroup>
+          </SelectContent>
+        </Select>
+        <Select
+          onValueChange={(key) => {
+            if (key === "All") {
+              table.getColumn("category")?.setFilterValue("");
+            } else {
+              table.getColumn("category")?.setFilterValue(key);
+            }
+          }}
+        >
+          <SelectTrigger className="mr-4  w-1/4 min-w-44">
+            <SelectValue placeholder="Filter by Category" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectGroup>
+              <SelectLabel>Filter by Category</SelectLabel>
+              <SelectItem key={"All"} value={"All"}>
+                All
+              </SelectItem>
+              {categories?.map((category) => (
+                <SelectItem key={category.name} value={category.name}>
+                  {category.name}
+                </SelectItem>
+              ))}
+            </SelectGroup>
+          </SelectContent>
+        </Select>
+        <Select
+          onValueChange={(key) => {
+            if (key === "All") {
+              table.getColumn("subCategory")?.setFilterValue("");
+            } else {
+              table.getColumn("subCategory")?.setFilterValue(key);
+            }
+          }}
+        >
+          <SelectTrigger className="mr-4  w-1/4 min-w-44">
+            <SelectValue placeholder="Filter by Sub Category" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectGroup>
+              <SelectLabel>Filter by Sub Category</SelectLabel>
+              <SelectItem key={"All"} value={"All"}>
+                All
+              </SelectItem>
+              {categories?.map((category) =>
+                category.subCategory.map((subCategory) => (
+                  <SelectItem key={subCategory.name} value={subCategory.name}>
+                    {subCategory.name}
+                  </SelectItem>
+                )),
+              )}
+            </SelectGroup>
+          </SelectContent>
+        </Select>
       </div>
       <div className="mt-4 rounded-md border">
         <Table>

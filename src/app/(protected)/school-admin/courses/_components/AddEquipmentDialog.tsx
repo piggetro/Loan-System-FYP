@@ -32,7 +32,7 @@ const AddEquipmentDialog = ({
 
   return (
     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-      <DialogContent className="sm:max-w-3xl">
+      <DialogContent className="sm:max-w-5xl">
         <DialogHeader>
           <DialogTitle>Assign Equipment to Course</DialogTitle>
         </DialogHeader>

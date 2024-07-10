@@ -128,7 +128,7 @@ const AddCourse = ({ setCourses }: AddCourseProps) => {
           />
         </form>
       </Form>
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between mb-3">
         <div className="flex items-center space-x-4">
           <p className="text-sm font-medium leading-none">
             Equipments Assigned to Course

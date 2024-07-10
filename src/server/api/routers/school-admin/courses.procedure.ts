@@ -28,7 +28,14 @@ export const coursesRouter = createTRPCRouter({
     try {
       return await ctx.db
         .selectFrom("Equipment")
-        .select(["id", "name"])
+        .leftJoin("SubCategory", "Equipment.subCategoryId", "SubCategory.id")
+        .leftJoin("Category", "SubCategory.categoryId", "Category.id")
+        .select([
+          "Equipment.id",
+          "Equipment.name",
+          "Category.name as category",
+          "SubCategory.name as subCategory",
+        ])
         .execute();
     } catch (err) {
       console.log(err);
@@ -93,7 +100,18 @@ export const coursesRouter = createTRPCRouter({
                   "EquipmentOnCourses.equipmentId",
                   "Equipment.id",
                 )
-                .select(["Equipment.id", "Equipment.name"])
+                .leftJoin(
+                  "SubCategory",
+                  "Equipment.subCategoryId",
+                  "SubCategory.id",
+                )
+                .leftJoin("Category", "SubCategory.categoryId", "Category.id")
+                .select([
+                  "Equipment.id",
+                  "Equipment.name",
+                  "Category.name as category",
+                  "SubCategory.name as subCategory",
+                ])
                 .where("EquipmentOnCourses.courseId", "=", input.id),
             ).as("equipments"),
           ])
@@ -111,6 +129,8 @@ export const coursesRouter = createTRPCRouter({
             data?.equipments.map((equipment) => ({
               id: equipment.id ?? "",
               name: equipment.name ?? "",
+              category: equipment.category ?? "",
+              subCategory: equipment.subCategory ?? "",
             })) ?? [],
         };
       } catch (err) {
@@ -159,8 +179,15 @@ export const coursesRouter = createTRPCRouter({
 
         return await ctx.db
           .selectFrom("Equipment")
-          .select(["id", "name"])
-          .where("id", "in", input.equipmentIds)
+          .leftJoin("SubCategory", "Equipment.subCategoryId", "SubCategory.id")
+          .leftJoin("Category", "SubCategory.categoryId", "Category.id")
+          .select([
+            "Equipment.id",
+            "Equipment.name",
+            "Category.name as category",
+            "SubCategory.name as subCategory",
+          ])
+          .where("Equipment.id", "in", input.equipmentIds)
           .execute();
       } catch (err) {
         console.log(err);
@@ -203,9 +230,16 @@ export const coursesRouter = createTRPCRouter({
       try {
         return await ctx.db
           .selectFrom("Equipment")
-          .select(["id", "name"])
+          .leftJoin("SubCategory", "Equipment.subCategoryId", "SubCategory.id")
+          .leftJoin("Category", "SubCategory.categoryId", "Category.id")
+          .select([
+            "Equipment.id",
+            "Equipment.name",
+            "Category.name as category",
+            "SubCategory.name as subCategory",
+          ])
           .where(
-            "id",
+            "Equipment.id",
             "not in",
             ctx.db
               .selectFrom("EquipmentOnCourses")

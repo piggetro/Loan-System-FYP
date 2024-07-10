@@ -18,14 +18,26 @@ export const equipmentRouter = createTRPCRouter({
           "Equipment.name",
           "SubCategory.name as subCategory",
           "Category.name as category",
-          ctx.db.fn.count("Inventory.id").as("inventoryCount"),
+          ctx.db.fn.count("Inventory.id").as("totalCount"),
+          ctx.db.fn
+            .count("Inventory.id")
+            .filterWhere("Inventory.status", "=", "AVAILABLE")
+            .as("availableCount"),
+          ctx.db.fn
+            .count("Inventory.id")
+            .filterWhere("Inventory.status", "!=", "AVAILABLE")
+            .as("unavailableCount"),
         ])
         .execute();
       return data.map((equipment) => ({
         ...equipment,
         subCategory: equipment.subCategory ?? "",
         category: equipment.category ?? "",
-        inventoryCount: parseInt(equipment.inventoryCount?.toString() ?? ""),
+        totalCount: parseInt(equipment.totalCount?.toString() ?? ""),
+        availableCount: parseInt(equipment.availableCount?.toString() ?? ""),
+        unavailableCount: parseInt(
+          equipment.unavailableCount?.toString() ?? "",
+        ),
       }));
     } catch (err) {
       console.log(err);
@@ -305,7 +317,9 @@ export const equipmentRouter = createTRPCRouter({
           ...equipment,
           subCategory: equipment.subCategory ?? "",
           category: equipment.category ?? "",
-          inventoryCount: input.inventoryItems.length,
+          totalCount: input.inventoryItems.length,
+          availableCount: input.inventoryItems.length,
+          unavailableCount: 0,
         };
       } catch (err) {
         console.log(err);

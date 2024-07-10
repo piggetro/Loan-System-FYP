@@ -82,7 +82,30 @@ const EquipmentDetails = ({
         setIsDeleteDialogOpen={setIsDeleteDialogOpen}
       />
       <div className="mb-3 flex items-center justify-between">
-        <h3 className="text-lg font-semibold">Inventory Items</h3>
+        <div className="flex items-center">
+          <h3 className="text-lg font-semibold">Inventory Items</h3>
+          <div className="ms-10 space-x-4">
+            <span className="text-sm font-medium">
+              Total Count: {equipmentInventoryItems.length}
+            </span>
+            <span className="text-sm font-medium">
+              Available Count:{" "}
+              {
+                equipmentInventoryItems.filter(
+                  (item) => item.status === "AVAILABLE",
+                ).length
+              }
+            </span>
+            <span className="text-sm font-medium">
+              Unavailable Count:{" "}
+              {
+                equipmentInventoryItems.filter(
+                  (item) => item.status != "AVAILABLE",
+                ).length
+              }
+            </span>
+          </div>
+        </div>
         <Button onClick={() => setIsAddDialogOpen(true)}>
           Add Equipment to Inventory
         </Button>

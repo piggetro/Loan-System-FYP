@@ -8,7 +8,9 @@ export type Equipment = {
   name: string;
   category: string;
   subCategory: string;
-  inventoryCount: number;
+  totalCount: number;
+  availableCount: number;
+  unavailableCount: number;
 };
 
 interface equipmentColumnsProps {
@@ -33,8 +35,16 @@ export const equipmentColumns = ({
     header: "Sub Category",
   },
   {
-    accessorKey: "inventoryCount",
-    header: "Inventory Count",
+    accessorKey: "totalCount",
+    header: "Total Count",
+  },
+  {
+    accessorKey: "availableCount",
+    header: "Available Count",
+  },
+  {
+    accessorKey: "unavailableCount",
+    header: "Unavailable Count",
   },
   {
     id: "actions",

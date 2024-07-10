@@ -6,6 +6,8 @@ import { Checkbox } from "@/app/_components/ui/checkbox";
 export type Equipment = {
   id: string;
   name: string;
+  category: string | null;
+  subCategory: string | null;
 };
 
 export const equipmentColumns = (): ColumnDef<Equipment>[] => [
@@ -32,5 +34,13 @@ export const equipmentColumns = (): ColumnDef<Equipment>[] => [
   {
     accessorKey: "name",
     header: "Equipment Name",
+  },
+  {
+    accessorKey: "category",
+    header: "Category",
+  },
+  {
+    accessorKey: "subCategory",
+    header: "Sub Category",
   },
 ];
