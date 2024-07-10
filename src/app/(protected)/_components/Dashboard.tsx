@@ -21,10 +21,10 @@ const Dashboard = ({ currentLoans, overdueLoans }: DashboardProps) => {
   const router = useRouter();
 
   const onViewCurrent = useCallback((loan: CurrentLoans) => {
-    router.push(`/school-admin/student/${loan.id}`);
+    router.push(`/equipment-loans/loans/${loan.id}`);
   }, []);
   const onViewOverdue = useCallback((loan: OverdueLoans) => {
-    router.push(`/school-admin/student/${loan.id}`);
+    router.push(`/equipment-loans/loans/${loan.id}`);
   }, []);
 
   const CurrentColumns = useMemo(

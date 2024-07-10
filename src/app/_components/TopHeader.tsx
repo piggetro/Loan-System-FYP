@@ -16,7 +16,7 @@ const TopHeaderComponent: React.FC<TopHeaderType> = ({
 }) => {
   return (
     <div className="my-3">
-      <div className="mb-3 flex items-center space-x-2 text-sm opacity-70">
+      <div className="mb-1 flex items-center space-x-2 text-sm opacity-70">
         {goBackLink && (
           <span
             onClick={() => {
@@ -30,7 +30,7 @@ const TopHeaderComponent: React.FC<TopHeaderType> = ({
         )}
         <span>{pathName}</span>
       </div>
-      <p className="text-2xl font-medium">{pageName}</p>
+      <p className="text-xl font-medium">{pageName}</p>
     </div>
   );
 };

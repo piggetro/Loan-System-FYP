@@ -52,7 +52,7 @@ export default async function ProtectedLayout({
       <div className="relative flex min-h-screen flex-col">
         <header className="sticky top-0 z-50 w-full text-white">
           <div className="bg-[#1c6c91]">
-            <div className="container flex h-16 max-w-screen-2xl items-center justify-between">
+            <div className="container flex h-14 max-w-screen-2xl items-center justify-between">
               <div className="flex items-center">
                 <Link
                   className="mr-10 flex items-center space-x-2 font-semibold"
@@ -81,7 +81,7 @@ export default async function ProtectedLayout({
         </header>
 
         <main className="flex-1">
-          <div className="container-relative mx-auto px-4 py-8 md:px-8 lg:max-w-screen-2xl">
+          <div className="container-relative mx-auto px-4 py-1 md:px-8 lg:max-w-screen-2xl">
             {children}
           </div>
         </main>

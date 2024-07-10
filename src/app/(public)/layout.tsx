@@ -7,7 +7,7 @@ export default async function PublicLayout({
     <>
       <header className="sticky top-0 z-50 w-full text-white">
         <div className="bg-[#1c6c91]">
-          <div className="container flex h-16 max-w-screen-2xl items-center justify-between">
+          <div className="container flex h-14 max-w-screen-2xl items-center justify-between">
             <div className="flex items-center">
               <h1 className="mr-10 flex items-center space-x-2 font-semibold">
                 <span className="text-xl">

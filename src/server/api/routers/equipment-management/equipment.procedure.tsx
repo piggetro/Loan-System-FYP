@@ -66,6 +66,162 @@ export const equipmentRouter = createTRPCRouter({
       throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
     }
   }),
+  getCategory: protectedProcedure
+    .input(z.object({ id: z.string() }))
+    .query(async ({ ctx, input }) => {
+      try {
+        return await ctx.db
+          .selectFrom("Category")
+          .select((eb) => [
+            "id",
+            "name",
+            jsonArrayFrom(
+              eb
+                .selectFrom("SubCategory")
+                .select(["SubCategory.id", "SubCategory.name"])
+                .whereRef("SubCategory.categoryId", "=", eb.ref("Category.id")),
+            ).as("subCategory"),
+          ])
+          .where("id", "=", input.id)
+          .executeTakeFirstOrThrow();
+      } catch (err) {
+        console.log(err);
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      }
+    }),
+  addSubCategory: protectedProcedure
+    .input(
+      z.object({
+        id: z.string().min(1),
+        name: z.array(z.string().min(1)),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      try {
+        return await ctx.db
+          .insertInto("SubCategory")
+          .values(
+            input.name.map((name) => ({
+              id: createId(),
+              name: name,
+              categoryId: input.id,
+            })),
+          )
+          .returning(["id", "name"])
+          .execute();
+      } catch (err) {
+        console.log(err);
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      }
+    }),
+  updateSubCategory: protectedProcedure
+    .input(
+      z.object({
+        id: z.string().min(1),
+        name: z.string().min(1),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      try {
+        return await ctx.db
+          .updateTable("SubCategory")
+          .set({
+            name: input.name,
+          })
+          .where("id", "=", input.id)
+          .returning(["id", "name"])
+          .executeTakeFirstOrThrow();
+      } catch (err) {
+        console.log(err);
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      }
+    }),
+  deleteSubCategory: protectedProcedure
+    .input(z.object({ id: z.string().min(1) }))
+    .mutation(async ({ ctx, input }) => {
+      try {
+        await ctx.db
+          .deleteFrom("SubCategory")
+          .where("id", "=", input.id)
+          .execute();
+        return;
+      } catch (err) {
+        console.log(err);
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      }
+    }),
+  addCategory: protectedProcedure
+    .input(
+      z.object({
+        name: z.string().min(1),
+        subCategory: z.array(z.string().min(1)),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      try {
+        return await ctx.db.transaction().execute(async (trx) => {
+          const category = await trx
+            .insertInto("Category")
+            .values({
+              id: createId(),
+              name: input.name,
+            })
+            .returningAll()
+            .executeTakeFirstOrThrow();
+          input.subCategory.length &&
+            (await trx
+              .insertInto("SubCategory")
+              .values(
+                input.subCategory.map((subCategory) => ({
+                  id: createId(),
+                  name: subCategory,
+                  categoryId: category.id,
+                })),
+              )
+              .execute());
+          return category;
+        });
+      } catch (err) {
+        console.log(err);
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      }
+    }),
+  updateCategory: protectedProcedure
+    .input(
+      z.object({
+        id: z.string().min(1),
+        name: z.string().min(1),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      try {
+        return await ctx.db
+          .updateTable("Category")
+          .set({
+            name: input.name,
+          })
+          .where("id", "=", input.id)
+          .returningAll()
+          .executeTakeFirstOrThrow();
+      } catch (err) {
+        console.log(err);
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      }
+    }),
+  deleteCategory: protectedProcedure
+    .input(z.object({ id: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      try {
+        await ctx.db
+          .deleteFrom("Category")
+          .where("id", "=", input.id)
+          .execute();
+        return;
+      } catch (err) {
+        console.log(err);
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      }
+    }),
   addEquipment: protectedProcedure
     .input(
       z.object({
