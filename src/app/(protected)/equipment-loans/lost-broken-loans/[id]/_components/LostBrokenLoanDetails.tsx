@@ -33,6 +33,8 @@ import {
   FormMessage,
 } from "@/app/_components/ui/form";
 import { Input } from "@/app/_components/ui/input";
+import WaiverRequestDialog from "./WaiverRequestDialog";
+import { Dialog } from "@/app/_components/ui/dialog";
 
 type LostBrokenLoanItemDataType = {
   id: string;
@@ -40,8 +42,6 @@ type LostBrokenLoanItemDataType = {
   remarks: string | null;
   loanId: string;
   dateIssued: Date;
-  reason: string | null;
-  approvedByUserId: string | null;
   loanItemId: string;
   equipment_name: string | null;
   equipment_checklist: string | null;
@@ -65,7 +65,9 @@ const LostBrokenLoanDetails: React.FC<{
   const [processedLostBrokenLoanData, setProcessedLostBrokenLoanData] =
     useState<LostBrokenLoanItemDataType[]>();
   const [processedLostBrokenItems, setProcessedLostBrokenItems] =
-    useState<{ id: string; reason: string; status: string }[]>();
+    useState<{ id: string; status: string }[]>();
+  const [openWaiverRequest, setOpenWaiverRequest] = useState<boolean>(false);
+  const [selectedWaiverId, setSelectedWaiverId] = useState<string>();
 
   const { toast } = useToast();
   //Get the Loan
@@ -92,7 +94,6 @@ const LostBrokenLoanDetails: React.FC<{
 
       return {
         id: item.id,
-        reason: item.reason ?? "",
         status: item.status,
       };
     });
@@ -117,19 +118,19 @@ const LostBrokenLoanDetails: React.FC<{
     });
   }
   function onSubmit(values: z.infer<typeof formSchema>) {
-    submitWaiver
-      .mutateAsync({ outstandingItems: values.outstandingItems })
-      .then(() => {
-        toast({
-          title: "Successfully Submitted Waive Request",
-          description: "You Will be notified once Waiver has been reviewed",
-        });
-        refresh();
-        setIsSubmitEnabled(false);
-      })
-      .catch((error) => {
-        toast({ title: error });
-      });
+    // submitWaiver
+    //   .mutateAsync({ outstandingItems: values.outstandingItems })
+    //   .then(() => {
+    //     toast({
+    //       title: "Successfully Submitted Waive Request",
+    //       description: "You Will be notified once Waiver has been reviewed",
+    //     });
+    //     refresh();
+    //     setIsSubmitEnabled(false);
+    //   })
+    //   .catch((error) => {
+    //     toast({ title: error });
+    //   });
   }
 
   if (isFetching || !data || !processedLostBrokenLoanData) {
@@ -147,6 +148,13 @@ const LostBrokenLoanDetails: React.FC<{
 
   return (
     <div className="w-full">
+      <Dialog open={openWaiverRequest} onOpenChange={setOpenWaiverRequest}>
+        <WaiverRequestDialog
+          selectedWaiverId={selectedWaiverId!}
+          waiverRequestArray={undefined}
+        />
+      </Dialog>
+
       <div className="w-7/8 h-full  rounded-lg bg-white p-5 shadow-lg">
         <div className="text-xl font-bold">{data.loanId}</div>
         <div className="mt-4 text-sm">
@@ -187,7 +195,7 @@ const LostBrokenLoanDetails: React.FC<{
 
                     <TableHead>Status</TableHead>
                     <TableHead>Remarks</TableHead>
-                    <TableHead>Waive Request</TableHead>
+                    <TableHead className="text-center">Action</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -213,8 +221,17 @@ const LostBrokenLoanDetails: React.FC<{
                       </TableCell>
                       <TableCell>{item.remarks}</TableCell>
 
-                      <TableCell>
-                        <FormField
+                      <TableCell className="text-center">
+                        <Button
+                          onClick={() => {
+                            setSelectedWaiverId(item.id);
+                            setOpenWaiverRequest(true);
+                          }}
+                        >
+                          Waiver Request
+                        </Button>
+
+                        {/* <FormField
                           control={form.control}
                           name={`outstandingItems.${index}.reason`}
                           render={({ field }) => (
@@ -236,18 +253,18 @@ const LostBrokenLoanDetails: React.FC<{
                               <FormMessage />
                             </FormItem>
                           )}
-                        />
+                        /> */}
                       </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
               </Table>
             </div>
-            <div className="mt-10 flex justify-center">
+            {/* <div className="mt-10 flex justify-center">
               <Button disabled={!isSubmitEnabled} type="submit">
                 Submit
               </Button>
-            </div>
+            </div> */}
           </form>
         </Form>
       </div>

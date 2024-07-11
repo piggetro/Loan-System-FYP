@@ -208,8 +208,8 @@ export const loanRouter = createTRPCRouter({
         .select((eb) => [
           jsonArrayFrom(
             eb
-              .selectFrom("WaiveRequest")
-              .whereRef("WaiveRequest.loanId", "=", "Loan.id")
+              .selectFrom("Waiver")
+              .whereRef("Waiver.loanId", "=", "Loan.id")
               .selectAll(),
           ).as("outstandingItems"),
           eb
@@ -297,9 +297,9 @@ export const loanRouter = createTRPCRouter({
       try {
         try {
           const data = await ctx.db
-            .selectFrom("WaiveRequest")
-            .leftJoin("Loan", "Loan.id", "WaiveRequest.loanId")
-            .selectAll("WaiveRequest")
+            .selectFrom("Waiver")
+            .leftJoin("Loan", "Loan.id", "Waiver.loanId")
+            .selectAll("Waiver")
             .select((eb) => [
               jsonObjectFrom(
                 eb
@@ -334,22 +334,18 @@ export const loanRouter = createTRPCRouter({
               "Loan.loanId as loanId",
               jsonArrayFrom(
                 eb
-                  .selectFrom("WaiveRequest")
-                  .leftJoin(
-                    "LoanItem",
-                    "LoanItem.id",
-                    "WaiveRequest.loanItemId",
-                  )
+                  .selectFrom("Waiver")
+                  .leftJoin("LoanItem", "LoanItem.id", "Waiver.loanItemId")
                   .leftJoin("Equipment", "Equipment.id", "LoanItem.equipmentId")
-                  .selectAll("WaiveRequest")
+                  .selectAll("Waiver")
                   .select([
                     "Equipment.name as equipment_name",
                     "Equipment.checklist as equipment_checklist",
                   ])
-                  .where("WaiveRequest.loanId", "=", input.id),
+                  .where("Waiver.loanId", "=", input.id),
               ).as("loanItems") ?? "",
             ])
-            .where("WaiveRequest.loanId", "=", input.id)
+            .where("Waiver.loanId", "=", input.id)
             .executeTakeFirstOrThrow();
 
           return data;

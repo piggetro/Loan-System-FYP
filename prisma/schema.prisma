@@ -52,8 +52,8 @@ model User {
     accessRightsGranted   UserAccessRights[] @relation("UserAccessRights_GrantedUser")
     accessRightsGrantedBy UserAccessRights[] @relation("UserAccessRights_GrantedBy")
     session               Session[]
-    waiveRequest          WaiveRequest[]
     Loan                  Loan[]
+    WaiverRequest         WaiverRequest[]
 }
 
 model VerificationToken {
@@ -90,7 +90,7 @@ model Equipment {
     loanItems     LoanItem[]
     checklist     String?
     course        EquipmentOnCourses[]
-    active        Boolean
+    active        Boolean?
 }
 
 model Inventory {
@@ -104,7 +104,7 @@ model Inventory {
     equipment      Equipment?      @relation(fields: [equipmentId], references: [id], onDelete: Cascade)
     equipmentId    String?
     loanItems      LoanItem[]
-    active         Boolean
+    active         Boolean?
 }
 
 enum EquipmentStatus {
@@ -116,18 +116,18 @@ enum EquipmentStatus {
 }
 
 model Loan {
-    id                        String         @id @default(cuid())
-    loanId                    String         @unique
+    id                        String     @id @default(cuid())
+    loanId                    String     @unique
     remarks                   String
     dueDate                   DateTime
     status                    LoanStatus
     signature                 String?
-    loanedBy                  User?          @relation("UserLoans_LoanedBy", fields: [loanedById], references: [id], onDelete: SetNull)
-    approvingLecturer         User?          @relation(fields: [approvingLecturerId], references: [id], onDelete: SetNull)
-    approvedBy                User?          @relation("UserLoans_ApprovedBy", fields: [approvedById], references: [id], onDelete: SetNull)
-    preparedBy                User?          @relation("UserLoans_PreparedBy", fields: [preparedById], references: [id], onDelete: SetNull)
-    issuedBy                  User?          @relation("UserLoans_IssuedBy", fields: [issuedById], references: [id], onDelete: SetNull)
-    returnedTo                User?          @relation("UserLoans_ReturnedTo", fields: [returnedToId], references: [id], onDelete: SetNull)
+    loanedBy                  User?      @relation("UserLoans_LoanedBy", fields: [loanedById], references: [id], onDelete: SetNull)
+    approvingLecturer         User?      @relation(fields: [approvingLecturerId], references: [id], onDelete: SetNull)
+    approvedBy                User?      @relation("UserLoans_ApprovedBy", fields: [approvedById], references: [id], onDelete: SetNull)
+    preparedBy                User?      @relation("UserLoans_PreparedBy", fields: [preparedById], references: [id], onDelete: SetNull)
+    issuedBy                  User?      @relation("UserLoans_IssuedBy", fields: [issuedById], references: [id], onDelete: SetNull)
+    returnedTo                User?      @relation("UserLoans_ReturnedTo", fields: [returnedToId], references: [id], onDelete: SetNull)
     loanedById                String?
     approvedById              String?
     preparedById              String?
@@ -135,8 +135,8 @@ model Loan {
     returnedToId              String?
     approvingLecturerId       String?
     loanItems                 LoanItem[]
-    waiveRequest              WaiveRequest[]
-    dateCreated               DateTime       @default(now())
+    waivers                   Waiver[]
+    dateCreated               DateTime   @default(now())
     collectionReferenceNumber String?
     datePrepared              DateTime?
     dateIssued                DateTime?
@@ -167,7 +167,7 @@ model LoanItem {
     loanedInventory Inventory?         @relation(fields: [inventoryId], references: [id], onDelete: SetNull)
     inventoryId     String?
     status          LoanedItemsStatus?
-    WaiveRequest    WaiveRequest[]
+    waiver          Waiver[]
 }
 
 enum LoanedItemsStatus {
@@ -182,18 +182,28 @@ enum LoanedItemsStatus {
     MISSING_CHECKLIST_ITEMS
 }
 
-model WaiveRequest {
-    id               String             @id @default(cuid())
-    loan             Loan               @relation(fields: [loanId], references: [id])
-    loanId           String
-    loanItem         LoanItem           @relation(fields: [loanItemId], references: [id])
-    reason           String?
-    remarks          String?
-    dateIssued       DateTime           @default(now())
-    status           WaiveRequestStatus
-    approvedBy       User?              @relation(fields: [approvedByUserId], references: [id], onDelete: SetNull)
-    approvedByUserId String?
-    loanItemId       String
+model Waiver {
+    id           String             @id @default(cuid())
+    loan         Loan               @relation(fields: [loanId], references: [id])
+    loanId       String
+    loanItem     LoanItem           @relation(fields: [loanItemId], references: [id])
+    waiveRequest WaiverRequest[]
+    remarks      String?
+    dateIssued   DateTime           @default(now())
+    status       WaiveRequestStatus
+    loanItemId   String
+}
+
+model WaiverRequest {
+    id         String             @id @default(cuid())
+    createdAt  DateTime
+    updatedAt  DateTime?
+    reason     String
+    status     WaiveRequestStatus
+    approvedBy User?              @relation(fields: [userId], references: [id])
+    Waiver     Waiver?            @relation(fields: [waiverId], references: [id])
+    waiverId   String?
+    userId     String?
 }
 
 enum WaiveRequestStatus {

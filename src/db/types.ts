@@ -32,7 +32,7 @@ export type Equipment = {
     updatedAt: Timestamp;
     subCategoryId: string | null;
     checklist: string | null;
-    active: boolean;
+    active: boolean | null;
 };
 export type EquipmentOnCourses = {
     equipmentId: string;
@@ -62,7 +62,7 @@ export type Inventory = {
     cost: string;
     status: EquipmentStatus;
     equipmentId: string | null;
-    active: boolean;
+    active: boolean | null;
 };
 export type Loan = {
     id: string;
@@ -145,15 +145,22 @@ export type VerificationToken = {
     token: string;
     expires: Timestamp;
 };
-export type WaiveRequest = {
+export type Waiver = {
     id: string;
     loanId: string;
-    reason: string | null;
     remarks: string | null;
     dateIssued: Generated<Timestamp>;
     status: WaiveRequestStatus;
-    approvedByUserId: string | null;
     loanItemId: string;
+};
+export type WaiverRequest = {
+    id: string;
+    createdAt: Timestamp;
+    updatedAt: Timestamp | null;
+    reason: string;
+    status: WaiveRequestStatus;
+    waiverId: string | null;
+    userId: string | null;
 };
 export type DB = {
     AccessRights: AccessRights;
@@ -176,5 +183,6 @@ export type DB = {
     User: User;
     UserAccessRights: UserAccessRights;
     VerificationToken: VerificationToken;
-    WaiveRequest: WaiveRequest;
+    Waiver: Waiver;
+    WaiverRequest: WaiverRequest;
 };

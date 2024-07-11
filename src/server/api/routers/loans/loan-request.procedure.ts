@@ -49,6 +49,7 @@ export const loanRequestRouter = createTRPCRouter({
               .select("equipmentId")
               .select(sql`COUNT(*)`.as("count"))
               .groupBy("equipmentId")
+              .distinctOn("equipmentId")
               .as("i"),
             "e.id",
             "i.equipmentId",
@@ -86,7 +87,7 @@ export const loanRequestRouter = createTRPCRouter({
         } else {
           results = await data.execute();
         }
-
+        console.log(results);
         //To Prevent category and subcategory from being NULL
         return results.map((equipment) => ({
           ...equipment,
@@ -997,7 +998,7 @@ export const loanRequestRouter = createTRPCRouter({
                 loanItemStatus = "LOST";
                 inventoryStatus = "LOST";
                 await trx
-                  .insertInto("WaiveRequest")
+                  .insertInto("Waiver")
                   .values({
                     id: createId(),
                     loanId: input.id,
@@ -1012,7 +1013,7 @@ export const loanRequestRouter = createTRPCRouter({
                 loanItemStatus = "BROKEN";
                 inventoryStatus = "BROKEN";
                 await trx
-                  .insertInto("WaiveRequest")
+                  .insertInto("Waiver")
                   .values({
                     id: createId(),
                     loanId: input.id,
@@ -1027,7 +1028,7 @@ export const loanRequestRouter = createTRPCRouter({
                 loanItemStatus = "MISSING_CHECKLIST_ITEMS";
                 inventoryStatus = "MISSING_CHECKLIST_ITEMS";
                 await trx
-                  .insertInto("WaiveRequest")
+                  .insertInto("Waiver")
                   .values({
                     id: createId(),
                     loanId: input.id,
@@ -1108,8 +1109,8 @@ export const loanRequestRouter = createTRPCRouter({
         .select((eb) => [
           jsonArrayFrom(
             eb
-              .selectFrom("WaiveRequest")
-              .whereRef("WaiveRequest.loanId", "=", "Loan.id")
+              .selectFrom("Waiver")
+              .whereRef("Waiver.loanId", "=", "Loan.id")
               .selectAll(),
           ).as("outstandingItems"),
           eb
@@ -1191,8 +1192,8 @@ export const loanRequestRouter = createTRPCRouter({
             .select((eb) => [
               jsonArrayFrom(
                 eb
-                  .selectFrom("WaiveRequest")
-                  .whereRef("WaiveRequest.loanId", "=", "Loan.id")
+                  .selectFrom("Waiver")
+                  .whereRef("Waiver.loanId", "=", "Loan.id")
                   .selectAll(),
               ).as("outstandingItems"),
               "Loan.id",
@@ -1213,7 +1214,7 @@ export const loanRequestRouter = createTRPCRouter({
     if (data.outstandingLoans.length === 0 && data.overdueLoans.length === 0) {
       return undefined;
     }
-    console.log(data);
+
     const updateedOutstandingData = data.outstandingLoans.map((item) => {
       let remarks = "";
       const statusArray: string[] = [];
@@ -1223,7 +1224,7 @@ export const loanRequestRouter = createTRPCRouter({
           outstandingItem.status === "AWAITING_REQUEST" ||
           outstandingItem.status === "REJECTED"
         ) {
-          remarks += outstandingItem.remarks;
+          remarks += outstandingItem.remarks + " ";
         }
         statusArray.push(outstandingItem.status);
       });
