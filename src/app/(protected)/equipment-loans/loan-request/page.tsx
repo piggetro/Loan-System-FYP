@@ -33,7 +33,7 @@ const LoanRequestPage = async () => {
 
       <LoanRequestComponent
         categoriesAndSubCategories={categoriesAndSubCategories}
-        approvingLecturers={approvingLecturers}
+        approvers={approvingLecturers}
       />
     </div>
   );

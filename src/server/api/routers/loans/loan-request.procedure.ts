@@ -137,7 +137,7 @@ export const loanRequestRouter = createTRPCRouter({
             quantitySelected: z.number(),
           }),
         ),
-        approvingLecturerEmail: z.string().min(1),
+        approverEmail: z.string().min(1),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -182,10 +182,10 @@ export const loanRequestRouter = createTRPCRouter({
               dueDate: dueDateFormatted.toISOString(),
               status: "PENDING_APPROVAL",
               loanedById: ctx.user.id,
-              approvingLecturerId: db
+              approverId: db
                 .selectFrom("User")
                 .select("User.id")
-                .where("User.email", "=", input.approvingLecturerEmail),
+                .where("User.email", "=", input.approverEmail),
             })
             .returning("Loan.id")
             .executeTakeFirstOrThrow();
@@ -226,7 +226,7 @@ export const loanRequestRouter = createTRPCRouter({
               eb
                 .selectFrom("User")
                 .select("User.name")
-                .whereRef("Loan.approvingLecturerId", "=", "User.id"),
+                .whereRef("Loan.approverId", "=", "User.id"),
             ).as("approvingLecturer"),
             jsonArrayFrom(
               eb
@@ -243,7 +243,7 @@ export const loanRequestRouter = createTRPCRouter({
                 ]),
             ).as("loanItems"),
           ])
-          .where("Loan.approvingLecturerId", "=", ctx.user.id)
+          .where("Loan.approverId", "=", ctx.user.id)
           .where("Loan.status", "=", "PENDING_APPROVAL")
           .execute();
 
@@ -295,7 +295,7 @@ export const loanRequestRouter = createTRPCRouter({
               eb
                 .selectFrom("User")
                 .select("User.name")
-                .whereRef("Loan.approvingLecturerId", "=", "User.id"),
+                .whereRef("Loan.approverId", "=", "User.id"),
             ).as("approvingLecturer"),
             jsonArrayFrom(
               eb
@@ -312,7 +312,7 @@ export const loanRequestRouter = createTRPCRouter({
                 ]),
             ).as("loanItems"),
           ])
-          .where("Loan.approvingLecturerId", "=", ctx.user.id)
+          .where("Loan.approverId", "=", ctx.user.id)
           .where("Loan.status", "!=", "PENDING_APPROVAL")
           .execute();
 
@@ -332,7 +332,7 @@ export const loanRequestRouter = createTRPCRouter({
             .updateTable("Loan")
             .set({ status: "REQUEST_COLLECTION", approvedById: ctx.user.id })
             .where("Loan.loanId", "=", input.loanId)
-            .where("Loan.approvingLecturerId", "=", ctx.user.id)
+            .where("Loan.approverId", "=", ctx.user.id)
             .execute();
 
           await trx
@@ -364,7 +364,7 @@ export const loanRequestRouter = createTRPCRouter({
             .updateTable("Loan")
             .set({ status: "REQUEST_COLLECTION", approvedById: ctx.user.id })
             .where("Loan.id", "=", input.id)
-            .where("Loan.approvingLecturerId", "=", ctx.user.id)
+            .where("Loan.approverId", "=", ctx.user.id)
             .returning("Loan.loanId")
             .executeTakeFirstOrThrow();
 
@@ -389,7 +389,7 @@ export const loanRequestRouter = createTRPCRouter({
             .updateTable("Loan")
             .set({ status: "REJECTED", approvedById: ctx.user.id })
             .where("Loan.id", "=", input.id)
-            .where("Loan.approvingLecturerId", "=", ctx.user.id)
+            .where("Loan.approverId", "=", ctx.user.id)
             .execute();
 
           await trx
@@ -983,13 +983,13 @@ export const loanRequestRouter = createTRPCRouter({
             if (loanItem.disabled) continue;
             let loanItemStatus:
               | "RETURNED"
-              | "BROKEN"
+              | "DAMAGED"
               | "LOST"
               | "COLLECTED"
               | "MISSING_CHECKLIST_ITEMS" = "RETURNED";
             let inventoryStatus:
               | "AVAILABLE"
-              | "BROKEN"
+              | "DAMAGED"
               | "LOST"
               | "LOANED"
               | "MISSING_CHECKLIST_ITEMS" = "AVAILABLE";
@@ -1002,7 +1002,6 @@ export const loanRequestRouter = createTRPCRouter({
                   .values({
                     id: createId(),
                     loanId: input.id,
-                    loanItemId: loanItem.loanItemId,
                     remarks: "Lost",
                     status: "AWAITING_REQUEST",
                   })
@@ -1010,14 +1009,14 @@ export const loanRequestRouter = createTRPCRouter({
                 outstandingItems = true;
                 break;
               case "BROKEN":
-                loanItemStatus = "BROKEN";
-                inventoryStatus = "BROKEN";
+                loanItemStatus = "DAMAGED";
+                inventoryStatus = "DAMAGED";
                 await trx
                   .insertInto("Waiver")
                   .values({
                     id: createId(),
                     loanId: input.id,
-                    loanItemId: loanItem.loanItemId,
+
                     remarks: "Broken",
                     status: "AWAITING_REQUEST",
                   })
@@ -1032,7 +1031,6 @@ export const loanRequestRouter = createTRPCRouter({
                   .values({
                     id: createId(),
                     loanId: input.id,
-                    loanItemId: loanItem.loanItemId,
                     remarks: `Penalty For Checklist: ${loanItem.remarks}`,
                     status: "AWAITING_REQUEST",
                   })
@@ -1100,9 +1098,9 @@ export const loanRequestRouter = createTRPCRouter({
         };
       }
     }),
-  getLostAndBrokenLoans: protectedProcedure.query(async ({ ctx }) => {
+  getLostAndDamagedLoans: protectedProcedure.query(async ({ ctx }) => {
     try {
-      const lostAndBrokenLoan = await ctx.db
+      const lostAndDamagedLoan = await ctx.db
         .selectFrom("Loan")
         .selectAll("Loan")
         .innerJoin("LoanItem", "Loan.id", "LoanItem.loanId")
@@ -1120,14 +1118,14 @@ export const loanRequestRouter = createTRPCRouter({
             .as("loanedByName"),
         ])
         .where("LoanItem.status", "in", [
-          "BROKEN",
+          "DAMAGED",
           "LOST",
           "MISSING_CHECKLIST_ITEMS",
         ])
         .distinctOn("Loan.id")
         .execute();
 
-      const data = lostAndBrokenLoan.map((item) => {
+      const data = lostAndDamagedLoan.map((item) => {
         let remarks = "";
         const statusArray: string[] = [];
 
@@ -1202,7 +1200,7 @@ export const loanRequestRouter = createTRPCRouter({
             .whereRef("Loan.loanedById", "=", "User.id")
             .innerJoin("LoanItem", "Loan.id", "LoanItem.loanId")
             .where("LoanItem.status", "in", [
-              "BROKEN",
+              "DAMAGED",
               "LOST",
               "MISSING_CHECKLIST_ITEMS",
             ])

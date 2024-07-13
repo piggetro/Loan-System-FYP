@@ -7,6 +7,7 @@ import {
   TableRow,
 } from "@/app/_components/ui/table";
 import React, {
+  useEffect,
   useRef,
   useState,
   type MouseEvent,
@@ -54,6 +55,19 @@ const CollectionLoanDialog: React.FC<{
       assetNumber: "",
     });
   });
+
+  useEffect(() => {
+    const ctx = canvasRef.current?.getContext("2d");
+    if (
+      ctx !== undefined &&
+      ctx !== null &&
+      data?.loanedBy?.name !== undefined
+    ) {
+      ctx.font = "15px sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText(data?.loanedBy?.name, 200, 180);
+    }
+  }, [data]);
 
   function onSubmit() {
     setIsCollecting(true);
@@ -132,6 +146,15 @@ const CollectionLoanDialog: React.FC<{
     const context = canvas?.getContext("2d");
     if (context && canvas !== null) {
       context.clearRect(0, 0, canvas.width, canvas.height);
+      if (
+        context !== undefined &&
+        context !== null &&
+        data?.loanedBy?.name !== undefined
+      ) {
+        context.font = "15px sans-serif";
+        context.textAlign = "center";
+        context.fillText(data?.loanedBy?.name, 200, 180);
+      }
     }
   };
   if (isFetching || !data) {
@@ -224,8 +247,30 @@ const CollectionLoanDialog: React.FC<{
           <p>{data.collectionReferenceNumber}</p>
         </div>
       </div>
-      <div className="mt-6 flex flex-col items-center gap-2">
-        <p className=" font-semibold">Loaner Signature</p>
+      <div className="mt-10 flex flex-col items-center gap-2">
+        <p className=" font-semibold">Rules and Regulations</p>
+        <p>
+          1. In the event of loss or irreparable damages, borrowers will be
+          required to replace the equipment
+          <br />
+          2. Borrowers will be required to pay for the full cost of any repairs
+          required for damaged equipment.
+          <br />
+          3. All equipment must be returned on the due date
+          <br />
+          4. Please present payment receipt at SOC IT Services for verifying and
+          document purposes.
+        </p>
+        <div className="mt-10 flex flex-col items-center">
+          <div className="font-bold">
+            I, {data.loanedBy?.name}, acknowledge receipt of the above items.
+          </div>
+          <div>
+            The Effective Date for the above items is&nbsp;
+            <b>{new Date().toLocaleDateString()}</b>
+          </div>
+        </div>
+
         <div className=" overflow-hidden">
           <canvas
             ref={canvasRef}

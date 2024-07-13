@@ -11,15 +11,6 @@ import { equipmentColumns, summaryColumns } from "./Columns";
 import { Dialog, DialogTrigger } from "@/app/_components/ui/dialog";
 import ReviewLoanRequest from "./ReviewLoanRequest";
 import { z } from "zod";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectTrigger,
-  SelectValue,
-} from "@/app/_components/ui/select";
 import { useToast } from "@/app/_components/ui/use-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -57,9 +48,9 @@ import {
 const formSchema = z.object({
   remarks: z.string().min(1, "Required").max(150),
   returnDate: z.date({}),
-  approvingLecturer: z.string().min(1),
+  approver: z.string().min(1),
 });
-type ApprovingLecturersType = {
+type ApproverType = {
   name: string;
   email: string;
 };
@@ -68,13 +59,12 @@ const LoanRequestComponent: React.FC<{
     categories: Category[];
     subCategories: SubCategory[];
   };
-  approvingLecturers: ApprovingLecturersType[];
-}> = ({ categoriesAndSubCategories, approvingLecturers }) => {
+  approvers: ApproverType[];
+}> = ({ categoriesAndSubCategories, approvers }) => {
   const [selectedEquipment, setSelectedEquipment] = useState<Inventory[]>([]);
-  const [approvingLecturer, setApprovingLecturer] = useState<string>("");
-  const [approvingLecturerEmail, setApprovingLecturerEmail] =
-    useState<string>("");
-  const [openLecturerDropDown, setOpenLecturerDropDown] =
+  const [approver, setApprover] = useState<string>("");
+  const [approverEmail, setApproverEmail] = useState<string>("");
+  const [openApproverDropdown, setOpenApproverDropdown] =
     useState<boolean>(false);
   const [searchInput, setSearchInput] = useState<string>("");
   const [debouncerIsLoading, setDebouncerIsLoading] = useState<boolean>(false);
@@ -153,7 +143,7 @@ const LoanRequestComponent: React.FC<{
       setRemarks("");
       form.reset({
         remarks: "",
-        approvingLecturer: "",
+        approver: "",
       });
       router.push("/equipment-loans/loans");
     } else if (successMessage.variant === "destructive") {
@@ -166,13 +156,13 @@ const LoanRequestComponent: React.FC<{
 
   //Using email to assign approving lecturer name
   useEffect(() => {
-    const lecturer = approvingLecturers.find((lecturer) => {
-      return lecturer.email === approvingLecturerEmail;
+    const approver = approvers.find((approver) => {
+      return approver.email === approverEmail;
     });
-    if (lecturer != undefined) {
-      setApprovingLecturer(lecturer.name);
+    if (approver != undefined) {
+      setApprover(approver.name);
     }
-  }, [approvingLecturerEmail]);
+  }, [approverEmail]);
 
   //debouncer
   useEffect(() => {
@@ -230,30 +220,30 @@ const LoanRequestComponent: React.FC<{
                 </div>
                 <div className="flex">
                   <div className="flex w-1/2  max-w-52 items-center">
-                    <Label>Approving Lecturer</Label>
+                    <Label>Approver</Label>
                   </div>
                   <div className="w-1/2">
                     <FormField
                       control={form.control}
-                      name="approvingLecturer"
+                      name="approver"
                       render={({ field }) => (
                         <Popover
-                          open={openLecturerDropDown}
-                          onOpenChange={setOpenLecturerDropDown}
+                          open={openApproverDropdown}
+                          onOpenChange={setOpenApproverDropdown}
                         >
                           <PopoverTrigger asChild>
                             <Button
                               variant="outline"
                               role="combobox"
-                              aria-expanded={openLecturerDropDown}
+                              aria-expanded={openApproverDropdown}
                               className="w-[250px] justify-between"
                             >
                               {field.value
-                                ? approvingLecturers.find(
-                                    (lecturer) =>
-                                      lecturer.email === approvingLecturerEmail,
+                                ? approvers.find(
+                                    (approver) =>
+                                      approver.email === approverEmail,
                                   )?.name
-                                : "Select Lecturer"}
+                                : "Select Approver"}
                               <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                             </Button>
                           </PopoverTrigger>
@@ -261,22 +251,20 @@ const LoanRequestComponent: React.FC<{
                             <Command>
                               <CommandInput placeholder="Search Lecturer" />
                               <CommandList>
-                                <CommandEmpty>No Lecturer Found</CommandEmpty>
+                                <CommandEmpty>No Approver</CommandEmpty>
                                 <CommandGroup>
-                                  {approvingLecturers.map((lecturer) => {
+                                  {approvers.map((approver) => {
                                     return (
                                       <CommandItem
-                                        key={lecturer.email}
-                                        value={lecturer.email}
+                                        key={approver.email}
+                                        value={approver.email}
                                         onSelect={(currentValue) => {
-                                          setApprovingLecturerEmail(
-                                            currentValue,
-                                          );
+                                          setApproverEmail(currentValue);
                                           field.onChange(currentValue);
-                                          setOpenLecturerDropDown(false);
+                                          setOpenApproverDropdown(false);
                                         }}
                                       >
-                                        {lecturer.name}
+                                        {approver.name}
                                       </CommandItem>
                                     );
                                   })}
@@ -323,16 +311,24 @@ const LoanRequestComponent: React.FC<{
                           <PopoverContent className="w-auto p-0" align="start">
                             <Calendar
                               captionLayout="dropdown-buttons"
-                              fromYear={2005}
-                              toYear={2040}
+                              fromYear={new Date().getFullYear()}
+                              toYear={new Date().getFullYear() + 1}
                               mode="single"
                               selected={field.value}
                               onSelect={field.onChange}
                               disabled={(date) =>
                                 date <
-                                new Date(
-                                  new Date().setDate(new Date().getDate() + 7),
-                                )
+                                  new Date(
+                                    new Date().setDate(
+                                      new Date().getDate() + 7,
+                                    ),
+                                  ) ||
+                                date >
+                                  new Date(
+                                    new Date().setDate(
+                                      new Date().getDate() + 365,
+                                    ),
+                                  )
                               }
                               initialFocus
                             />
@@ -409,8 +405,8 @@ const LoanRequestComponent: React.FC<{
               {reviewLoanRequestOpen && returnDate && (
                 <ReviewLoanRequest
                   remarks={remarks}
-                  approvingLecturer={approvingLecturer}
-                  approvingLecturerEmail={approvingLecturerEmail}
+                  approver={approver}
+                  approverEmail={approverEmail}
                   returnDate={returnDate}
                   equipments={selectedEquipment}
                   closeDialog={closeDialog}

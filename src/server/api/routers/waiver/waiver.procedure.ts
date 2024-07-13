@@ -80,25 +80,25 @@ export const waiverRouter = createTRPCRouter({
     .input(z.object({ id: z.string().min(1) }))
     .mutation(async ({ ctx, input }) => {
       try {
-        await ctx.db.transaction().execute(async (trx) => {
-          const updateWaiver = await trx
-            .updateTable("Waiver")
-            .set({ status: "APPROVED" })
-            .where("Waiver.id", "=", input.id)
-            .returning("Waiver.loanItemId")
-            .executeTakeFirstOrThrow();
-          const updateLoanItem = await trx
-            .updateTable("LoanItem")
-            .set({ status: "RETURNED" })
-            .where("LoanItem.id", "=", updateWaiver.loanItemId)
-            .returning("LoanItem.inventoryId")
-            .executeTakeFirstOrThrow();
-          await trx
-            .updateTable("Inventory")
-            .set({ status: "AVAILABLE", remarks: null })
-            .where("Inventory.id", "=", updateLoanItem.inventoryId)
-            .execute();
-        });
+        // await ctx.db.transaction().execute(async (trx) => {
+        //   const updateWaiver = await trx
+        //     .updateTable("Waiver")
+        //     .set({ status: "APPROVED" })
+        //     .where("Waiver.id", "=", input.id)
+        //     .returning("Waiver.loanItemId")
+        //     .executeTakeFirstOrThrow();
+        //   const updateLoanItem = await trx
+        //     .updateTable("LoanItem")
+        //     .set({ status: "RETURNED" })
+        //     .where("LoanItem.id", "=", updateWaiver.loanItemId)
+        //     .returning("LoanItem.inventoryId")
+        //     .executeTakeFirstOrThrow();
+        //   await trx
+        //     .updateTable("Inventory")
+        //     .set({ status: "AVAILABLE", remarks: null })
+        //     .where("Inventory.id", "=", updateLoanItem.inventoryId)
+        //     .execute();
+        // });
 
         return true;
       } catch (err) {
@@ -162,18 +162,18 @@ export const waiverRouter = createTRPCRouter({
                 .whereRef("Loan.returnedToId", "=", "User.id"),
             ).as("returnedTo"),
             "Loan.loanId as loanId",
-            jsonArrayFrom(
-              eb
-                .selectFrom("Waiver")
-                .leftJoin("LoanItem", "LoanItem.id", "Waiver.loanItemId")
-                .leftJoin("Equipment", "Equipment.id", "LoanItem.equipmentId")
-                .selectAll("Waiver")
-                .select([
-                  "Equipment.name as equipment_name",
-                  "Equipment.checklist as equipment_checklist",
-                ])
-                .where("Waiver.loanId", "=", input.id),
-            ).as("loanItems") ?? "",
+            // jsonArrayFrom(
+            //   eb
+            //     .selectFrom("Waiver")
+            //     .leftJoin("LoanItem", "LoanItem.id", "Waiver.loanItemId")
+            //     .leftJoin("Equipment", "Equipment.id", "LoanItem.equipmentId")
+            //     .selectAll("Waiver")
+            //     .select([
+            //       "Equipment.name as equipment_name",
+            //       "Equipment.checklist as equipment_checklist",
+            //     ])
+            //     .where("Waiver.loanId", "=", input.id),
+            // ).as("loanItems") ?? "",
           ])
           .where("Waiver.loanId", "=", input.id)
           .executeTakeFirstOrThrow();

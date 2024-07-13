@@ -523,7 +523,7 @@ export const equipmentRouter = createTRPCRouter({
           .updateTable("Inventory")
           .set({
             assetNumber: input.assetNumber,
-            status: input.status as "AVAILABLE" | "LOST" | "LOANED" | "BROKEN",
+            status: input.status as "AVAILABLE" | "LOST" | "LOANED" | "DAMAGED",
             cost: input.cost.toFixed(2),
             datePurchased: input.datePurchased,
             warrantyExpiry: input.warrantyExpiry,

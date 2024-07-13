@@ -16,7 +16,7 @@ export interface ApprovalManagementType {
   preparedById: string | null;
   issuedById: string | null;
   returnedToId: string | null;
-  approvingLecturerId: string | null;
+  approverId: string | null;
   dateCreated: Date;
   collectionReferenceNumber: string | null;
   datePrepared: Date | null;

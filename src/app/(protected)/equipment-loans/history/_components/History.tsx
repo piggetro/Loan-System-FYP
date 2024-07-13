@@ -22,7 +22,7 @@ export interface HistoryLoanType {
   preparedById: string | null;
   issuedById: string | null;
   returnedToId: string | null;
-  approvingLecturerId: string | null;
+  approverId: string | null;
   dateCreated: Date;
   collectionReferenceNumber: string | null;
   datePrepared: Date | null;
@@ -30,7 +30,7 @@ export interface HistoryLoanType {
   dateCollected: Date | null;
   dateReturned: Date | null;
   loanedBy: { name: string } | null;
-  approvingLecturer: { name: string } | null;
+  approver: { name: string } | null;
 }
 
 const HistoryPage: React.FC<{

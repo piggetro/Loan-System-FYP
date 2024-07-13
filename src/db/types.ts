@@ -32,7 +32,7 @@ export type Equipment = {
     updatedAt: Timestamp;
     subCategoryId: string | null;
     checklist: string | null;
-    active: boolean | null;
+    active: boolean;
 };
 export type EquipmentOnCourses = {
     equipmentId: string;
@@ -62,7 +62,7 @@ export type Inventory = {
     cost: string;
     status: EquipmentStatus;
     equipmentId: string | null;
-    active: boolean | null;
+    active: boolean;
 };
 export type Loan = {
     id: string;
@@ -76,7 +76,7 @@ export type Loan = {
     preparedById: string | null;
     issuedById: string | null;
     returnedToId: string | null;
-    approvingLecturerId: string | null;
+    approverId: string | null;
     dateCreated: Generated<Timestamp>;
     collectionReferenceNumber: string | null;
     datePrepared: Timestamp | null;
@@ -90,6 +90,10 @@ export type LoanItem = {
     equipmentId: string | null;
     inventoryId: string | null;
     status: LoanedItemsStatus | null;
+};
+export type LoanItemToWaiver = {
+    A: string;
+    B: string;
 };
 export type OrganizationUnit = {
     id: string;
@@ -150,8 +154,8 @@ export type Waiver = {
     loanId: string;
     remarks: string | null;
     dateIssued: Generated<Timestamp>;
+    dateUpdated: Timestamp | null;
     status: WaiveRequestStatus;
-    loanItemId: string;
 };
 export type WaiverRequest = {
     id: string;
@@ -163,6 +167,7 @@ export type WaiverRequest = {
     userId: string | null;
 };
 export type DB = {
+    _LoanItemToWaiver: LoanItemToWaiver;
     AccessRights: AccessRights;
     AccessRightsOnRoles: AccessRightsOnRoles;
     Category: Category;

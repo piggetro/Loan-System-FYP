@@ -10,15 +10,15 @@ import {
 import { Button } from "@/app/_components/ui/button";
 import { MoreHorizontal } from "lucide-react";
 
-interface LostBrokenRowActionsProps<TData> {
+interface LostDamagedRowActionsProps<TData> {
   row: Row<TData>;
   onView: (id: TData) => void;
 }
 
-export const LostBrokenRowActionsProps = <TData,>({
+export const LostDamagedRowActionsProps = <TData,>({
   row,
   onView,
-}: LostBrokenRowActionsProps<TData>) => {
+}: LostDamagedRowActionsProps<TData>) => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
