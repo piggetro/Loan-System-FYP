@@ -63,7 +63,7 @@ const UnableToLoanComponent: React.FC<{
                   <TableCell className="w-[200px] text-center">
                     <Button
                       onClick={() => {
-                        router.push(`/equipment-loans/lost-broken-loans`);
+                        router.push(`/equipment-loans/lost-damaged-loans`);
                       }}
                     >
                       View Overdue Loans
@@ -97,7 +97,7 @@ const UnableToLoanComponent: React.FC<{
                     <Button
                       onClick={() => {
                         router.push(
-                          `/equipment-loans/lost-broken-loans/${loan.id}`,
+                          `/equipment-loans/lost-damaged-loans/${loan.id}`,
                         );
                       }}
                     >

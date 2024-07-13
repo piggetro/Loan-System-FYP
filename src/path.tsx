@@ -43,8 +43,8 @@ export const NAVBAR_NAV_ITEMS: NavbarNavItem[] = [
         path: "/equipment-loans/history",
       },
       {
-        title: "Lost/Broken Loans",
-        path: "/equipment-loans/lost-broken-loans",
+        title: "Lost/Damaged Loans",
+        path: "/equipment-loans/lost-damaged-loans",
       },
     ],
   },
@@ -132,8 +132,8 @@ export const NAVBAR_NAV_ITEMS: NavbarNavItem[] = [
         path: "/loan-management/track-loans",
       },
       {
-        title: "Lost/Broken Loans",
-        path: "/loan-management/lost-broken-loans",
+        title: "Lost/Damaged Loans",
+        path: "/loan-management/lost-damaged-loans",
       },
       {
         title: "Waiver",

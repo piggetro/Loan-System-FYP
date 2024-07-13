@@ -16,14 +16,14 @@ export interface LoanTableDataType {
   preparedById: string | null;
   issuedById: string | null;
   returnedToId: string | null;
-  approvingLecturerId: string | null;
+  approverId: string | null;
   dateCreated: Date;
   collectionReferenceNumber: string | null;
   datePrepared: Date | null;
   dateIssued: Date | null;
   dateCollected: Date | null;
   dateReturned: Date | null;
-  approvingLecturerName: string | null;
+  approverName: string | null;
 }
 
 const page = async () => {

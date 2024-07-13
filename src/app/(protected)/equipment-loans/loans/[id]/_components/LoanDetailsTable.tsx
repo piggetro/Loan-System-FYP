@@ -31,7 +31,7 @@ export interface LoanDetailsData {
   preparedById: string | null;
   issuedById: string | null;
   returnedToId: string | null;
-  approvingLecturerId: string | null;
+  approverId: string | null;
   dateCreated: Date;
   collectionReferenceNumber: string | null;
   datePrepared: Date | null;
@@ -43,7 +43,7 @@ export interface LoanDetailsData {
   preparedByName: string | null;
   issuedByName: string | null;
   returnedToName: string | null;
-  approvingLecturerName: string | null;
+  approverName: string | null;
   loanItems: EquipmentDetailsData[];
 }
 

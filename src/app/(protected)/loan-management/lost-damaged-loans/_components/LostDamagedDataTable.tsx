@@ -38,7 +38,7 @@ interface DataTableProps<TData, TValue> {
   allSemesters: { name: string }[];
 }
 
-export function LostBrokenDataTable<TData, TValue>({
+export function LostDamagedDataTable<TData, TValue>({
   columns,
   data,
   allSemesters,

@@ -18,7 +18,7 @@ export const LoanPendingApprovalColumns = ({
   {
     accessorKey: "loanId",
     header: "Loan ID",
-    cell: ({ row }) => <div className="w-96">{row.getValue("loanId")}</div>,
+    cell: ({ row }) => <div className="w-24">{row.getValue("loanId")}</div>,
   },
   {
     accessorKey: "dateCreated",
@@ -37,6 +37,13 @@ export const LoanPendingApprovalColumns = ({
         {new Date(row.getValue("dueDate")).toLocaleDateString()}
       </div>
     ),
+  },
+
+  {
+    accessorKey: "approverName",
+    id: "approverName",
+    header: "Approver",
+    cell: ({ row }) => <div className="">{row.getValue("approverName")}</div>,
   },
   {
     accessorKey: "status",
@@ -57,14 +64,6 @@ export const LoanPendingApprovalColumns = ({
         ></div>
         <span>{toStartCase(row.getValue("status"))}</span>
       </div>
-    ),
-  },
-  {
-    accessorKey: "approvingLecturerName",
-    id: "approvingLecturerName",
-    header: "Approving Lecturer",
-    cell: ({ row }) => (
-      <div className="">{row.getValue("approvingLecturerName")}</div>
     ),
   },
   {

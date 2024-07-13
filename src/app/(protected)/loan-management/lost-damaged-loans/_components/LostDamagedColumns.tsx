@@ -1,16 +1,16 @@
 /* eslint-disable react-hooks/rules-of-hooks */
 "use client";
 import { type ColumnDef } from "@tanstack/react-table";
-import { LostBrokenRowActionsProps } from "./LostBrokenLoanRowAction";
-import { type LostBrokenLoanType } from "./LostBroken";
+import { LostDamagedRowActionsProps } from "./LostDamagedLoanRowAction";
+import { type LostDamagedLoanType } from "./LostDamaged";
 
 interface LoanProps {
-  onView: (value: LostBrokenLoanType) => void;
+  onView: (value: LostDamagedLoanType) => void;
 }
 
-export const LostBrokenColumns = ({
+export const LostDamagedColumns = ({
   onView,
-}: LoanProps): ColumnDef<LostBrokenLoanType>[] => [
+}: LoanProps): ColumnDef<LostDamagedLoanType>[] => [
   {
     accessorKey: "loanId",
     header: "Loan ID",
@@ -55,7 +55,7 @@ export const LostBrokenColumns = ({
   },
   {
     id: "actions",
-    cell: ({ row }) => <LostBrokenRowActionsProps row={row} onView={onView} />,
+    cell: ({ row }) => <LostDamagedRowActionsProps row={row} onView={onView} />,
   },
 ];
 

@@ -23,70 +23,7 @@ export const ApprovalManagementColumns = ({
   {
     accessorKey: "loanId",
     header: "Loan ID",
-    cell: ({ row }) => <div className="w-96">{row.getValue("loanId")}</div>,
-  },
-  {
-    accessorKey: "loanedBy.name",
-    id: "name",
-    header: ({ column }) => {
-      return <p>Name</p>;
-    },
-    cell: ({ row }) => <div className="">{row.getValue("name")}</div>,
-  },
-  {
-    accessorKey: "dateCreated",
-    header: ({ column }) => {
-      return <p>Date Requested</p>;
-    },
-    cell: ({ row }) => {
-      const dateCreated = new Date(
-        row.getValue("dateCreated"),
-      ).toLocaleDateString();
-      return (
-        <div className="" suppressHydrationWarning>
-          {dateCreated}
-        </div>
-      );
-    },
-  },
-  {
-    accessorKey: "dueDate",
-    header: ({ column }) => {
-      return <p>Return Date</p>;
-    },
-    cell: ({ row }) => {
-      const dueDate = new Date(row.getValue("dueDate")).toLocaleDateString();
-      return (
-        <div className="" suppressHydrationWarning>
-          {dueDate}
-        </div>
-      );
-    },
-  },
-  {
-    id: "actions",
-    cell: ({ row }) => (
-      <ApprovalManagementTableRowActionsProps
-        row={row}
-        onView={onView}
-        onApprove={onApprove}
-        onReject={onReject}
-      />
-    ),
-  },
-];
-
-interface ApprovalManagementHistoryProps {
-  onView: (value: ApprovalManagementType) => void;
-}
-
-export const ApprovalManagementHistoryColumns = ({
-  onView,
-}: ApprovalManagementHistoryProps): ColumnDef<ApprovalManagementType>[] => [
-  {
-    accessorKey: "loanId",
-    header: "Loan ID",
-    cell: ({ row }) => <div className="w-96">{row.getValue("loanId")}</div>,
+    cell: ({ row }) => <div className="w-24">{row.getValue("loanId")}</div>,
   },
   {
     accessorKey: "loanedBy.name",
@@ -111,12 +48,12 @@ export const ApprovalManagementHistoryColumns = ({
       return <p>Date Requested</p>;
     },
     cell: ({ row }) => {
-      const dateRequested = new Date(
+      const dateCreated = new Date(
         row.getValue("dateCreated"),
       ).toLocaleDateString();
       return (
         <div className="" suppressHydrationWarning>
-          {dateRequested}
+          {dateCreated}
         </div>
       );
     },
@@ -158,7 +95,103 @@ export const ApprovalManagementHistoryColumns = ({
         <span>{toStartCase(row.getValue("status"))}</span>
       </div>
     ),
-  },  
+  },
+  {
+    id: "actions",
+    cell: ({ row }) => (
+      <ApprovalManagementTableRowActionsProps
+        row={row}
+        onView={onView}
+        onApprove={onApprove}
+        onReject={onReject}
+      />
+    ),
+  },
+];
+
+interface ApprovalManagementHistoryProps {
+  onView: (value: ApprovalManagementType) => void;
+}
+
+export const ApprovalManagementHistoryColumns = ({
+  onView,
+}: ApprovalManagementHistoryProps): ColumnDef<ApprovalManagementType>[] => [
+  {
+    accessorKey: "loanId",
+    header: "Loan ID",
+    cell: ({ row }) => <div className="w-24">{row.getValue("loanId")}</div>,
+  },
+  {
+    accessorKey: "loanedBy.name",
+    id: "name",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          className="pl-0"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Name
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      );
+    },
+    cell: ({ row }) => <div className="">{row.getValue("name")}</div>,
+  },
+  {
+    accessorKey: "dateCreated",
+    header: ({ column }) => {
+      return <p>Date Requested</p>;
+    },
+    cell: ({ row }) => {
+      const dateCreated = new Date(
+        row.getValue("dateCreated"),
+      ).toLocaleDateString();
+      return (
+        <div className="" suppressHydrationWarning>
+          {dateCreated}
+        </div>
+      );
+    },
+  },
+  {
+    accessorKey: "dueDate",
+    header: ({ column }) => {
+      return <p>Return Date</p>;
+    },
+    cell: ({ row }) => {
+      const dueDate = new Date(row.getValue("dueDate")).toLocaleDateString();
+      return (
+        <div className="" suppressHydrationWarning>
+          {dueDate}
+        </div>
+      );
+    },
+  },
+  {
+    accessorKey: "status",
+    id: "status",
+    header: ({ column }) => {
+      return <p>Status</p>;
+    },
+    cell: ({ row }) => (
+      <div className="flex items-center">
+        <div
+          className={`mr-2 h-3 w-3 rounded-full ${
+            row.getValue("status") === "COLLECTED" ||
+            row.getValue("status") === "RETURNED"
+              ? "bg-green-500"
+              : row.getValue("status") === "REJECTED" ||
+                  row.getValue("status") === "CANCELLED" ||
+                  row.getValue("status") === "OVERDUE"
+                ? "bg-red-500"
+                : "bg-yellow-500"
+          }`}
+        ></div>
+        <span>{toStartCase(row.getValue("status"))}</span>
+      </div>
+    ),
+  },
   {
     id: "actions",
     cell: ({ row }) => (

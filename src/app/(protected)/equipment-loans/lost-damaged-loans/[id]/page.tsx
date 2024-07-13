@@ -3,7 +3,7 @@ import { api } from "@/trpc/server";
 
 import { redirect } from "next/navigation";
 import TopHeaderComponent from "@/app/_components/TopHeader";
-import LostBrokenLoanDetails from "./_components/LostBrokenLoanDetails";
+import LostBrokenLoanDetails from "./_components/LostDamagedLoanDetails";
 
 interface pageProps {
   params: { id: string };

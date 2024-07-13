@@ -28,8 +28,8 @@ import { Textarea } from "@/app/_components/ui/textarea";
 type LoanRequestType = {
   remarks: string;
   returnDate: Date;
-  approvingLecturer: string;
-  approvingLecturerEmail: string;
+  approver: string;
+  approverEmail: string;
   equipments: Inventory[];
   closeDialog: (successMessage: {
     title: string;
@@ -40,9 +40,9 @@ type LoanRequestType = {
 const ReviewLoanRequest: React.FC<LoanRequestType> = ({
   remarks,
   returnDate,
-  approvingLecturer,
+  approver,
   equipments,
-  approvingLecturerEmail,
+  approverEmail,
   closeDialog,
 }) => {
   const { toast } = useToast();
@@ -86,7 +86,7 @@ const ReviewLoanRequest: React.FC<LoanRequestType> = ({
               <Input
                 readOnly={true}
                 className=" w-1/2 focus-visible:ring-0 focus-visible:ring-offset-0"
-                value={approvingLecturer}
+                value={approver}
               />
             </div>
           </div>
@@ -146,17 +146,11 @@ const ReviewLoanRequest: React.FC<LoanRequestType> = ({
         </DialogClose>
         <Button
           onClick={() => {
-            console.log({
-              equipment: equipments,
-              remarks: remarks,
-              dueDate: returnDate,
-              approvingLecturerEmail: approvingLecturerEmail,
-            });
             createLoanRequest({
               equipment: equipments,
               remarks: remarks,
               dueDate: returnDate,
-              approvingLecturerEmail: approvingLecturerEmail,
+              approverEmail: approverEmail,
             });
           }}
           disabled={isPending}

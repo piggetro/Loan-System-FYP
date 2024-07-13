@@ -1,19 +1,19 @@
 import React from "react";
-import LostBrokenPage from "./_components/LostBroken";
+import LostDamagedPage from "./_components/LostDamaged";
 import TopHeaderComponent from "@/app/_components/TopHeader";
 import { api } from "@/trpc/server";
 const page = async () => {
   const allSemesters = await api.loan.getSemesters();
-  const lostAndBrokenLoanData = await api.loanRequest.getLostAndBrokenLoans();
+  const lostAndDamagedLoanData = await api.loanRequest.getLostAndDamagedLoans();
   return (
     <div>
       <TopHeaderComponent
-        pageName="Lost/Broken"
-        pathName="Loan Management / Lost/Broken"
+        pageName="Lost/Damaged"
+        pathName="Loan Management / Lost/Damaged"
       />
-      <LostBrokenPage
+      <LostDamagedPage
         allSemesters={allSemesters}
-        lostAndBrokenLoanData={lostAndBrokenLoanData}
+        lostAndDamagedLoanData={lostAndDamagedLoanData}
       />
     </div>
   );
