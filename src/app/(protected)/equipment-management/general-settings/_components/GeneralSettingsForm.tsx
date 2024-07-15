@@ -32,6 +32,7 @@ interface GeneralSettingsFormProps {
       numberOfDays: number;
       timing: string;
     };
+    loanLimitPrice: number;
   };
 }
 
@@ -52,6 +53,10 @@ const formSchema = z.object({
     .string()
     .regex(/^\d+$/, { message: "Number is needed" }),
   voidLoanTiming: z.string().min(1, { message: "Void loan timing is needed" }),
+  loanLimitPrice: z.string().regex(/^\d+$/, {
+    message:
+      "Price threshold (exceeding threshold will cause equipment to have a limit of 1 per loan) is needed",
+  }),
 });
 
 const GeneralSettingsForm = ({ generalSettings }: GeneralSettingsFormProps) => {
@@ -64,6 +69,7 @@ const GeneralSettingsForm = ({ generalSettings }: GeneralSettingsFormProps) => {
       endRequestForCollection: generalSettings.requestForCollection.end,
       voidLoanNumberOfDays: generalSettings.voidLoan.numberOfDays.toString(),
       voidLoanTiming: generalSettings.voidLoan.timing,
+      loanLimitPrice: generalSettings.loanLimitPrice.toString(),
     },
     mode: "onChange",
   });
@@ -82,6 +88,7 @@ const GeneralSettingsForm = ({ generalSettings }: GeneralSettingsFormProps) => {
         form.reset({
           ...data,
           voidLoanNumberOfDays: data.voidLoanNumberOfDays.toString(),
+          loanLimitPrice: data.loanLimitPrice.toString(),
         });
       },
       onError: (err) => {
@@ -100,6 +107,7 @@ const GeneralSettingsForm = ({ generalSettings }: GeneralSettingsFormProps) => {
     updateGeneralSettings({
       ...values,
       voidLoanNumberOfDays: parseInt(values?.voidLoanNumberOfDays ?? ""),
+      loanLimitPrice: parseInt(values?.loanLimitPrice ?? ""),
     });
   };
 
@@ -191,6 +199,25 @@ const GeneralSettingsForm = ({ generalSettings }: GeneralSettingsFormProps) => {
                   <FormLabel>Void Loan Timing</FormLabel>
                   <FormControl>
                     <Input type="time" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+          <div className="flex w-full space-x-4">
+            <FormField
+              disabled={disabled}
+              name="loanLimitPrice"
+              control={form.control}
+              render={({ field }) => (
+                <FormItem className="w-1/2">
+                  <FormLabel>
+                    Price threshold (exceeding threshold will cause equipment to
+                    have a limit of 1 per loan)
+                  </FormLabel>
+                  <FormControl>
+                    <Input placeholder="$0.00" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

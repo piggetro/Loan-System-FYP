@@ -41,6 +41,7 @@ export type Equipment = {
   courses: string[];
   category: string;
   subCategory: string;
+  loanLimit: number;
 };
 
 const formSchema = z.object({
@@ -54,6 +55,9 @@ const formSchema = z.object({
     .string({ required_error: "Please select a sub category" })
     .min(1),
   courses: z.array(z.string()),
+  loanLimit: z
+    .string()
+    .regex(/^\d+$/, { message: "Loan Limit is needed, 0 means no limit" }),
 });
 const EquipmentInfo = ({
   equipment,
@@ -69,6 +73,7 @@ const EquipmentInfo = ({
       category: equipment.category,
       subCategory: equipment.subCategory,
       courses: equipment.courses,
+      loanLimit: equipment.loanLimit.toString(),
     },
     mode: "onChange",
   });
@@ -89,7 +94,10 @@ const EquipmentInfo = ({
           title: "Success",
           description: "Equipment updated successfully",
         });
-        form.reset(data);
+        form.reset({
+          ...data,
+          loanLimit: data.loanLimit.toString(),
+        });
       },
       onError: (err) => {
         console.log(err);
@@ -126,6 +134,7 @@ const EquipmentInfo = ({
     updateEquipment({
       id: equipment.id,
       ...values,
+      loanLimit: parseInt(values?.loanLimit ?? ""),
     });
   };
 
@@ -218,6 +227,20 @@ const EquipmentInfo = ({
                       )}
                     </SelectContent>
                   </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              name="loanLimit"
+              disabled={disabled}
+              control={form.control}
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Limit Per Loan</FormLabel>
+                  <FormControl>
+                    <Input placeholder="0 - 99" {...field} />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}

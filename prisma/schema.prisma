@@ -91,6 +91,7 @@ model Equipment {
     checklist     String?
     course        EquipmentOnCourses[]
     active        Boolean
+    loanLimit   Int
 }
 
 model Inventory {
@@ -300,4 +301,5 @@ model GeneralSettings {
     endRequestForCollection   String
     voidLoanNumberOfDays      Int
     voidLoanTiming            String
+    loanLimitPrice Int
 }

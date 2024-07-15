@@ -33,6 +33,7 @@ export type Equipment = {
     subCategoryId: string | null;
     checklist: string | null;
     active: boolean;
+    loanLimit: number;
 };
 export type EquipmentOnCourses = {
     equipmentId: string;
@@ -46,6 +47,7 @@ export type GeneralSettings = {
     endRequestForCollection: string;
     voidLoanNumberOfDays: number;
     voidLoanTiming: string;
+    loanLimitPrice: number;
 };
 export type Holiday = {
     id: string;

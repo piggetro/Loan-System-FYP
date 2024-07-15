@@ -261,6 +261,14 @@ export const equipmentRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       try {
+        const averageCost =
+          input.inventoryItems.reduce((sum, item) => sum + item.cost, 0) /
+          input.inventoryItems.length;
+        const loanLimitPrice = await ctx.db
+          .selectFrom("GeneralSettings")
+          .select("loanLimitPrice")
+          .executeTakeFirstOrThrow();
+
         const equipment = await ctx.db
           .with("newEquipment", (db) =>
             db
@@ -272,6 +280,7 @@ export const equipmentRouter = createTRPCRouter({
                 subCategoryId: input.subCategory,
                 updatedAt: new Date(),
                 active: true,
+                loanLimit: averageCost > loanLimitPrice.loanLimitPrice ? 1 : 0,
               })
               .returning(["id", "name", "subCategoryId"]),
           )
@@ -354,6 +363,7 @@ export const equipmentRouter = createTRPCRouter({
               "Equipment.checklist",
               "SubCategory.id as subCategory",
               "Category.id as category",
+              "Equipment.loanLimit",
             ])
             .where("Equipment.id", "=", input.id)
             .where("Equipment.active", "=", true)
@@ -390,6 +400,7 @@ export const equipmentRouter = createTRPCRouter({
             checkList: equipment?.checklist ?? "",
             subCategory: equipment?.subCategory ?? "",
             category: equipment?.category ?? "",
+            loanLimit: equipment?.loanLimit ?? 0,
             courses: courses.map((course) => course.courseId),
           },
           inventoryItems: inventory.map((item) => ({
@@ -411,6 +422,7 @@ export const equipmentRouter = createTRPCRouter({
         category: z.string().min(1),
         subCategory: z.string().min(1),
         courses: z.array(z.string().min(1)),
+        loanLimit: z.number().min(0),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -422,9 +434,10 @@ export const equipmentRouter = createTRPCRouter({
             checklist: input.checkList,
             subCategoryId: input.subCategory,
             updatedAt: new Date(),
+            loanLimit: input.loanLimit,
           })
           .where("id", "=", input.id)
-          .returning(["id", "name", "checklist", "subCategoryId"])
+          .returning(["id", "name", "checklist", "subCategoryId", "loanLimit"])
           .executeTakeFirst();
 
         await ctx.db.transaction().execute(async (trx) => {
@@ -452,6 +465,7 @@ export const equipmentRouter = createTRPCRouter({
           subCategory: equipment?.subCategoryId ?? "",
           category: input.category,
           courses: input.courses,
+          loanLimit: equipment?.loanLimit ?? 0,
         };
       } catch (err) {
         console.log(err);
@@ -585,6 +599,7 @@ export const equipmentRouter = createTRPCRouter({
           numberOfDays: data?.voidLoanNumberOfDays ?? 0,
           timing: data?.voidLoanTiming ?? "",
         },
+        loanLimitPrice: data?.loanLimitPrice ?? 0,
       };
     } catch (err) {
       console.log(err);
@@ -600,6 +615,7 @@ export const equipmentRouter = createTRPCRouter({
         endRequestForCollection: z.string().min(1),
         voidLoanNumberOfDays: z.number().min(1),
         voidLoanTiming: z.string().min(1),
+        loanLimitPrice: z.number().min(0),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -613,6 +629,7 @@ export const equipmentRouter = createTRPCRouter({
             endRequestForCollection: input.endRequestForCollection,
             voidLoanNumberOfDays: input.voidLoanNumberOfDays,
             voidLoanTiming: input.voidLoanTiming,
+            loanLimitPrice: input.loanLimitPrice,
           })
           .returningAll()
           .executeTakeFirstOrThrow();
