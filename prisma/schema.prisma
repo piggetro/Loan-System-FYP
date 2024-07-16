@@ -154,9 +154,7 @@ enum LoanStatus {
     COLLECTED
     CANCELLED
     RETURNED
-    OVERDUE
     PARTIAL_RETURN
-    MISSING
 }
 
 model LoanItem {

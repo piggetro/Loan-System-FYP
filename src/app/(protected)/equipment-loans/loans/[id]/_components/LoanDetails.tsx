@@ -284,9 +284,7 @@ const LoanDetails: React.FC<{
                 className={`mr-2 h-3 w-3 rounded-full ${
                   data.status === "COLLECTED" || data.status === "RETURNED"
                     ? "bg-green-500"
-                    : data.status === "REJECTED" ||
-                        data.status === "CANCELLED" ||
-                        data.status === "OVERDUE"
+                    : data.status === "REJECTED" || data.status === "CANCELLED"
                       ? "bg-red-500"
                       : "bg-yellow-500"
                 }`}

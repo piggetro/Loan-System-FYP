@@ -15,9 +15,7 @@ export const LoanStatus = {
     COLLECTED: "COLLECTED",
     CANCELLED: "CANCELLED",
     RETURNED: "RETURNED",
-    OVERDUE: "OVERDUE",
-    PARTIAL_RETURN: "PARTIAL_RETURN",
-    MISSING: "MISSING"
+    PARTIAL_RETURN: "PARTIAL_RETURN"
 } as const;
 export type LoanStatus = (typeof LoanStatus)[keyof typeof LoanStatus];
 export const LoanedItemsStatus = {

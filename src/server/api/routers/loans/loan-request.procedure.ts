@@ -41,59 +41,167 @@ export const loanRequestRouter = createTRPCRouter({
           if (user.courseId !== null) referingCourseId = user.courseId;
           else throw new Error("This Account is not linked to a Course");
         }
-        const data = db
+        console.log(referingCourseId);
+        const generalSettingsLimit = await db
+          .selectFrom("GeneralSettings")
+          .select("GeneralSettings.loanLimitPrice")
+          .executeTakeFirst();
+        let equipmentsQuery = db
           .selectFrom("Equipment as e")
-          .leftJoin(
-            db
-              .selectFrom("Inventory")
-              .select("equipmentId")
-              .select(sql`COUNT(*)`.as("count"))
-              .groupBy("equipmentId")
-              .distinctOn("equipmentId")
-              .as("i"),
-            "e.id",
-            "i.equipmentId",
-          )
-          .leftJoin("LoanItem as li", "e.id", "li.equipmentId")
           .leftJoin(
             "EquipmentOnCourses",
             "EquipmentOnCourses.equipmentId",
             "e.id",
           )
           .leftJoin("SubCategory", "e.subCategoryId", "SubCategory.id")
-          .leftJoin("Category", "SubCategory.categoryId", "Category.id")
+          .leftJoin("Category", "Category.id", "SubCategory.categoryId")
+          .selectAll("e")
           .select([
-            "e.id as equipmentId",
-            "e.name as itemDescription",
-            "Category.name as category",
-            "SubCategory.name as subCategory",
-            sql<number>`CAST(COALESCE(SUM(i.count), 0) - COALESCE(SUM(CASE WHEN li.status IS NOT NULL AND li.status NOT IN ('RETURNED', 'REQUEST_COLLECTION', 'CANCELLED') THEN 1 ELSE 0 END), 0) AS int)`.as(
-              "quantityAvailable",
-            ),
-            sql<number>`1`.as("quantitySelected"),
+            "SubCategory.name as subCategoryName",
+            "Category.name as categoryName",
           ])
+          .where("e.active", "=", true)
+          .where("e.name", "ilike", `%${input.searchInput}%`);
+
+        const inventoryAvailabilityQuery = db
+          .selectFrom("Inventory")
+          .leftJoin("Equipment", "Inventory.equipmentId", "Equipment.id")
+          .select("equipmentId")
+          .select([
+            sql<number>`COUNT(*)`.as("count"),
+            sql<number>`AVG(cost)`.as("avgCost"),
+          ])
+          .groupBy("equipmentId")
+          .where("Equipment.name", "ilike", `%${input.searchInput}%`)
+          .where("Equipment.active", "=", true);
+
+        const loanItemsUnavailableQuery = db
+          .selectFrom("LoanItem")
+          .select([
+            "LoanItem.equipmentId",
+            sql<number>`COALESCE(COUNT(*), 0)`.as("count"),
+          ])
+          .leftJoin("Equipment as e", "LoanItem.equipmentId", "e.id")
           .where("e.name", "ilike", `%${input.searchInput}%`)
-          .groupBy(["e.id", "SubCategory.id", "Category.name"])
-          .having(
-            sql`COALESCE(SUM(i.count), 0) - COALESCE(SUM(CASE WHEN li.status IS NOT NULL AND li.status NOT IN ('RETURNED', 'REQUEST_COLLECTION', 'CANCELLED') THEN 1 ELSE 0 END), 0)`,
-            "!=",
-            0,
+          .where("LoanItem.status", "not in", [
+            "CANCELLED",
+            "REQUEST_COLLECTION",
+            "RETURNED",
+          ])
+          .groupBy("LoanItem.equipmentId");
+
+        if (referingCourseId !== undefined) {
+          equipmentsQuery = equipmentsQuery.where(
+            "EquipmentOnCourses.courseId",
+            "=",
+            "clw7z6fyo00003qp95wbipxtr",
           );
-        let results;
-        if (referingCourseId) {
-          results = await data
-            .where("EquipmentOnCourses.courseId", "=", referingCourseId)
-            .execute();
-        } else {
-          results = await data.execute();
         }
-        console.log(results);
-        //To Prevent category and subcategory from being NULL
-        return results.map((equipment) => ({
-          ...equipment,
-          category: equipment.category ?? "",
-          subCategory: equipment.subCategory ?? "",
-        }));
+        const [equipments, inventoryAvailability, loanItemsUnavailable] =
+          await Promise.all([
+            equipmentsQuery.execute(),
+            inventoryAvailabilityQuery.execute(),
+            loanItemsUnavailableQuery.execute(),
+          ]);
+        console.log(equipments);
+        const loanLimitPrice = generalSettingsLimit?.loanLimitPrice ?? 0;
+        const data = equipments.map((equipment) => {
+          let loanLimit = 0;
+          const theoraticalAvailableItems =
+            inventoryAvailability.find(
+              (inventory) => inventory.equipmentId === equipment.id,
+            )?.count ?? 0;
+          const unavailableCount =
+            loanItemsUnavailable.find(
+              (item) => item.equipmentId === equipment.id,
+            )?.count ?? 0;
+          const actualAvailableItems =
+            theoraticalAvailableItems - unavailableCount;
+          const averageCost =
+            inventoryAvailability.find(
+              (item) => item.equipmentId === equipment.id,
+            )?.avgCost ?? 0;
+
+          //this causes the equipment loan limit to take higher precedence than the general settings
+          if (equipment.loanLimit !== 0) {
+            if (actualAvailableItems > equipment.loanLimit) {
+              loanLimit = equipment.loanLimit;
+            } else {
+              loanLimit = actualAvailableItems;
+            }
+          } else if (loanLimitPrice !== 0) {
+            if (averageCost >= loanLimitPrice) {
+              if (actualAvailableItems >= 1) loanLimit = 1;
+              else loanLimit = 0;
+            } else {
+              loanLimit = actualAvailableItems;
+            }
+          } else {
+            loanLimit = actualAvailableItems;
+          }
+          return {
+            equipmentId: equipment.id,
+            itemDescription: equipment.name,
+            category: equipment.categoryName,
+            subCategory: equipment.subCategoryName,
+            quantityAvailable: loanLimit,
+            quantitySelected: 1,
+          };
+        });
+        return data;
+        // const data = db
+        //   .selectFrom("Equipment as e")
+        //   .leftJoin(
+        //     db
+        //       .selectFrom("Inventory")
+        //       .select("equipmentId")
+        //       .select(sql`COUNT(*)`.as("count"))
+        //       .groupBy("equipmentId")
+        //       .distinctOn("equipmentId")
+        //       .as("i"),
+        //     "e.id",
+        //     "i.equipmentId",
+        //   )
+        //   .leftJoin("LoanItem as li", "e.id", "li.equipmentId")
+        //   .leftJoin(
+        //     "EquipmentOnCourses",
+        //     "EquipmentOnCourses.equipmentId",
+        //     "e.id",
+        //   )
+        //   .leftJoin("SubCategory", "e.subCategoryId", "SubCategory.id")
+        //   .leftJoin("Category", "SubCategory.categoryId", "Category.id")
+        //   .select([
+        //     "e.id as equipmentId",
+        //     "e.name as itemDescription",
+        //     "Category.name as category",
+        //     "SubCategory.name as subCategory",
+        //     sql<number>`CAST(COALESCE(SUM(i.count), 0) - COALESCE(SUM(CASE WHEN li.status IS NOT NULL AND li.status NOT IN ('RETURNED', 'REQUEST_COLLECTION', 'CANCELLED') THEN 1 ELSE 0 END), 0) AS int)`.as(
+        //       "quantityAvailable",
+        //     ),
+        //     sql<number>`1`.as("quantitySelected"),
+        //   ])
+        //   .where("e.name", "ilike", `%${input.searchInput}%`)
+        //   .groupBy(["e.id", "SubCategory.id", "Category.name"])
+        //   .having(
+        //     sql`COALESCE(SUM(i.count), 0) - COALESCE(SUM(CASE WHEN li.status IS NOT NULL AND li.status NOT IN ('RETURNED', 'REQUEST_COLLECTION', 'CANCELLED') THEN 1 ELSE 0 END), 0)`,
+        //     "!=",
+        //     0,
+        //   );
+        // let results;
+        // if (referingCourseId) {
+        //   results = await data
+        //     .where("EquipmentOnCourses.courseId", "=", referingCourseId)
+        //     .execute();
+        // } else {
+        //   results = await data.execute();
+        // }
+        // console.log(results);
+        // //To Prevent category and subcategory from being NULL
+        // return results.map((equipment) => ({
+        //   ...equipment,
+        //   category: equipment.category ?? "",
+        //   subCategory: equipment.subCategory ?? "",
+        // }));
       } catch (err) {
         console.log(err);
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
@@ -246,30 +354,6 @@ export const loanRequestRouter = createTRPCRouter({
           .where("Loan.approverId", "=", ctx.user.id)
           .where("Loan.status", "=", "PENDING_APPROVAL")
           .execute();
-
-        // loan.findMany({
-        //   where: {
-        //     approvingLecturerId: ctx.user.id,
-        //     status: "PENDING_APPROVAL",
-        //   },
-        //   include: {
-        //     loanedBy: {
-        //       select: {
-        //         name: true,
-        //       },
-        //     },
-        //     approvingLecturer: { select: { name: true } },
-        //     loanItems: {
-        //       select: {
-        //         equipment: {
-        //           select: {
-        //             name: true,
-        //           },
-        //         },
-        //       },
-        //     },
-        //   },
-        // });
 
         return userApprovalManagementLoanRequests;
       } catch (err) {
@@ -1321,5 +1405,75 @@ export const loanRequestRouter = createTRPCRouter({
         }
       });
       return true;
+    }),
+  searchLoans: protectedProcedure
+    .input(z.object({ searchInput: z.string().min(1) }))
+    .mutation(async ({ ctx, input }) => {
+      try {
+        const loansForReturn = await ctx.db
+          .selectFrom("Loan")
+          .leftJoin("User as b", "b.id", "Loan.loanedById")
+          .selectAll("Loan")
+          .select((eb) => [
+            jsonObjectFrom(
+              eb
+                .selectFrom("User")
+                .select("User.name")
+                .whereRef("Loan.loanedById", "=", "User.id"),
+            ).as("loanedBy"),
+            jsonObjectFrom(
+              eb
+                .selectFrom("User")
+                .select("User.name")
+                .whereRef("Loan.approvedById", "=", "User.id"),
+            ).as("approvedBy"),
+            jsonObjectFrom(
+              eb
+                .selectFrom("User")
+                .select("User.name")
+                .whereRef("Loan.preparedById", "=", "User.id"),
+            ).as("preparedBy"),
+            jsonObjectFrom(
+              eb
+                .selectFrom("User")
+                .select("User.name")
+                .whereRef("Loan.issuedById", "=", "User.id"),
+            ).as("issuedBy"),
+            jsonObjectFrom(
+              eb
+                .selectFrom("User")
+                .select("User.name")
+                .whereRef("Loan.returnedToId", "=", "User.id"),
+            ).as("returnedTo"),
+            eb
+              .selectFrom("Waiver")
+              .whereRef("Waiver.loanId", "=", "Loan.id")
+              .select("Waiver.id")
+              .as("waiverId"),
+          ])
+          .where((eb) =>
+            eb.or([
+              eb("Loan.loanId", "ilike", `%${input.searchInput}%`),
+              eb("b.name", "ilike", `%${input.searchInput}%`),
+            ]),
+          )
+          .execute();
+
+        return loansForReturn.map((loan) => {
+          if (
+            loan.status === "COLLECTED" ||
+            (loan.status === "PARTIAL_RETURN" && loan.dueDate < new Date())
+          ) {
+            return {
+              ...loan,
+              status: "OVERDUE",
+            };
+          }
+          return loan;
+        });
+      } catch (err) {
+        console.log(err);
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      }
     }),
 });

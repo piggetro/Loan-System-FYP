@@ -54,7 +54,7 @@ export const userRouter = createTRPCRouter({
           ),
         ])
         .where("loanedById", "=", ctx.user.id)
-        .where("status", "=", "OVERDUE")
+        // .where("status", "=", "OVERDUE")
         .execute();
     } catch (err) {
       console.log(err);

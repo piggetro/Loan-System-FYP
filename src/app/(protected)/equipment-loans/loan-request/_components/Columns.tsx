@@ -44,6 +44,13 @@ export const equipmentColumns = (
     header: () => <div className="text-center">Quantity</div>,
     cell: ({ row }) => {
       const [value, setValue] = useState<number>(row.original.quantitySelected);
+      if (row.original.quantityAvailable === 0) {
+        return (
+          <div className="flex h-10 items-center justify-center">
+            <p>Item Unavailable</p>
+          </div>
+        );
+      }
       return (
         <div className="flex h-6 justify-center text-center font-medium text-gray-500">
           <div
@@ -79,17 +86,19 @@ export const equipmentColumns = (
     accessorKey: "addItem",
     header: "",
     cell: ({ row }) => {
-      return (
-        <div className="flex justify-end">
-          <Button
-            onClick={() => {
-              setAddedEquipment(row.original);
-            }}
-          >
-            Add Item
-          </Button>
-        </div>
-      );
+      if (row.original.quantityAvailable !== 0) {
+        return (
+          <div className="flex justify-end">
+            <Button
+              onClick={() => {
+                setAddedEquipment(row.original);
+              }}
+            >
+              Add Item
+            </Button>
+          </div>
+        );
+      }
     },
   },
 ];
