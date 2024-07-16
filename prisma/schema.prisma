@@ -53,7 +53,7 @@ model User {
     accessRightsGrantedBy UserAccessRights[] @relation("UserAccessRights_GrantedBy")
     session               Session[]
     Loan                  Loan[]
-    WaiverRequest         WaiverRequest[]
+    Waiver                Waiver[]
 }
 
 model VerificationToken {
@@ -91,7 +91,7 @@ model Equipment {
     checklist     String?
     course        EquipmentOnCourses[]
     active        Boolean
-    loanLimit   Int
+    loanLimit     Int
 }
 
 model Inventory {
@@ -168,7 +168,8 @@ model LoanItem {
     loanedInventory Inventory?         @relation(fields: [inventoryId], references: [id], onDelete: SetNull)
     inventoryId     String?
     status          LoanedItemsStatus?
-    waiver          Waiver[]
+    Waiver          Waiver?            @relation(fields: [waiverId], references: [id])
+    waiverId        String?
 }
 
 enum LoanedItemsStatus {
@@ -184,27 +185,18 @@ enum LoanedItemsStatus {
 }
 
 model Waiver {
-    id           String             @id @default(cuid())
-    loan         Loan               @relation(fields: [loanId], references: [id])
-    loanId       String
-    loanItems    LoanItem[]
-    waiveRequest WaiverRequest[]
-    remarks      String?
-    dateIssued   DateTime           @default(now())
-    dateUpdated  DateTime?
-    status       WaiveRequestStatus
-}
-
-model WaiverRequest {
-    id         String             @id @default(cuid())
-    createdAt  DateTime
-    updatedAt  DateTime?
-    reason     String
-    status     WaiveRequestStatus
-    approvedBy User?              @relation(fields: [userId], references: [id])
-    Waiver     Waiver?            @relation(fields: [waiverId], references: [id])
-    waiverId   String?
-    userId     String?
+    id            String             @id @default(cuid())
+    loan          Loan               @relation(fields: [loanId], references: [id])
+    loanId        String
+    loanItems     LoanItem[]
+    waiveRequest  String?
+    remarks       String?
+    dateIssued    DateTime           @default(now())
+    dateUpdated   DateTime?
+    dateSubmitted DateTime?
+    updatedBy     User?              @relation(fields: [updatedById], references: [id])
+    status        WaiveRequestStatus
+    updatedById   String?
 }
 
 enum WaiveRequestStatus {
@@ -301,5 +293,5 @@ model GeneralSettings {
     endRequestForCollection   String
     voidLoanNumberOfDays      Int
     voidLoanTiming            String
-    loanLimitPrice Int
+    loanLimitPrice            Int
 }

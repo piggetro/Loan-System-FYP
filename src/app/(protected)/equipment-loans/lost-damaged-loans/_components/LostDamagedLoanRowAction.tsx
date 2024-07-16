@@ -14,11 +14,13 @@ import { api } from "@/trpc/react";
 interface LostDamagedLoanTableRowActionsProps<TData> {
   row: Row<TData>;
   onView: (value: TData) => void;
+  onViewWaiver: (value: TData) => void;
 }
 
 export const LostDamagedLoanTableRowActionsProps = <TData,>({
   row,
   onView,
+  onViewWaiver,
 }: LostDamagedLoanTableRowActionsProps<TData>) => {
   return (
     <DropdownMenu>
@@ -36,6 +38,13 @@ export const LostDamagedLoanTableRowActionsProps = <TData,>({
           }}
         >
           View Loan
+        </DropdownMenuItem>{" "}
+        <DropdownMenuItem
+          onClick={() => {
+            onViewWaiver(row.original);
+          }}
+        >
+          View Waiver
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

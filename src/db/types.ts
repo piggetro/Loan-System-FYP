@@ -92,10 +92,7 @@ export type LoanItem = {
     equipmentId: string | null;
     inventoryId: string | null;
     status: LoanedItemsStatus | null;
-};
-export type LoanItemToWaiver = {
-    A: string;
-    B: string;
+    waiverId: string | null;
 };
 export type OrganizationUnit = {
     id: string;
@@ -154,22 +151,15 @@ export type VerificationToken = {
 export type Waiver = {
     id: string;
     loanId: string;
+    waiveRequest: string | null;
     remarks: string | null;
     dateIssued: Generated<Timestamp>;
     dateUpdated: Timestamp | null;
+    dateSubmitted: Timestamp | null;
     status: WaiveRequestStatus;
-};
-export type WaiverRequest = {
-    id: string;
-    createdAt: Timestamp;
-    updatedAt: Timestamp | null;
-    reason: string;
-    status: WaiveRequestStatus;
-    waiverId: string | null;
-    userId: string | null;
+    updatedById: string | null;
 };
 export type DB = {
-    _LoanItemToWaiver: LoanItemToWaiver;
     AccessRights: AccessRights;
     AccessRightsOnRoles: AccessRightsOnRoles;
     Category: Category;
@@ -191,5 +181,4 @@ export type DB = {
     UserAccessRights: UserAccessRights;
     VerificationToken: VerificationToken;
     Waiver: Waiver;
-    WaiverRequest: WaiverRequest;
 };

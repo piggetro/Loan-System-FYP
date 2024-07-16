@@ -6,21 +6,18 @@ import { type WaiveRequestStatus } from "@/db/enums";
 
 export interface WaiverType {
   id: string;
-  status: WaiveRequestStatus;
   loanId: string;
-  reason: string | null;
   remarks: string | null;
+  status: WaiveRequestStatus;
   dateIssued: Date;
-  approvedByUserId: string | null;
-  loanItemId: string;
+  waiveRequest: string | null;
+  dateUpdated: Date | null;
   loanedBy: string | null;
   loan_id: string | null;
 }
 
 const WaiverPage = async () => {
-  const pendingWaivers = await api.waiver.getPendingWaiver();
-
-  const waiverHistory = await api.waiver.getWaiverHistory();
+  const waivers = await api.waiver.getWaivers();
 
   const allSemesters = await api.loan.getSemesters();
 
@@ -30,11 +27,7 @@ const WaiverPage = async () => {
         pathName="Loan Management / Waiver"
         pageName="Waiver"
       />
-      <WaiverComponent
-        loanRequests={pendingWaivers}
-        loanRequestHistory={waiverHistory}
-        allSemesters={allSemesters}
-      />
+      <WaiverComponent loanRequests={waivers} allSemesters={allSemesters} />
     </div>
   );
 };

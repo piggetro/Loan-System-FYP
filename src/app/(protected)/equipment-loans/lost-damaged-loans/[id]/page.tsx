@@ -20,7 +20,7 @@ const LostBrokenLoanDetailsPage = async ({ params }: pageProps) => {
   return (
     <div className="">
       <TopHeaderComponent
-        pageName="Lost / Broken Loan"
+        pageName="Waiver"
         pathName="Equipment Loans / Lost & Broken Loan"
       />
       <LostBrokenLoanDetails id={params.id} />

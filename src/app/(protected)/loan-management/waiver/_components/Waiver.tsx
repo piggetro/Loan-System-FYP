@@ -19,9 +19,8 @@ import {
 
 const WaiverComponent: React.FC<{
   loanRequests: WaiverType[];
-  loanRequestHistory: WaiverType[];
   allSemesters: { name: string }[];
-}> = ({ loanRequests, loanRequestHistory, allSemesters }) => {
+}> = ({ loanRequests, allSemesters }) => {
   const [loanRequestsData, setLoanRequestsData] =
     useState<WaiverType[]>(loanRequests);
   const router = useRouter();
@@ -36,8 +35,13 @@ const WaiverComponent: React.FC<{
     [],
   );
   return (
-    <div className="bg-white">
-      <Tabs defaultValue="loanApprovals" className="mt-4">
+    <div className="rounded-lg bg-white p-5 shadow-lg">
+      <WaiverTable
+        data={loanRequestsData}
+        columns={TableColumns}
+        allSemesters={allSemesters}
+      />
+      {/* <Tabs defaultValue="loanApprovals" className="mt-4">
         <div className="mt-2 rounded-md bg-white px-6 py-4">
           <TabsList className="mb-2">
             <TabsTrigger value="loanApprovals">Pending Waivers</TabsTrigger>
@@ -58,7 +62,7 @@ const WaiverComponent: React.FC<{
             />
           </TabsContent>
         </div>
-      </Tabs>
+      </Tabs> */}
     </div>
   );
 };

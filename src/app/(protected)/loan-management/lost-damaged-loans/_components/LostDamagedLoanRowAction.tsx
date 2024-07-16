@@ -34,7 +34,7 @@ export const LostDamagedRowActionsProps = <TData,>({
             onView(row.original);
           }}
         >
-          View Waive Request
+          View Loan
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

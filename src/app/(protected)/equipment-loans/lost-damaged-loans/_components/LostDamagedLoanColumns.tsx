@@ -6,10 +6,12 @@ import { LostDamagedLoanTableRowActionsProps } from "./LostDamagedLoanRowAction"
 
 interface LostDamagedLoanProps {
   onView: (value: LostDamagedLoanType) => void;
+  onViewWaiver: (value: LostDamagedLoanType) => void;
 }
 
 export const LostDamagedLoanColumns = ({
   onView,
+  onViewWaiver,
 }: LostDamagedLoanProps): ColumnDef<LostDamagedLoanType>[] => [
   {
     accessorKey: "loanId",
@@ -59,7 +61,11 @@ export const LostDamagedLoanColumns = ({
   {
     id: "actions",
     cell: ({ row }) => (
-      <LostDamagedLoanTableRowActionsProps row={row} onView={onView} />
+      <LostDamagedLoanTableRowActionsProps
+        onViewWaiver={onViewWaiver}
+        row={row}
+        onView={onView}
+      />
     ),
   },
 ];

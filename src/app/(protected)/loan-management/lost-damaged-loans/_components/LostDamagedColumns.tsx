@@ -49,7 +49,7 @@ export const LostDamagedColumns = ({
       <div className="grow">
         {row.getValue("remarks") === ""
           ? "No Outstanding Remarks"
-          : row.getValue("remarks")}
+          : toStartCase(row.getValue("remarks"))}
       </div>
     ),
   },

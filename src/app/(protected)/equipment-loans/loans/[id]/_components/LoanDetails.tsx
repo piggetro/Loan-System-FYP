@@ -7,8 +7,9 @@ import { api } from "@/trpc/react";
 import LoanDetailsTable from "./LoanDetailsTable";
 import LoanActions from "./LoanActions";
 import Image from "next/image";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useToast } from "@/app/_components/ui/use-toast";
+import { useRouter, useSearchParams } from "next/navigation";
 import CollectionLoanDialog from "@/app/(protected)/loan-management/_components/CollectionLoanDialog";
 import {
   AlertDialog,
@@ -22,10 +23,17 @@ import {
 } from "@/app/_components/ui/alert-dialog";
 import PreparationLoanDialog from "@/app/(protected)/loan-management/_components/PreparationLoanDialog";
 import ReturnLoanDialog from "@/app/(protected)/loan-management/_components/ReturnLoanDialog";
+import { Button } from "@/app/_components/ui/button";
+import { Dialog, DialogContent } from "@/app/_components/ui/dialog";
+import OutstandingItemDialog from "./OutstandingItemsDialog";
 
 const LoanDetails: React.FC<{
   id: string;
 }> = ({ id }) => {
+  //Check if the outstanding modal needs to be open
+  const searchParams = useSearchParams();
+  const outsandingItemsOptionFromURL = searchParams.get("ooid");
+  const router = useRouter();
   //For Action Button Loading States
   const [isPendingRejectLoan, setIsPendingRejectLoan] =
     useState<boolean>(false);
@@ -40,6 +48,16 @@ const LoanDetails: React.FC<{
     useState<boolean>(false);
   const [openReturnDialog, setOpenReturnDialog] = useState<boolean>(false);
   const [openRequestDialog, setOpenRequestDialog] = useState<boolean>(false);
+  const [openOutstandingItemsDialog, setOpenOutstandingItemsDialog] =
+    useState<boolean>(false);
+  useEffect(() => {
+    if (outsandingItemsOptionFromURL === "true") {
+      setOpenOutstandingItemsDialog(true);
+    }
+  }, []);
+  useEffect(() => {
+    if (openOutstandingItemsDialog === false) refresh();
+  }, [openOutstandingItemsDialog]);
 
   const {
     refetch: userAccessRightsRefetch,
@@ -60,7 +78,6 @@ const LoanDetails: React.FC<{
       console.log(error);
     });
   }
-
   const onApprove = useCallback(() => {
     setIsPendingApproveLoan(true);
     approveRequest
@@ -133,7 +150,7 @@ const LoanDetails: React.FC<{
   const onReturnLoan = useCallback(() => {
     setOpenReturnDialog(true);
   }, []);
-  if (isFetching || !data) {
+  if (!data) {
     return (
       <div className="w-7/8 h-full  rounded-lg bg-white p-5 shadow-lg">
         <Skeleton className="h-7 w-1/2" />
@@ -145,9 +162,24 @@ const LoanDetails: React.FC<{
       </div>
     );
   }
-  console.log(data);
+
   return (
     <div className="w-full">
+      <Dialog
+        open={openOutstandingItemsDialog}
+        onOpenChange={setOpenOutstandingItemsDialog}
+      >
+        <DialogContent className=" h-3/4 w-11/12 max-w-none">
+          <OutstandingItemDialog
+            outstandingItems={data.outstandingItems}
+            id={data.id}
+            loanId={data.loanId}
+            refresh={() => {
+              refresh();
+            }}
+          />
+        </DialogContent>
+      </Dialog>
       <AlertDialog open={openCollectLoanDialog}>
         <AlertDialogContent className=" h-3/4 w-11/12 max-w-none">
           <CollectionLoanDialog
@@ -219,7 +251,7 @@ const LoanDetails: React.FC<{
         <div className="text-xl font-bold">{data.loanId}</div>
         <div className="mt-4 text-sm">
           <p className="flex">
-            <span className="font-bold">Loaner:&nbsp;</span>
+            <span className="font-bold">Borrower:&nbsp;</span>
             {!data.loanedById ? "Deleted Account" : data.loanedByName}
           </p>
           <p className="flex">
@@ -267,13 +299,69 @@ const LoanDetails: React.FC<{
             {new Date(data.dueDate).toLocaleDateString()}
           </p>
         </div>
+        <div className="flex w-full justify-end gap-3">
+          {userAccessRights?.includes("Waiver Option") ? (
+            <Button
+              onClick={() => {
+                router.push(`/equipment-loans/lost-damaged-loans/${id}`);
+              }}
+            >
+              View Waiver
+            </Button>
+          ) : null}
+          {userAccessRights?.includes("Admin Waiver Option") ? (
+            <Button
+              onClick={() => {
+                router.push(`/loan-management/waiver/${id}`);
+              }}
+            >
+              View Waiver
+            </Button>
+          ) : null}
+
+          {userAccessRights?.includes("Lost/Damaged Loans") ? (
+            <Button
+              onClick={() => {
+                setOpenOutstandingItemsDialog(true);
+              }}
+            >
+              Outstanding Items
+            </Button>
+          ) : null}
+        </div>
         <div className="mt-7">
-          <LoanDetailsTable loanData={data} />
+          <LoanDetailsTable
+            loanData={data}
+            outstandingItems={data.outstandingItems.length === 0 ? false : true}
+          />
         </div>
 
-        {userAccessRights?.includes("Collection") && data.signature !== null ? (
+        {(userAccessRights?.includes("Collection") ??
+          userAccessRights?.includes("usersOwnLoan")) &&
+        data.signature !== null ? (
           <div className="mt-5 flex flex-col items-center">
-            <p className="font-semibold">Loaner&apos;s Signature</p>
+            <p className=" font-semibold">Rules and Regulations</p>
+            <p>
+              1. In the event of loss or irreparable damages, borrowers will be
+              required to replace the equipment
+              <br />
+              2. Borrowers will be required to pay for the full cost of any
+              repairs required for damaged equipment.
+              <br />
+              3. All equipment must be returned on the due date
+              <br />
+              4. Please present payment receipt at SOC IT Services for verifying
+              and document purposes.
+            </p>
+            <div className="mt-10 flex flex-col items-center">
+              <div className="font-bold">
+                I, {data.loanedByName}, acknowledge receipt of the above items.
+              </div>
+              <div>
+                The Effective Date for the above items is&nbsp;
+                <b>{new Date().toLocaleDateString()}</b>
+              </div>
+            </div>
             <Image
               src={data.signature}
               width={400}

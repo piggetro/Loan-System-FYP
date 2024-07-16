@@ -225,14 +225,14 @@ const ReturnLoanDialog: React.FC<{
                     }}
                   >
                     <SelectTrigger className="w-[180px]">
-                      <SelectValue placeholder="Select a fruit" />
+                      <SelectValue placeholder="Select a status" />
                     </SelectTrigger>
 
                     <SelectContent>
                       <SelectItem value="COLLECTED">Not Returned</SelectItem>
                       <SelectItem value="RETURNED">Returned</SelectItem>
                       <SelectItem value="LOST">Lost</SelectItem>
-                      <SelectItem value="BROKEN">Broken</SelectItem>
+                      <SelectItem value="DAMAGED">Damaged</SelectItem>
                       <SelectItem value="MISSING_CHECKLIST_ITEMS">
                         Penalty For Checklist
                       </SelectItem>

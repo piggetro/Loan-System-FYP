@@ -976,10 +976,12 @@ export const loanRequestRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       try {
         let partialReturn = false;
-        let outstandingItems = false;
+        const outstandingItems: string[] = [];
+        let outstandingItemsRemarks = "";
 
         return await ctx.db.transaction().execute(async (trx) => {
           for (const loanItem of input.loanItemsToReturn) {
+            console.log(loanItem);
             if (loanItem.disabled) continue;
             let loanItemStatus:
               | "RETURNED"
@@ -993,48 +995,29 @@ export const loanRequestRouter = createTRPCRouter({
               | "LOST"
               | "LOANED"
               | "MISSING_CHECKLIST_ITEMS" = "AVAILABLE";
+
             switch (loanItem.returned) {
               case "LOST":
                 loanItemStatus = "LOST";
                 inventoryStatus = "LOST";
-                await trx
-                  .insertInto("Waiver")
-                  .values({
-                    id: createId(),
-                    loanId: input.id,
-                    remarks: "Lost",
-                    status: "AWAITING_REQUEST",
-                  })
-                  .execute();
-                outstandingItems = true;
+                outstandingItems.push(loanItem.loanItemId);
+                outstandingItemsRemarks === ""
+                  ? (outstandingItemsRemarks = "Lost")
+                  : (outstandingItemsRemarks += ", Lost");
                 break;
-              case "BROKEN":
+              case "DAMAGED":
                 loanItemStatus = "DAMAGED";
                 inventoryStatus = "DAMAGED";
-                await trx
-                  .insertInto("Waiver")
-                  .values({
-                    id: createId(),
-                    loanId: input.id,
-
-                    remarks: "Broken",
-                    status: "AWAITING_REQUEST",
-                  })
-                  .execute();
-                outstandingItems = true;
+                outstandingItems.push(loanItem.loanItemId);
+                outstandingItemsRemarks === ""
+                  ? (outstandingItemsRemarks = "Damaged")
+                  : (outstandingItemsRemarks += ", Damaged");
                 break;
               case "MISSING_CHECKLIST_ITEMS":
                 loanItemStatus = "MISSING_CHECKLIST_ITEMS";
                 inventoryStatus = "MISSING_CHECKLIST_ITEMS";
-                await trx
-                  .insertInto("Waiver")
-                  .values({
-                    id: createId(),
-                    loanId: input.id,
-                    remarks: `Penalty For Checklist: ${loanItem.remarks}`,
-                    status: "AWAITING_REQUEST",
-                  })
-                  .execute();
+                outstandingItems.push(loanItem.loanItemId);
+
                 await trx
                   .updateTable("Inventory")
                   .set({
@@ -1042,7 +1025,9 @@ export const loanRequestRouter = createTRPCRouter({
                   })
                   .where("Inventory.assetNumber", "=", loanItem.assetNumber)
                   .execute();
-                outstandingItems = true;
+                outstandingItemsRemarks === ""
+                  ? (outstandingItemsRemarks = `Penalty For Checklist: ${loanItem.remarks}`)
+                  : (outstandingItemsRemarks += `, Penalty For Checklist: ${loanItem.remarks}`);
                 break;
               case "COLLECTED":
                 partialReturn = true;
@@ -1060,6 +1045,46 @@ export const loanRequestRouter = createTRPCRouter({
               .set({ status: loanItemStatus })
               .where("LoanItem.id", "=", loanItem.loanItemId)
               .execute();
+          }
+          if (outstandingItems.length !== 0) {
+            //Check for existing waiver
+            const existingWaiver = await trx
+              .selectFrom("Waiver")
+              .select(["Waiver.id", "Waiver.remarks"])
+              .where("Waiver.loanId", "=", input.id)
+              .executeTakeFirst();
+
+            if (existingWaiver !== undefined) {
+              await trx
+                .updateTable("LoanItem")
+                .set({ waiverId: existingWaiver.id })
+                .where("LoanItem.id", "in", outstandingItems)
+                .execute();
+              await trx
+                .updateTable("Waiver")
+                .set({
+                  remarks:
+                    existingWaiver.remarks + ", " + outstandingItemsRemarks,
+                })
+                .where("Waiver.id", "=", existingWaiver.id)
+                .execute();
+            } else {
+              const waiverId = createId();
+              await trx
+                .insertInto("Waiver")
+                .values({
+                  id: waiverId,
+                  status: "AWAITING_REQUEST",
+                  loanId: input.id,
+                  remarks: outstandingItemsRemarks,
+                })
+                .execute();
+              await trx
+                .updateTable("LoanItem")
+                .set({ waiverId: waiverId })
+                .where("LoanItem.id", "in", outstandingItems)
+                .execute();
+            }
           }
           if (partialReturn) {
             await trx
@@ -1085,7 +1110,7 @@ export const loanRequestRouter = createTRPCRouter({
 
           return {
             title: "Loan Updated",
-            description: `Loan Status has been updated to ${partialReturn ? "Partial Return" : "Returned"} ${outstandingItems ? " With Penalty Issued for Outstanding Items" : ""}`,
+            description: `Loan Status has been updated to ${partialReturn ? "Partial Return" : "Returned"} ${outstandingItems.length !== 0 ? " With Penalty Issued for Outstanding Items" : ""}`,
             variant: "default",
           };
         });
@@ -1105,17 +1130,12 @@ export const loanRequestRouter = createTRPCRouter({
         .selectAll("Loan")
         .innerJoin("LoanItem", "Loan.id", "LoanItem.loanId")
         .select((eb) => [
-          jsonArrayFrom(
-            eb
-              .selectFrom("Waiver")
-              .whereRef("Waiver.loanId", "=", "Loan.id")
-              .selectAll(),
-          ).as("outstandingItems"),
           eb
             .selectFrom("User")
             .whereRef("User.id", "=", "Loan.loanedById")
             .select("User.name")
             .as("loanedByName"),
+          jsonArrayFrom(eb.selectFrom("LoanItem").selectAll()).as("loanItems"),
         ])
         .where("LoanItem.status", "in", [
           "DAMAGED",
@@ -1124,45 +1144,35 @@ export const loanRequestRouter = createTRPCRouter({
         ])
         .distinctOn("Loan.id")
         .execute();
-
       const data = lostAndDamagedLoan.map((item) => {
         let remarks = "";
-        const statusArray: string[] = [];
+        let lostRemarks = 0;
+        let damagedRemarks = 0;
+        let missingRemarks = 0;
 
-        item.outstandingItems.forEach((outstandingItem) => {
-          if (outstandingItem.status === "AWAITING_REQUEST") {
-            remarks += outstandingItem.remarks;
+        item.loanItems.forEach((loanitem) => {
+          if (loanitem.status === "LOST") {
+            lostRemarks++;
           }
-          statusArray.push(outstandingItem.status!);
+          if (loanitem.status === "DAMAGED") {
+            damagedRemarks++;
+          }
+          if (loanitem.status === "MISSING_CHECKLIST_ITEMS") {
+            missingRemarks++;
+          }
         });
-        let status;
-        if (
-          (statusArray.includes("AWAITING_REQUEST") &&
-            statusArray.includes("APPROVED")) ||
-          (statusArray.includes("AWAITING_REQUEST") &&
-            statusArray.includes("REJECTED")) ||
-          (statusArray.includes("AWAITING_REQUEST") &&
-            statusArray.includes("PENDING")) ||
-          statusArray.every(
-            (status) => status === "APPROVED" || status === "REJECTED",
-          )
-        ) {
-          status = "Partially Outstanding";
-        } else if (statusArray.every((status) => status === "APPROVED")) {
-          status = "Approved";
-        } else if (statusArray.every((status) => status === "PENDING")) {
-          status = "Pending";
-        } else if (
-          statusArray.every((status) => status === "AWAITING_REQUEST")
-        ) {
-          status = "Awaiting Request";
-        }
+        remarks =
+          (lostRemarks !== 0 ? lostRemarks + " x Lost " : "") +
+          (damagedRemarks !== 0 ? damagedRemarks + " x Damaged " : "") +
+          (missingRemarks !== 0
+            ? missingRemarks + " x Missing Checklist Items "
+            : "");
         return {
           id: item.id,
           loanId: item.loanId,
-          status: status,
+          status: "Outstanding Items",
           remarks: remarks,
-          name: item.loanedByName ?? "Deleted User",
+          name: item.loanedByName,
         };
       });
 
@@ -1249,4 +1259,67 @@ export const loanRequestRouter = createTRPCRouter({
       outstandingLoans: updateedOutstandingData,
     };
   }),
+  processOutstandingLoanItem: protectedProcedure
+    .input(
+      z.array(
+        z.object({
+          id: z.string().min(1),
+          loanId: z.string().min(1),
+          status: z.string().min(1),
+          equipmentId: z.string().min(1),
+          inventoryId: z.string().min(1),
+          waiverId: z.string().min(1).optional().nullable(),
+          name: z.string().min(1),
+          checklist: z.string().min(1).optional().nullable(),
+          remarks: z.string().optional().nullable(),
+          assetNumber: z.string().min(1).optional().nullable(),
+          edited: z.boolean(),
+        }),
+      ),
+    )
+    .mutation(async ({ ctx, input }) => {
+      await ctx.db.transaction().execute(async (trx) => {
+        for (const item of input) {
+          let loanItemStatus:
+            | "RETURNED"
+            | "DAMAGED"
+            | "LOST"
+            | "MISSING_CHECKLIST_ITEMS" = "RETURNED";
+          let inventoryStatus:
+            | "AVAILABLE"
+            | "DAMAGED"
+            | "LOST"
+            | "MISSING_CHECKLIST_ITEMS" = "AVAILABLE";
+          switch (item.status) {
+            case "LOST":
+              loanItemStatus = "LOST";
+              inventoryStatus = "LOST";
+              break;
+            case "DAMAGED":
+              loanItemStatus = "DAMAGED";
+              inventoryStatus = "DAMAGED";
+              break;
+            case "MISSING_CHECKLIST_ITEMS":
+              loanItemStatus = "MISSING_CHECKLIST_ITEMS";
+              inventoryStatus = "MISSING_CHECKLIST_ITEMS";
+              break;
+          }
+          if (!item.edited) continue;
+          await trx
+            .updateTable("LoanItem")
+            .set({ status: loanItemStatus })
+            .where("LoanItem.id", "=", item.id)
+            .execute();
+          await trx
+            .updateTable("Inventory")
+            .set({
+              status: inventoryStatus,
+              remarks: item.remarks,
+            })
+            .where("Inventory.id", "=", item.inventoryId)
+            .execute();
+        }
+      });
+      return true;
+    }),
 });

@@ -7,7 +7,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/app/_components/ui/table";
-import { type LoanStatus } from "@/db/enums";
+import { LoanedItemsStatus, type LoanStatus } from "@/db/enums";
 
 export interface EquipmentDetailsData {
   id: string;
@@ -45,6 +45,18 @@ export interface LoanDetailsData {
   returnedToName: string | null;
   approverName: string | null;
   loanItems: EquipmentDetailsData[];
+  outstandingItems: {
+    id: string;
+    loanId: string;
+    status: LoanedItemsStatus | null;
+    equipmentId: string | null;
+    inventoryId: string | null;
+    waiverId: string | null;
+    name: string | null;
+    checklist: string | null;
+    remarks: string | null;
+    assetNumber: string | null;
+  }[];
 }
 
 type EquipmentDataType = {
@@ -60,7 +72,8 @@ type EquipmentDataType = {
 
 const LoanDetailsTable: React.FC<{
   loanData: LoanDetailsData;
-}> = ({ loanData }) => {
+  outstandingItems: boolean;
+}> = ({ loanData, outstandingItems }) => {
   const processedLoanData: EquipmentDataType[] = [];
   loanData.loanItems.forEach((equipment) => {
     const index = processedLoanData.findIndex(
@@ -130,7 +143,15 @@ const LoanDetailsTable: React.FC<{
       </TableHeader>
       <TableBody>
         {processedLoanData.map((loanItem) => (
-          <TableRow key={loanItem.id}>
+          <TableRow
+            key={loanItem.id}
+            className={
+              loanItem.quantityReturned !== loanItem.quantityCollected &&
+              outstandingItems
+                ? "text-red-500"
+                : ""
+            }
+          >
             <TableCell className="font-medium">
               {loanItem.description}
             </TableCell>

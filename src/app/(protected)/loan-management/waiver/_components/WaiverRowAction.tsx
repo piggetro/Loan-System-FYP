@@ -35,7 +35,7 @@ export const WaiverTableRowActionsProps = <TData,>({
             onView(row.original);
           }}
         >
-          View Loan
+          View Waiver
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

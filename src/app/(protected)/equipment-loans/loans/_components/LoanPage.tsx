@@ -55,7 +55,9 @@ const LoanPage: React.FC<{
     (loan) => loan.status === "PREPARING" || loan.status === "READY",
   );
 
-  const collectedRequest = data?.filter((loan) => loan.status === "COLLECTED");
+  const collectedRequest = data?.filter(
+    (loan) => loan.status === "COLLECTED" || loan.status === "PARTIAL_RETURN",
+  );
 
   const onView = useCallback((loanDetails: LoanTableDataType) => {
     router.push(`/equipment-loans/loans/${loanDetails.id}`);

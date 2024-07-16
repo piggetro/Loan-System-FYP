@@ -5,13 +5,9 @@
 
 import { Skeleton } from "@/app/_components/ui/skeleton";
 import { api } from "@/trpc/react";
-
-import Image from "next/image";
-import { useCallback, useEffect, useState, useMemo } from "react";
+import { useEffect } from "react";
 import { useToast } from "@/app/_components/ui/use-toast";
-
 import { Button } from "@/app/_components/ui/button";
-import { type WaiveRequestStatus } from "@/db/enums";
 import { z } from "zod";
 import {
   Table,
@@ -26,49 +22,19 @@ import { useForm } from "react-hook-form";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
-  FormLabel,
   FormMessage,
 } from "@/app/_components/ui/form";
-import { Input } from "@/app/_components/ui/input";
-import WaiverRequestDialog from "./WaiverRequestDialog";
-import { Dialog } from "@/app/_components/ui/dialog";
-
-type LostBrokenLoanItemDataType = {
-  id: string;
-  status: WaiveRequestStatus;
-  remarks: string | null;
-  loanId: string;
-  dateIssued: Date;
-  loanItemId: string;
-  equipment_name: string | null;
-  equipment_checklist: string | null;
-};
-
+import { Textarea } from "@/app/_components/ui/textarea";
 const formSchema = z.object({
-  outstandingItems: z.array(
-    z.object({
-      id: z.string().min(1),
-      reason: z.string().min(5),
-      status: z.string().min(1),
-    }),
-  ),
+  //Change this for the word requirement
+  waiverRequest: z.string().min(1),
 });
 
 const LostBrokenLoanDetails: React.FC<{
   id: string;
 }> = ({ id }) => {
-  //For Action Button Loading States
-  const [isSubmitEnabled, setIsSubmitEnabled] = useState<boolean>(false);
-  const [processedLostBrokenLoanData, setProcessedLostBrokenLoanData] =
-    useState<LostBrokenLoanItemDataType[]>();
-  const [processedLostBrokenItems, setProcessedLostBrokenItems] =
-    useState<{ id: string; status: string }[]>();
-  const [openWaiverRequest, setOpenWaiverRequest] = useState<boolean>(false);
-  const [selectedWaiverId, setSelectedWaiverId] = useState<string>();
-
   const { toast } = useToast();
   //Get the Loan
   const { isFetching, refetch, data } =
@@ -78,35 +44,16 @@ const LostBrokenLoanDetails: React.FC<{
   //For Submitting Waiver
   const submitWaiver = api.waiver.proccessWaiverRequest.useMutation();
 
-  useEffect(() => {
-    if (data != undefined) {
-      setProcessedLostBrokenLoanData(data?.loanItems);
-    }
-  }, [data]);
-
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     mode: "onChange",
   });
-  useEffect(() => {
-    const proccessedData = data?.loanItems.map((item) => {
-      if (item.status === "AWAITING_REQUEST") setIsSubmitEnabled(true);
-
-      return {
-        id: item.id,
-        status: item.status,
-      };
-    });
-    setProcessedLostBrokenItems(proccessedData);
-  }, [data]);
 
   useEffect(() => {
-    if (id && data && processedLostBrokenItems) {
-      form.reset({
-        outstandingItems: processedLostBrokenItems,
-      });
+    if (data) {
+      form.setValue("waiverRequest", data.waiveRequest!);
     }
-  }, [id, data, processedLostBrokenItems, form]);
+  }, [data]);
   //To Refresh
 
   function refresh() {
@@ -118,22 +65,21 @@ const LostBrokenLoanDetails: React.FC<{
     });
   }
   function onSubmit(values: z.infer<typeof formSchema>) {
-    // submitWaiver
-    //   .mutateAsync({ outstandingItems: values.outstandingItems })
-    //   .then(() => {
-    //     toast({
-    //       title: "Successfully Submitted Waive Request",
-    //       description: "You Will be notified once Waiver has been reviewed",
-    //     });
-    //     refresh();
-    //     setIsSubmitEnabled(false);
-    //   })
-    //   .catch((error) => {
-    //     toast({ title: error });
-    //   });
+    submitWaiver
+      .mutateAsync({ id: id, waiveRequest: values.waiverRequest })
+      .then(() => {
+        toast({
+          title: "Successfully Submitted Waive Request",
+          description: "You Will be notified once Waiver has been reviewed",
+        });
+        refresh();
+      })
+      .catch((error) => {
+        toast({ title: error });
+      });
   }
 
-  if (isFetching || !data || !processedLostBrokenLoanData) {
+  if (isFetching || !data) {
     return (
       <div className="w-7/8 h-full  rounded-lg bg-white p-5 shadow-lg">
         <Skeleton className="h-7 w-1/2" />
@@ -148,18 +94,11 @@ const LostBrokenLoanDetails: React.FC<{
 
   return (
     <div className="w-full">
-      <Dialog open={openWaiverRequest} onOpenChange={setOpenWaiverRequest}>
-        <WaiverRequestDialog
-          selectedWaiverId={selectedWaiverId!}
-          waiverRequestArray={undefined}
-        />
-      </Dialog>
-
       <div className="w-7/8 h-full  rounded-lg bg-white p-5 shadow-lg">
         <div className="text-xl font-bold">{data.loanId}</div>
         <div className="mt-4 text-sm">
           <p className="flex">
-            <span className="font-bold">Loaner:&nbsp;</span>
+            <span className="font-bold">Borrower:&nbsp;</span>
             {!data.loanedBy ? "Deleted Account" : data.loanedBy?.name}
           </p>
           <p className="flex">
@@ -184,6 +123,73 @@ const LostBrokenLoanDetails: React.FC<{
             <span className="font-bold">Date Issued:&nbsp;</span>
             {new Date(data.dateIssued).toLocaleDateString()}
           </p>
+          <p suppressHydrationWarning>
+            <b>Date Updated: </b>
+            {data.dateUpdated === null
+              ? "-"
+              : data.dateUpdated.toLocaleDateString()}
+          </p>
+          <p>
+            <b>Updated By: </b>
+            {data.updatedByName?.name ?? "-"}
+          </p>
+          <p className="flex">
+            <span className="font-bold">Status:&nbsp;</span>
+            <div className="flex items-center">
+              <div
+                className={`mr-2 h-3 w-3 rounded-full ${
+                  data.status === "APPROVED"
+                    ? "bg-green-500"
+                    : data.status === "PENDING" ||
+                        data.status === "AWAITING_REQUEST"
+                      ? "bg-yellow-500"
+                      : "bg-red-500"
+                }`}
+              ></div>
+              <p> {toStartCase(data.status)}</p>
+            </div>
+          </p>
+        </div>
+        <div>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)}>
+              <p className="mb-3 mt-5 text-lg font-semibold">Waive Request</p>
+              <FormField
+                control={form.control}
+                name="waiverRequest"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <Textarea
+                        disabled={data.status !== "AWAITING_REQUEST"}
+                        {...field}
+                      />
+                    </FormControl>
+
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <p className="mt-2 text-sm font-medium">
+                <b>Submitted On: </b>
+                {data.dateSubmitted?.toLocaleString() ?? ""}
+              </p>
+              <div className="mt-10 flex justify-center">
+                <Button
+                  disabled={
+                    form.getValues("waiverRequest") === "" ||
+                    data.status !== "AWAITING_REQUEST" ||
+                    form.getValues("waiverRequest") === null ||
+                    form.getValues("waiverRequest") === undefined
+                  }
+                  type="submit"
+                >
+                  Submit
+                </Button>
+              </div>
+            </form>
+          </Form>
         </div>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
@@ -193,78 +199,36 @@ const LostBrokenLoanDetails: React.FC<{
                   <TableRow>
                     <TableHead className="w-1/4">Item Description</TableHead>
 
-                    <TableHead>Status</TableHead>
+                    <TableHead>Checklist</TableHead>
                     <TableHead>Remarks</TableHead>
-                    <TableHead className="text-center">Action</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Cost</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {processedLostBrokenLoanData.map((item, index) => (
+                  {data.loanItems.map((item) => (
                     <TableRow key={item.id}>
-                      <TableCell className="font-medium">
-                        {item.equipment_name}
-                      </TableCell>
+                      <TableCell className="font-medium">{item.name}</TableCell>
+                      <TableCell>{item.checklist}</TableCell>
+                      <TableCell>{item.remarks}</TableCell>
+                      <TableCell>$&nbsp;{item.cost ?? "-"}</TableCell>
                       <TableCell>
                         <div className="flex items-center">
                           <div
                             className={`mr-2 h-3 w-3 rounded-full ${
-                              item.status === "APPROVED"
+                              item.status === "RETURNED"
                                 ? "bg-green-500"
-                                : item.status === "PENDING" ||
-                                    item.status === "AWAITING_REQUEST"
-                                  ? "bg-yellow-500"
-                                  : "bg-red-500"
+                                : "bg-red-500"
                             }`}
                           ></div>
-                          <p> {toStartCase(item.status)}</p>
+                          <p> {toStartCase(item.status!)}</p>
                         </div>
-                      </TableCell>
-                      <TableCell>{item.remarks}</TableCell>
-
-                      <TableCell className="text-center">
-                        <Button
-                          onClick={() => {
-                            setSelectedWaiverId(item.id);
-                            setOpenWaiverRequest(true);
-                          }}
-                        >
-                          Waiver Request
-                        </Button>
-
-                        {/* <FormField
-                          control={form.control}
-                          name={`outstandingItems.${index}.reason`}
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormControl>
-                                <Input
-                                  disabled={
-                                    item.status === "APPROVED" ||
-                                    item.status === "PENDING"
-                                  }
-                                  placeholder="Enter Here"
-                                  {...field}
-                                  onClick={() => {
-                                    setIsSubmitEnabled(true);
-                                  }}
-                                />
-                              </FormControl>
-
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        /> */}
                       </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
               </Table>
             </div>
-            {/* <div className="mt-10 flex justify-center">
-              <Button disabled={!isSubmitEnabled} type="submit">
-                Submit
-              </Button>
-            </div> */}
           </form>
         </Form>
       </div>

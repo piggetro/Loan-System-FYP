@@ -25,7 +25,7 @@ export const waiverRouter = createTRPCRouter({
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
       }
     }),
-  getPendingWaiver: protectedProcedure.query(async ({ ctx }) => {
+  getWaivers: protectedProcedure.query(async ({ ctx }) => {
     try {
       const data = await ctx.db
         .selectFrom("Waiver as wr")
@@ -37,7 +37,6 @@ export const waiverRouter = createTRPCRouter({
           "Loan.loanId as loanId",
           "Loan.id as loan_id",
         ])
-        .where("wr.status", "=", "PENDING")
         .distinctOn("Loan.id")
         .execute();
 
@@ -80,25 +79,17 @@ export const waiverRouter = createTRPCRouter({
     .input(z.object({ id: z.string().min(1) }))
     .mutation(async ({ ctx, input }) => {
       try {
-        // await ctx.db.transaction().execute(async (trx) => {
-        //   const updateWaiver = await trx
-        //     .updateTable("Waiver")
-        //     .set({ status: "APPROVED" })
-        //     .where("Waiver.id", "=", input.id)
-        //     .returning("Waiver.loanItemId")
-        //     .executeTakeFirstOrThrow();
-        //   const updateLoanItem = await trx
-        //     .updateTable("LoanItem")
-        //     .set({ status: "RETURNED" })
-        //     .where("LoanItem.id", "=", updateWaiver.loanItemId)
-        //     .returning("LoanItem.inventoryId")
-        //     .executeTakeFirstOrThrow();
-        //   await trx
-        //     .updateTable("Inventory")
-        //     .set({ status: "AVAILABLE", remarks: null })
-        //     .where("Inventory.id", "=", updateLoanItem.inventoryId)
-        //     .execute();
-        // });
+        await ctx.db.transaction().execute(async (trx) => {
+          await trx
+            .updateTable("Waiver")
+            .set({
+              status: "APPROVED",
+              dateUpdated: new Date(),
+              updatedById: ctx.user.id,
+            })
+            .where("Waiver.loanId", "=", input.id)
+            .executeTakeFirstOrThrow();
+        });
 
         return true;
       } catch (err) {
@@ -112,8 +103,12 @@ export const waiverRouter = createTRPCRouter({
       try {
         const data = await ctx.db
           .updateTable("Waiver")
-          .set({ status: "REJECTED" })
-          .where("Waiver.id", "=", input.id)
+          .set({
+            status: "REJECTED",
+            dateUpdated: new Date(),
+            updatedById: ctx.user.id,
+          })
+          .where("Waiver.loanId", "=", input.id)
           .execute();
 
         return true;
@@ -131,6 +126,13 @@ export const waiverRouter = createTRPCRouter({
           .leftJoin("Loan", "Loan.id", "Waiver.loanId")
           .selectAll("Waiver")
           .select((eb) => [
+            "Loan.remarks as loanRemarks",
+            jsonObjectFrom(
+              eb
+                .selectFrom("User")
+                .select("User.name")
+                .whereRef("Waiver.updatedById", "=", "User.id"),
+            ).as("updatedByName"),
             jsonObjectFrom(
               eb
                 .selectFrom("User")
@@ -162,22 +164,24 @@ export const waiverRouter = createTRPCRouter({
                 .whereRef("Loan.returnedToId", "=", "User.id"),
             ).as("returnedTo"),
             "Loan.loanId as loanId",
-            // jsonArrayFrom(
-            //   eb
-            //     .selectFrom("Waiver")
-            //     .leftJoin("LoanItem", "LoanItem.id", "Waiver.loanItemId")
-            //     .leftJoin("Equipment", "Equipment.id", "LoanItem.equipmentId")
-            //     .selectAll("Waiver")
-            //     .select([
-            //       "Equipment.name as equipment_name",
-            //       "Equipment.checklist as equipment_checklist",
-            //     ])
-            //     .where("Waiver.loanId", "=", input.id),
-            // ).as("loanItems") ?? "",
+            jsonArrayFrom(
+              eb
+                .selectFrom("LoanItem")
+                .leftJoin("Inventory", "Inventory.id", "LoanItem.inventoryId")
+                .leftJoin("Equipment", "LoanItem.equipmentId", "Equipment.id")
+                .whereRef("Waiver.id", "=", "LoanItem.waiverId")
+                .selectAll("LoanItem")
+                .select([
+                  "Equipment.name",
+                  "Equipment.checklist",
+                  "Inventory.remarks",
+                  "Inventory.cost",
+                ]),
+            ).as("loanItems") ?? "",
           ])
           .where("Waiver.loanId", "=", input.id)
           .executeTakeFirstOrThrow();
-
+        console.log(data);
         return data;
       } catch (err) {
         console.log(err);
@@ -188,48 +192,23 @@ export const waiverRouter = createTRPCRouter({
     .input(
       z.object({
         id: z.string().min(1),
-        reason: z.string().min(1),
+        waiveRequest: z.string().min(1),
       }),
     )
     .mutation(async ({ ctx, input }) => {
       try {
         await ctx.db.transaction().execute(async (trx) => {
           await trx
-            .insertInto("WaiverRequest")
-            .values({
-              reason: input.reason,
-              status: "PENDING",
-              createdAt: new Date(),
-              id: createId(),
-              waiverId: input.id,
-            })
-            .execute();
-          await trx
             .updateTable("Waiver")
-            .set({ status: "PENDING" })
-            .where("Waiver.id", "=", input.id)
+            .set({
+              status: "PENDING",
+              waiveRequest: input.waiveRequest,
+              dateSubmitted: new Date(),
+            })
+            .where("Waiver.loanId", "=", input.id)
             .execute();
         });
         return true;
-      } catch (err) {
-        console.log(err);
-        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
-      }
-    }),
-  getWaiverRequestByWaiverId: protectedProcedure
-    .input(
-      z.object({
-        id: z.string().min(1),
-      }),
-    )
-    .query(async ({ ctx, input }) => {
-      try {
-        const data = await ctx.db
-          .selectFrom("WaiverRequest")
-          .selectAll()
-          .where("WaiverRequest.waiverId", "=", input.id)
-          .execute();
-        return data;
       } catch (err) {
         console.log(err);
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });

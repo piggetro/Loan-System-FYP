@@ -33,40 +33,68 @@ export const loanRouter = createTRPCRouter({
         //This array to contain the strings of allowed access
         const accessRightsArray = [];
         //Queries to get access
-        const [usersAccessRights, userLoanPermission] = await Promise.all([
-          await ctx.db
-            .selectFrom("UserAccessRights")
-            .leftJoin(
-              "AccessRights",
-              "AccessRights.id",
-              "UserAccessRights.accessRightId",
-            )
-            .select("AccessRights.pageName")
-            .where("UserAccessRights.grantedUserId", "=", ctx.user.id)
-            .execute(),
-          await ctx.db
-            .selectFrom("Loan")
-            .select([
-              ctx.db
-                .selectFrom("Loan")
-                .select("Loan.id")
-                .where("Loan.approverId", "=", ctx.user.id)
-                .where("Loan.status", "=", "PENDING_APPROVAL")
-                .where("Loan.id", "=", input.id)
-                .as("userAllowedToApproveLoan"),
-              ctx.db
-                .selectFrom("Loan")
-                .select("Loan.id")
-                .where("Loan.loanedById", "=", ctx.user.id)
-                .where("Loan.id", "=", input.id)
-                .as("usersOwnLoan"),
-            ])
-            .where("Loan.id", "=", input.id)
-            .executeTakeFirst(),
-        ]);
-
+        const [usersAccessRights, userLoanPermission, loanOutstandingItems] =
+          await Promise.all([
+            await ctx.db
+              .selectFrom("UserAccessRights")
+              .leftJoin(
+                "AccessRights",
+                "AccessRights.id",
+                "UserAccessRights.accessRightId",
+              )
+              .select(["AccessRights.pageName", "AccessRights.pageLink"])
+              .where("UserAccessRights.grantedUserId", "=", ctx.user.id)
+              .execute(),
+            await ctx.db
+              .selectFrom("Loan")
+              .select([
+                ctx.db
+                  .selectFrom("Loan")
+                  .select("Loan.id")
+                  .where("Loan.approverId", "=", ctx.user.id)
+                  .where("Loan.status", "=", "PENDING_APPROVAL")
+                  .where("Loan.id", "=", input.id)
+                  .as("userAllowedToApproveLoan"),
+                ctx.db
+                  .selectFrom("Loan")
+                  .select("Loan.id")
+                  .where("Loan.loanedById", "=", ctx.user.id)
+                  .where("Loan.id", "=", input.id)
+                  .as("usersOwnLoan"),
+              ])
+              .where("Loan.id", "=", input.id)
+              .executeTakeFirst(),
+            ctx.db
+              .selectFrom("Waiver")
+              .select("id")
+              .where("Waiver.loanId", "=", input.id)
+              .execute(),
+          ]);
+        if (
+          loanOutstandingItems.length !== 0 &&
+          usersAccessRights.findIndex(
+            (accessRight) =>
+              accessRight.pageLink === "/loan-management/lost-damaged-loans",
+          ) !== -1
+        ) {
+          accessRightsArray.push("Lost/Damaged Loans");
+        }
+        if (
+          loanOutstandingItems.length !== 0 &&
+          userLoanPermission?.usersOwnLoan !== null
+        ) {
+          accessRightsArray.push("Waiver Option");
+        }
         if (userLoanPermission?.usersOwnLoan !== null) {
           accessRightsArray.push("usersOwnLoan");
+        }
+        if (
+          loanOutstandingItems.length !== 0 &&
+          usersAccessRights.findIndex(
+            (accessRight) => accessRight.pageLink === "/loan-management/waiver",
+          ) !== -1
+        ) {
+          accessRightsArray.push("Admin Waiver Option");
         }
         if (userLoanPermission?.userAllowedToApproveLoan !== null) {
           accessRightsArray.push("userAllowedToApproveLoan");
@@ -117,8 +145,24 @@ export const loanRouter = createTRPCRouter({
           .where("Loan.id", "=", input.id)
           .execute();
 
+        const outstandingItems = await ctx.db
+          .selectFrom("LoanItem")
+          .leftJoin("Equipment", "LoanItem.equipmentId", "Equipment.id")
+          .leftJoin("Inventory", "Inventory.id", "LoanItem.inventoryId")
+          .selectAll("LoanItem")
+          .select([
+            "Equipment.name",
+            "Equipment.checklist",
+            "Inventory.assetNumber",
+            "Inventory.remarks",
+          ])
+          .where("LoanItem.loanId", "=", input.id)
+          .where("LoanItem.waiverId", "is not", null)
+          .execute();
+        console.log(outstandingItems);
         const results: LoanDetailsData = {
           ...loanDetails,
+          outstandingItems: outstandingItems,
           loanItems: equipmentInLoan.map((equipment) => ({
             ...equipment,
             id: equipment.id ?? "",
@@ -276,11 +320,7 @@ export const loanRouter = createTRPCRouter({
           .selectFrom("Loan")
           .selectAll("Loan")
           .innerJoin("LoanItem", "Loan.id", "LoanItem.loanId")
-          .where("LoanItem.status", "in", [
-            "DAMAGED",
-            "LOST",
-            "MISSING_CHECKLIST_ITEMS",
-          ])
+          .where("LoanItem.waiverId", "is not", null)
           .where("Loan.id", "=", input.id)
           .distinctOn("Loan.id")
           .executeTakeFirstOrThrow();
@@ -301,6 +341,12 @@ export const loanRouter = createTRPCRouter({
             .leftJoin("Loan", "Loan.id", "Waiver.loanId")
             .selectAll("Waiver")
             .select((eb) => [
+              jsonObjectFrom(
+                eb
+                  .selectFrom("User")
+                  .select("User.name")
+                  .whereRef("Waiver.updatedById", "=", "User.id"),
+              ).as("updatedByName"),
               jsonObjectFrom(
                 eb
                   .selectFrom("User")
@@ -332,22 +378,25 @@ export const loanRouter = createTRPCRouter({
                   .whereRef("Loan.returnedToId", "=", "User.id"),
               ).as("returnedTo"),
               "Loan.loanId as loanId",
-              // jsonArrayFrom(
-              //   eb
-              //     .selectFrom("Waiver")
-              //     .leftJoin("LoanItem", "LoanItem.id", "Waiver.loanItemId")
-              //     .leftJoin("Equipment", "Equipment.id", "LoanItem.equipmentId")
-              //     .selectAll("Waiver")
-              //     .select([
-              //       "Equipment.name as equipment_name",
-              //       "Equipment.checklist as equipment_checklist",
-              //     ])
-              //     .where("Waiver.loanId", "=", input.id),
-              // ).as("loanItems") ?? "",
+              jsonArrayFrom(
+                eb
+                  .selectFrom("LoanItem")
+                  .leftJoin("Equipment", "LoanItem.equipmentId", "Equipment.id")
+                  .leftJoin("Inventory", "Inventory.id", "LoanItem.inventoryId")
+                  .selectAll("LoanItem")
+                  .select([
+                    "Equipment.name",
+                    "Equipment.checklist",
+                    "Inventory.remarks",
+                    "Inventory.cost",
+                  ])
+                  .where("LoanItem.loanId", "=", input.id)
+                  .where("LoanItem.waiverId", "is not", null),
+              ).as("loanItems") ?? "",
             ])
             .where("Waiver.loanId", "=", input.id)
             .executeTakeFirstOrThrow();
-
+          console.log(data);
           return data;
         } catch (err) {
           console.log(err);

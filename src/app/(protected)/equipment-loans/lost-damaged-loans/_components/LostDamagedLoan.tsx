@@ -18,12 +18,21 @@ const LostDamagedLoanComponent: React.FC<{
   const router = useRouter();
 
   const onView = useCallback((LostDamagedLoanDetails: LostDamagedLoanType) => {
-    router.push(
-      `/equipment-loans/lost-damaged-loans/${LostDamagedLoanDetails.id}`,
-    );
+    router.push(`/equipment-loans/loans/${LostDamagedLoanDetails.id}`);
   }, []);
+  const onViewWaiver = useCallback(
+    (LostDamagedLoanDetails: LostDamagedLoanType) => {
+      router.push(
+        `/equipment-loans/lost-damaged-loans/${LostDamagedLoanDetails.id}`,
+      );
+    },
+    [],
+  );
 
-  const TableColumns = useMemo(() => LostDamagedLoanColumns({ onView }), []);
+  const TableColumns = useMemo(
+    () => LostDamagedLoanColumns({ onView, onViewWaiver }),
+    [],
+  );
 
   return (
     <div className="rounded-md bg-white shadow-lg">

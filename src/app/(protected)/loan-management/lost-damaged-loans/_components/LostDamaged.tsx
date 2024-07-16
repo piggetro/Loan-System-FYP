@@ -11,9 +11,9 @@ import { Skeleton } from "@/app/_components/ui/skeleton";
 export interface LostDamagedLoanType {
   id: string;
   loanId: string;
-  status: string | undefined;
+  status: string;
   remarks: string;
-  name: string;
+  name: string | null;
 }
 
 const LostDamagedPage: React.FC<{
@@ -23,7 +23,7 @@ const LostDamagedPage: React.FC<{
   const router = useRouter();
 
   const onView = useCallback((loanDetails: LostDamagedLoanType) => {
-    router.push(`/loan-management/waiver/${loanDetails.id}`);
+    router.push(`/equipment-loans/loans/${loanDetails.id}?ooid=true`);
   }, []);
 
   const LostDamagedTableColumns = useMemo(
