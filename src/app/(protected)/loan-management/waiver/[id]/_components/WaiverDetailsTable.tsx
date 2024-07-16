@@ -73,7 +73,7 @@ type WaiverItemDataType = {
   name: string | null;
   checklist: string | null;
   remarks: string | null;
-  cost: number | null;
+  cost: string | null;
 };
 
 const LoanDetailsTable: React.FC<{

@@ -9,7 +9,6 @@ import { PreparationDataTable } from "./PreparationDataTable";
 import PreparationLoanDialog from "../../_components/PreparationLoanDialog";
 import { Skeleton } from "@/app/_components/ui/skeleton";
 import { useToast } from "@/app/_components/ui/use-toast";
-import { type Loan } from "@/db/types";
 import { type LoanStatus } from "@/db/enums";
 
 export interface PreparationLoanType {
@@ -24,7 +23,7 @@ export interface PreparationLoanType {
   preparedById: string | null;
   issuedById: string | null;
   returnedToId: string | null;
-  approvingLecturerId: string | null;
+  approverId: string | null;
   dateCreated: Date;
   collectionReferenceNumber: string | null;
   datePrepared: Date | null;
