@@ -35,6 +35,8 @@ export const coursesRouter = createTRPCRouter({
           "Equipment.name",
           "Category.name as category",
           "SubCategory.name as subCategory",
+          "Category.id as categoryId",
+          "SubCategory.id as subCategoryId",
         ])
         .where("Equipment.active", "=", true)
         .execute();
@@ -112,6 +114,8 @@ export const coursesRouter = createTRPCRouter({
                   "Equipment.name",
                   "Category.name as category",
                   "SubCategory.name as subCategory",
+                  "Category.id as categoryId",
+                  "SubCategory.id as subCategoryId",
                 ])
                 .where("EquipmentOnCourses.courseId", "=", input.id)
                 .where("Equipment.active", "=", true)
@@ -133,6 +137,8 @@ export const coursesRouter = createTRPCRouter({
               name: equipment.name ?? "",
               category: equipment.category ?? "",
               subCategory: equipment.subCategory ?? "",
+              categoryId: equipment.categoryId ?? "",
+              subCategoryId: equipment.subCategoryId ?? "",
             })) ?? [],
         };
       } catch (err) {
