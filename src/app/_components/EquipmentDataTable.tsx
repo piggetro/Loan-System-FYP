@@ -33,6 +33,7 @@ import {
   SelectValue,
 } from "./ui/select";
 import { api } from "@/trpc/react";
+import { Separator } from "./ui/separator";
 
 interface EquipmentDataTableProps<TData, TValue> {
   data: TData[];
@@ -45,6 +46,10 @@ export function EquipmentDataTable<TData, TValue>({
   columns,
   setSelectedEquipments,
 }: EquipmentDataTableProps<TData, TValue>) {
+  const [columnVisibility] = useState({
+    categoryId: false,
+    subCategoryId: false,
+  });
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [rowSelection, setRowSelection] = useState({});
   const [sorting, setSorting] = useState<SortingState>([]);
@@ -65,6 +70,7 @@ export function EquipmentDataTable<TData, TValue>({
       columnFilters,
       rowSelection,
       sorting,
+      columnVisibility,
     },
   });
 
@@ -115,9 +121,9 @@ export function EquipmentDataTable<TData, TValue>({
         <Select
           onValueChange={(key) => {
             if (key === "All") {
-              table.getColumn("category")?.setFilterValue("");
+              table.getColumn("categoryId")?.setFilterValue("");
             } else {
-              table.getColumn("category")?.setFilterValue(key);
+              table.getColumn("categoryId")?.setFilterValue(key);
             }
           }}
         >
@@ -131,7 +137,7 @@ export function EquipmentDataTable<TData, TValue>({
                 All
               </SelectItem>
               {categories?.map((category) => (
-                <SelectItem key={category.name} value={category.name}>
+                <SelectItem key={category.id} value={category.id}>
                   {category.name}
                 </SelectItem>
               ))}
@@ -141,9 +147,9 @@ export function EquipmentDataTable<TData, TValue>({
         <Select
           onValueChange={(key) => {
             if (key === "All") {
-              table.getColumn("subCategory")?.setFilterValue("");
+              table.getColumn("subCategoryId")?.setFilterValue("");
             } else {
-              table.getColumn("subCategory")?.setFilterValue(key);
+              table.getColumn("subCategoryId")?.setFilterValue(key);
             }
           }}
         >
@@ -156,13 +162,20 @@ export function EquipmentDataTable<TData, TValue>({
               <SelectItem key={"All"} value={"All"}>
                 All
               </SelectItem>
-              {categories?.map((category) =>
-                category.subCategory.map((subCategory) => (
-                  <SelectItem key={subCategory.name} value={subCategory.name}>
-                    {subCategory.name}
-                  </SelectItem>
-                )),
-              )}
+              <Separator className="h-0.5 bg-slate-500" />
+              {categories?.map((category) => (
+                <>
+                  <SelectGroup key={category.name}>
+                    <SelectLabel>{category.name}</SelectLabel>
+                    {category.subCategory.map((subCategory) => (
+                      <SelectItem key={subCategory.id} value={subCategory.id}>
+                        {subCategory.name}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                  <Separator className="h-0.5 bg-slate-500" />
+                </>
+              ))}
             </SelectGroup>
           </SelectContent>
         </Select>

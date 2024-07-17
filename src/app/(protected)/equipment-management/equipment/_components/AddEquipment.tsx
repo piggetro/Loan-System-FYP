@@ -22,7 +22,9 @@ import { Textarea } from "@/app/_components/ui/textarea";
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@/app/_components/ui/select";
@@ -31,6 +33,7 @@ import { Course } from "@/app/(protected)/school-admin/courses/_components/Cours
 import InventoryItemsForm, {
   InventoryItem,
 } from "@/app/_components/InventoryItemsForm";
+import { Separator } from "@/app/_components/ui/separator";
 
 interface AddEquipmentProps {
   setEquipment: React.Dispatch<React.SetStateAction<Equipment[]>>;
@@ -93,6 +96,7 @@ const AddEquipment = ({
         });
         form.reset();
         setInventoryItems([]);
+        setSelectedCategory("");
         setReset(true);
       },
       onError: (err) => {
@@ -190,15 +194,22 @@ const AddEquipment = ({
                       {categories.map(
                         (category) =>
                           (selectedCategory === category.id ||
-                            !selectedCategory) &&
-                          category.subCategory.map((subCategory) => (
-                            <SelectItem
-                              key={subCategory.id}
-                              value={subCategory.id}
-                            >
-                              {subCategory.name}
-                            </SelectItem>
-                          )),
+                            !selectedCategory) && (
+                            <>
+                              <SelectGroup key={category.name}>
+                                <SelectLabel>{category.name}</SelectLabel>
+                                {category.subCategory.map((subCategory) => (
+                                  <SelectItem
+                                    key={subCategory.id}
+                                    value={subCategory.id}
+                                  >
+                                    {subCategory.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectGroup>
+                              <Separator className="h-0.5 bg-slate-500" />
+                            </>
+                          ),
                       )}
                     </SelectContent>
                   </Select>

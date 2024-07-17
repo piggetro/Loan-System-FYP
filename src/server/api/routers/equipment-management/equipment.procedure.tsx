@@ -12,12 +12,20 @@ export const equipmentRouter = createTRPCRouter({
         .leftJoin("SubCategory", "Equipment.subCategoryId", "SubCategory.id")
         .leftJoin("Category", "SubCategory.categoryId", "Category.id")
         .leftJoin("Inventory", "Equipment.id", "Inventory.equipmentId")
-        .groupBy(["Equipment.id", "SubCategory.name", "Category.name"])
+        .groupBy([
+          "Equipment.id",
+          "SubCategory.name",
+          "Category.name",
+          "Category.id",
+          "SubCategory.id",
+        ])
         .select([
           "Equipment.id",
           "Equipment.name",
           "SubCategory.name as subCategory",
           "Category.name as category",
+          "Category.id as categoryId",
+          "SubCategory.id as subCategoryId",
           ctx.db.fn
             .count("Inventory.id")
             .filterWhere("Inventory.active", "=", true)
@@ -39,6 +47,8 @@ export const equipmentRouter = createTRPCRouter({
         ...equipment,
         subCategory: equipment.subCategory ?? "",
         category: equipment.category ?? "",
+        subCategoryId: equipment.subCategoryId ?? "",
+        categoryId: equipment.categoryId ?? "",
         totalCount: parseInt(equipment.totalCount?.toString() ?? ""),
         availableCount: parseInt(equipment.availableCount?.toString() ?? ""),
         unavailableCount: parseInt(
@@ -269,72 +279,80 @@ export const equipmentRouter = createTRPCRouter({
           .select("loanLimitPrice")
           .executeTakeFirstOrThrow();
 
-        const equipment = await ctx.db
-          .with("newEquipment", (db) =>
-            db
-              .insertInto("Equipment")
-              .values({
-                id: createId(),
-                name: input.name,
-                checklist: input.checkList,
-                subCategoryId: input.subCategory,
-                updatedAt: new Date(),
-                active: true,
-                loanLimit: averageCost > loanLimitPrice.loanLimitPrice ? 1 : 0,
-              })
-              .returning(["id", "name", "subCategoryId"]),
-          )
-          .with("equipmentDetails", (db) =>
-            db
-              .selectFrom("newEquipment")
-              .leftJoin(
-                "SubCategory",
-                "newEquipment.subCategoryId",
-                "SubCategory.id",
+        const equipment = await ctx.db.transaction().execute(async (trx) => {
+          const equipment = await trx
+            .with("newEquipment", (db) =>
+              db
+                .insertInto("Equipment")
+                .values({
+                  id: createId(),
+                  name: input.name,
+                  checklist: input.checkList,
+                  subCategoryId: input.subCategory,
+                  updatedAt: new Date(),
+                  active: true,
+                  loanLimit:
+                    averageCost > loanLimitPrice.loanLimitPrice ? 1 : 0,
+                })
+                .returning(["id", "name", "subCategoryId"]),
+            )
+            .with("equipmentDetails", (db) =>
+              db
+                .selectFrom("newEquipment")
+                .leftJoin(
+                  "SubCategory",
+                  "newEquipment.subCategoryId",
+                  "SubCategory.id",
+                )
+                .leftJoin("Category", "SubCategory.categoryId", "Category.id")
+                .select([
+                  "newEquipment.id",
+                  "newEquipment.name",
+                  "SubCategory.name as subCategory",
+                  "Category.name as category",
+                  "Category.id as categoryId",
+                  "SubCategory.id as subCategoryId",
+                ]),
+            )
+            .selectFrom("equipmentDetails")
+            .selectAll()
+            .executeTakeFirstOrThrow();
+          input.inventoryItems.length &&
+            (await trx
+              .insertInto("Inventory")
+              .values(
+                input.inventoryItems.map((item) => ({
+                  id: createId(),
+                  equipmentId: equipment.id,
+                  assetNumber: item.assetNumber,
+                  cost: item.cost.toFixed(2),
+                  status: "AVAILABLE",
+                  datePurchased: item.datePurchased,
+                  warrantyExpiry: item.warrantyExpiry,
+                  active: true,
+                })),
               )
-              .leftJoin("Category", "SubCategory.categoryId", "Category.id")
-              .select([
-                "newEquipment.id",
-                "newEquipment.name",
-                "SubCategory.name as subCategory",
-                "Category.name as category",
-              ]),
-          )
-          .selectFrom("equipmentDetails")
-          .selectAll()
-          .executeTakeFirstOrThrow();
+              .execute());
 
-        input.inventoryItems.length &&
-          (await ctx.db
-            .insertInto("Inventory")
-            .values(
-              input.inventoryItems.map((item) => ({
-                id: createId(),
-                equipmentId: equipment.id,
-                assetNumber: item.assetNumber,
-                cost: item.cost.toFixed(2),
-                status: "AVAILABLE",
-                datePurchased: item.datePurchased,
-                warrantyExpiry: item.warrantyExpiry,
-                active: true,
-              })),
-            )
-            .execute());
+          input.course.length &&
+            (await trx
+              .insertInto("EquipmentOnCourses")
+              .values(
+                input.course.map((course) => ({
+                  courseId: course,
+                  equipmentId: equipment.id,
+                })),
+              )
+              .execute());
+          return equipment;
+        });
 
-        input.course.length &&
-          (await ctx.db
-            .insertInto("EquipmentOnCourses")
-            .values(
-              input.course.map((course) => ({
-                courseId: course,
-                equipmentId: equipment.id,
-              })),
-            )
-            .execute());
         return {
           ...equipment,
           subCategory: equipment.subCategory ?? "",
           category: equipment.category ?? "",
+          subCategoryId: equipment.subCategoryId ?? "",
+          categoryId: equipment.categoryId ?? "",
           totalCount: input.inventoryItems.length,
           availableCount: input.inventoryItems.length,
           unavailableCount: 0,

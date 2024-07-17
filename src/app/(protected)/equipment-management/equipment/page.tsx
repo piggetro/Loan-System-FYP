@@ -9,7 +9,7 @@ const page = async () => {
     api.equipment.getCategories(),
     api.courses.getAllCourses(),
   ]);
-  console.log(data)
+
   return (
     <div>
       <TopHeaderComponent

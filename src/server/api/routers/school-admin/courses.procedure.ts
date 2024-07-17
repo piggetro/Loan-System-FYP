@@ -188,6 +188,8 @@ export const coursesRouter = createTRPCRouter({
             "Equipment.name",
             "Category.name as category",
             "SubCategory.name as subCategory",
+            "Category.id as categoryId",
+            "SubCategory.id as subCategoryId",
           ])
           .where("Equipment.id", "in", input.equipmentIds)
           .execute();
@@ -239,6 +241,8 @@ export const coursesRouter = createTRPCRouter({
             "Equipment.name",
             "Category.name as category",
             "SubCategory.name as subCategory",
+            "Category.id as categoryId",
+            "SubCategory.id as subCategoryId",
           ])
           .where(
             "Equipment.id",

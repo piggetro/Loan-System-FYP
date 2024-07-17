@@ -8,6 +8,8 @@ export type Equipment = {
   name: string;
   category: string | null;
   subCategory: string | null;
+  categoryId: string | null;
+  subCategoryId: string | null;
 };
 
 export const equipmentColumns = (): ColumnDef<Equipment>[] => [
@@ -42,5 +44,11 @@ export const equipmentColumns = (): ColumnDef<Equipment>[] => [
   {
     accessorKey: "subCategory",
     header: "Sub Category",
+  },
+  {
+    accessorKey: "categoryId",
+  },
+  {
+    accessorKey: "subCategoryId",
   },
 ];

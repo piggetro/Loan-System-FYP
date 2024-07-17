@@ -11,6 +11,8 @@ export type Equipment = {
   totalCount: number;
   availableCount: number;
   unavailableCount: number;
+  subCategoryId: string;
+  categoryId: string;
 };
 
 interface equipmentColumnsProps {
@@ -55,5 +57,11 @@ export const equipmentColumns = ({
         onDelete={onDelete}
       />
     ),
+  },
+  {
+    accessorKey: "categoryId",
+  },
+  {
+    accessorKey: "subCategoryId",
   },
 ];

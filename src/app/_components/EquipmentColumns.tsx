@@ -8,6 +8,8 @@ export type Equipment = {
   name: string;
   category: string | null;
   subCategory: string | null;
+  categoryId: string | null;
+  subCategoryId: string | null;
 };
 
 interface EquipmentColumnProps {
@@ -34,5 +36,11 @@ export const equipmentColumns = ({
     cell: ({ row }) => (
       <AddEquipmentDataTableRowActions row={row} onDelete={onDelete} />
     ),
+  },
+  {
+    accessorKey: "categoryId",
+  },
+  {
+    accessorKey: "subCategoryId",
   },
 ];
