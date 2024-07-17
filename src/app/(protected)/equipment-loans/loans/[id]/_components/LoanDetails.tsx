@@ -72,6 +72,7 @@ const LoanDetails: React.FC<{
   const { isFetching, refetch, data } = api.loan.getLoanById.useQuery({
     id: id,
   });
+  const { data: loanTimingData } = api.loan.getLoanTimings.useQuery();
   const rejectLoan = api.loanRequest.rejectLoanRequest.useMutation();
   function refresh() {
     refetch().catch((error) => {
@@ -197,8 +198,10 @@ const LoanDetails: React.FC<{
           <AlertDialogHeader>
             <AlertDialogTitle>Request Collection</AlertDialogTitle>
             <AlertDialogDescription>
-              Subject to Item Availability. Once Requested please proceed to
-              Classroom: _____ From _____ to _____
+              Subject to Item Availability. Once Loan is Ready for collection,
+              please collect at SOC IT Services from
+              {loanTimingData?.startTimeOfCollection} to
+              {loanTimingData?.endTimeOfCollection}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

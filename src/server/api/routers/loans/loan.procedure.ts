@@ -430,4 +430,22 @@ export const loanRouter = createTRPCRouter({
       throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
     }
   }),
+  getLoanTimings: protectedProcedure.query(async ({ ctx }) => {
+    try {
+      const loanTimings = await ctx.db
+        .selectFrom("GeneralSettings")
+        .select([
+          "GeneralSettings.startTimeOfCollection",
+          "GeneralSettings.endTimeOfCollection",
+          "GeneralSettings.endRequestForCollection",
+          "GeneralSettings.startRequestForCollection",
+        ])
+        .executeTakeFirst();
+
+      return loanTimings;
+    } catch (err) {
+      console.log(err);
+      throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+    }
+  }),
 });

@@ -41,7 +41,7 @@ export const loanRequestRouter = createTRPCRouter({
           if (user.courseId !== null) referingCourseId = user.courseId;
           else throw new Error("This Account is not linked to a Course");
         }
-        console.log(referingCourseId);
+
         const generalSettingsLimit = await db
           .selectFrom("GeneralSettings")
           .select("GeneralSettings.loanLimitPrice")
@@ -61,7 +61,8 @@ export const loanRequestRouter = createTRPCRouter({
             "Category.name as categoryName",
           ])
           .where("e.active", "=", true)
-          .where("e.name", "ilike", `%${input.searchInput}%`);
+          .where("e.name", "ilike", `%${input.searchInput}%`)
+          .distinctOn("e.id");
 
         const inventoryAvailabilityQuery = db
           .selectFrom("Inventory")
@@ -103,8 +104,8 @@ export const loanRequestRouter = createTRPCRouter({
             inventoryAvailabilityQuery.execute(),
             loanItemsUnavailableQuery.execute(),
           ]);
-        console.log(equipments);
-        const loanLimitPrice = generalSettingsLimit?.loanLimitPrice ?? 0;
+
+        // const loanLimitPrice = generalSettingsLimit?.loanLimitPrice ?? 0;
         const data = equipments.map((equipment) => {
           let loanLimit = 0;
           const theoraticalAvailableItems =
@@ -117,10 +118,10 @@ export const loanRequestRouter = createTRPCRouter({
             )?.count ?? 0;
           const actualAvailableItems =
             theoraticalAvailableItems - unavailableCount;
-          const averageCost =
-            inventoryAvailability.find(
-              (item) => item.equipmentId === equipment.id,
-            )?.avgCost ?? 0;
+          // const averageCost =
+          //   inventoryAvailability.find(
+          //     (item) => item.equipmentId === equipment.id,
+          //   )?.avgCost ?? 0;
 
           //this causes the equipment loan limit to take higher precedence than the general settings
           if (equipment.loanLimit !== 0) {
@@ -129,79 +130,28 @@ export const loanRequestRouter = createTRPCRouter({
             } else {
               loanLimit = actualAvailableItems;
             }
-          } else if (loanLimitPrice !== 0) {
-            if (averageCost >= loanLimitPrice) {
-              if (actualAvailableItems >= 1) loanLimit = 1;
-              else loanLimit = 0;
-            } else {
-              loanLimit = actualAvailableItems;
-            }
-          } else {
+          }
+          // else if (loanLimitPrice !== 0) {
+          //   if (averageCost >= loanLimitPrice) {
+          //     if (actualAvailableItems >= 1) loanLimit = 1;
+          //     else loanLimit = 0;
+          //   } else {
+          //     loanLimit = actualAvailableItems;
+          //   }
+          // }
+          else {
             loanLimit = actualAvailableItems;
           }
           return {
             equipmentId: equipment.id,
             itemDescription: equipment.name,
-            category: equipment.categoryName,
-            subCategory: equipment.subCategoryName,
+            category: equipment.categoryName ?? "",
+            subCategory: equipment.subCategoryName ?? "",
             quantityAvailable: loanLimit,
             quantitySelected: 1,
           };
         });
         return data;
-        // const data = db
-        //   .selectFrom("Equipment as e")
-        //   .leftJoin(
-        //     db
-        //       .selectFrom("Inventory")
-        //       .select("equipmentId")
-        //       .select(sql`COUNT(*)`.as("count"))
-        //       .groupBy("equipmentId")
-        //       .distinctOn("equipmentId")
-        //       .as("i"),
-        //     "e.id",
-        //     "i.equipmentId",
-        //   )
-        //   .leftJoin("LoanItem as li", "e.id", "li.equipmentId")
-        //   .leftJoin(
-        //     "EquipmentOnCourses",
-        //     "EquipmentOnCourses.equipmentId",
-        //     "e.id",
-        //   )
-        //   .leftJoin("SubCategory", "e.subCategoryId", "SubCategory.id")
-        //   .leftJoin("Category", "SubCategory.categoryId", "Category.id")
-        //   .select([
-        //     "e.id as equipmentId",
-        //     "e.name as itemDescription",
-        //     "Category.name as category",
-        //     "SubCategory.name as subCategory",
-        //     sql<number>`CAST(COALESCE(SUM(i.count), 0) - COALESCE(SUM(CASE WHEN li.status IS NOT NULL AND li.status NOT IN ('RETURNED', 'REQUEST_COLLECTION', 'CANCELLED') THEN 1 ELSE 0 END), 0) AS int)`.as(
-        //       "quantityAvailable",
-        //     ),
-        //     sql<number>`1`.as("quantitySelected"),
-        //   ])
-        //   .where("e.name", "ilike", `%${input.searchInput}%`)
-        //   .groupBy(["e.id", "SubCategory.id", "Category.name"])
-        //   .having(
-        //     sql`COALESCE(SUM(i.count), 0) - COALESCE(SUM(CASE WHEN li.status IS NOT NULL AND li.status NOT IN ('RETURNED', 'REQUEST_COLLECTION', 'CANCELLED') THEN 1 ELSE 0 END), 0)`,
-        //     "!=",
-        //     0,
-        //   );
-        // let results;
-        // if (referingCourseId) {
-        //   results = await data
-        //     .where("EquipmentOnCourses.courseId", "=", referingCourseId)
-        //     .execute();
-        // } else {
-        //   results = await data.execute();
-        // }
-        // console.log(results);
-        // //To Prevent category and subcategory from being NULL
-        // return results.map((equipment) => ({
-        //   ...equipment,
-        //   category: equipment.category ?? "",
-        //   subCategory: equipment.subCategory ?? "",
-        // }));
       } catch (err) {
         console.log(err);
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
