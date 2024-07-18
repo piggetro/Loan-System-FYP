@@ -32,6 +32,7 @@ import {
 } from "@/app/_components/ui/select";
 import { Button } from "@/app/_components/ui/button";
 import { Skeleton } from "@/app/_components/ui/skeleton";
+import { Checkbox } from "@/app/_components/ui/checkbox";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -61,7 +62,6 @@ export function TrackLoansDataTable<TData, TValue>({
     "CANCELLED",
     "RETURNED",
     "PARTIAL_RETURN",
-    "OVERDUE",
   ];
 
   const table = useReactTable({
@@ -73,6 +73,11 @@ export function TrackLoansDataTable<TData, TValue>({
     getPaginationRowModel: getPaginationRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     onRowSelectionChange: setRowSelection,
+    filterFns: {
+      overdueFilter: (row, columnId, filterValue) => {
+        return new Date(row.getValue("dueDate")) < new Date();
+      },
+    },
 
     state: {
       sorting,
@@ -148,6 +153,17 @@ export function TrackLoansDataTable<TData, TValue>({
             </SelectContent>
           </Select>
         </div>
+        {/* <div className="h-max ">
+          <p className="text-sm font-medium">Overdue Loans</p>
+          <div className="flex h-10 justify-center pt-2">
+            <Checkbox
+              onCheckedChange={(e) => {
+    
+              }}
+              className="h-5 w-5"
+            />
+          </div>
+        </div> */}
       </div>
       {searchInput === "" ? (
         <div>

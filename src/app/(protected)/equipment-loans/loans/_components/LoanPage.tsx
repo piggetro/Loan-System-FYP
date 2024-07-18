@@ -34,7 +34,7 @@ const LoanPage: React.FC<{
   const { data, refetch } = api.loan.getUsersLoans.useQuery();
   const requestCollection = api.loanRequest.requestForCollection.useMutation();
   const cancelLoan = api.loanRequest.cancelLoan.useMutation();
-
+  const { data: loanTimingData } = api.loan.getLoanTimings.useQuery();
   const { toast } = useToast();
   const router = useRouter();
   const [openCancelDialog, setOpenCancelDialog] = useState<boolean>(false);
@@ -121,11 +121,16 @@ const LoanPage: React.FC<{
           refetch().catch(() => {
             //handle error
           });
-        } else {
+        } else if (results === "UNAVAILABLE") {
           toast({
             title: "Request Collection Was Unsuccessful",
             description:
               "The Equipment that you have requested is currently unavailable.\nAll Loan Request are subject to Equipment Availability",
+          });
+        } else {
+          toast({
+            title: "Request Collection Was Unsuccessful",
+            description: `Please request during Request Collection Timing\nRequest Collection Timing is ${loanTimingData?.startRequestForCollection} to ${loanTimingData?.endRequestForCollection}`,
           });
         }
       })
@@ -185,8 +190,28 @@ const LoanPage: React.FC<{
           <AlertDialogHeader>
             <AlertDialogTitle>Request Collection</AlertDialogTitle>
             <AlertDialogDescription>
-              Subject to Item Availability. Once Requested please proceed to
-              Classroom: _____ From _____ to _____
+              You may only request for loan from&nbsp;
+              <b className="text-red-500">
+                {loanTimingData?.startRequestForCollection}
+              </b>
+              &nbsp;to&nbsp;
+              <b className="text-red-500">
+                {loanTimingData?.endRequestForCollection}
+              </b>
+              <br />
+              <br />
+              Subjected To item availability, if item if unavailable please try
+              request for collection at another time
+              <br /> <br />
+              Once Loan is Ready for collection, please collect at SOC IT
+              Services from&nbsp;
+              <b className="text-red-500">
+                {loanTimingData?.startTimeOfCollection}
+              </b>
+              &nbsp;to&nbsp;
+              <b className="text-red-500">
+                {loanTimingData?.endTimeOfCollection}
+              </b>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

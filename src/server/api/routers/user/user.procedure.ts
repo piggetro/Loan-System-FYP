@@ -32,9 +32,17 @@ export const userRouter = createTRPCRouter({
     try {
       return await ctx.db
         .selectFrom("Loan")
-        .select(["id", "loanId", "dueDate"])
-        .where("loanedById", "=", ctx.user.id)
-        .where("status", "=", "COLLECTED")
+        .leftJoin("User", "Loan.approverId", "User.id")
+        .select([
+          "Loan.id",
+          "Loan.loanId",
+          "Loan.dueDate",
+          "Loan.status",
+          "User.name",
+        ])
+        .where("Loan.loanedById", "=", ctx.user.id)
+        .where("Loan.status", "not in", ["REJECTED", "CANCELLED", "RETURNED"])
+        .where("Loan.dueDate", ">", new Date())
         .execute();
     } catch (err) {
       console.log(err);
@@ -49,12 +57,14 @@ export const userRouter = createTRPCRouter({
           "id",
           "loanId",
           "dueDate",
+          "status",
           sql<string>`DATE_PART('day', CURRENT_TIMESTAMP - "dueDate")`.as(
             "numberOfDaysDue",
           ),
         ])
         .where("loanedById", "=", ctx.user.id)
-        // .where("status", "=", "OVERDUE")
+        .where("Loan.status", "in", ["COLLECTED", "PARTIAL_RETURN"])
+        .where("Loan.dueDate", "<", new Date())
         .execute();
     } catch (err) {
       console.log(err);

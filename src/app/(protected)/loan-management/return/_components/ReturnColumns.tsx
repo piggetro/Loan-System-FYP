@@ -39,7 +39,13 @@ export const PreparationColumns = ({
     header: "Due Date",
     cell: ({ row }) => (
       <div className="" suppressHydrationWarning>
-        {new Date(row.getValue("dueDate")).toLocaleDateString()}
+        {new Date(row.getValue("dueDate")) < new Date() ? (
+          <p className="font-semibold text-red-500">
+            {new Date(row.getValue("dueDate")).toLocaleDateString()}
+          </p>
+        ) : (
+          <p>{new Date(row.getValue("dueDate")).toLocaleDateString()}</p>
+        )}
       </div>
     ),
   },

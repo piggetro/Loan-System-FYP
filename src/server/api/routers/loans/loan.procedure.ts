@@ -159,7 +159,7 @@ export const loanRouter = createTRPCRouter({
           .where("LoanItem.loanId", "=", input.id)
           .where("LoanItem.waiverId", "is not", null)
           .execute();
-        console.log(outstandingItems);
+
         const results: LoanDetailsData = {
           ...loanDetails,
           outstandingItems: outstandingItems,

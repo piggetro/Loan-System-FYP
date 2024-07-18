@@ -69,7 +69,7 @@ const LoanDetails: React.FC<{
   const approveRequest = api.loanRequest.approveLoanRequestWithId.useMutation();
   const requestCollection = api.loanRequest.requestForCollection.useMutation();
   const { toast } = useToast();
-  const { isFetching, refetch, data } = api.loan.getLoanById.useQuery({
+  const { refetch, data } = api.loan.getLoanById.useQuery({
     id: id,
   });
   const { data: loanTimingData } = api.loan.getLoanTimings.useQuery();
@@ -128,11 +128,16 @@ const LoanDetails: React.FC<{
             description: "Loan is now Preparing",
           });
           refresh();
-        } else {
+        } else if (results === "UNAVAILABLE") {
           toast({
             title: "Request Collection Was Unsuccessful",
             description:
               "The Equipment that you have requested is currently unavailable.\nAll Loan Request are subject to Equipment Availability",
+          });
+        } else {
+          toast({
+            title: "Request Collection Was Unsuccessful",
+            description: `Please request during Request Collection Timing\nRequest Collection Timing is ${loanTimingData?.startRequestForCollection} to ${loanTimingData?.endRequestForCollection}`,
           });
         }
       })
@@ -198,10 +203,28 @@ const LoanDetails: React.FC<{
           <AlertDialogHeader>
             <AlertDialogTitle>Request Collection</AlertDialogTitle>
             <AlertDialogDescription>
-              Subject to Item Availability. Once Loan is Ready for collection,
-              please collect at SOC IT Services from
-              {loanTimingData?.startTimeOfCollection} to
-              {loanTimingData?.endTimeOfCollection}
+              You may only request for loan from&nbsp;
+              <b className="text-red-500">
+                {loanTimingData?.startRequestForCollection}
+              </b>
+              &nbsp;to&nbsp;
+              <b className="text-red-500">
+                {loanTimingData?.endRequestForCollection}
+              </b>
+              <br />
+              <br />
+              Subjected To item availability, if item if unavailable please try
+              request for collection at another time
+              <br /> <br />
+              Once Loan is Ready for collection, please collect at SOC IT
+              Services from&nbsp;
+              <b className="text-red-500">
+                {loanTimingData?.startTimeOfCollection}
+              </b>
+              &nbsp;to&nbsp;
+              <b className="text-red-500">
+                {loanTimingData?.endTimeOfCollection}
+              </b>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -297,7 +320,13 @@ const LoanDetails: React.FC<{
           </p>
           <p className="flex" suppressHydrationWarning>
             <span className="font-bold">Due Date:&nbsp;</span>
-            {new Date(data.dueDate).toLocaleDateString()}
+            {new Date(data.dueDate) < new Date() ? (
+              <p className="font-semibold text-red-500">
+                {new Date(data.dueDate).toLocaleDateString()}&nbsp;(Overdue)
+              </p>
+            ) : (
+              <p> {new Date(data.dueDate).toLocaleDateString()}</p>
+            )}
           </p>
         </div>
         <div className="flex w-full justify-end gap-3">
@@ -309,8 +338,7 @@ const LoanDetails: React.FC<{
             >
               View Waiver
             </Button>
-          ) : null}
-          {userAccessRights?.includes("Admin Waiver Option") ? (
+          ) : userAccessRights?.includes("Admin Waiver Option") ? (
             <Button
               onClick={() => {
                 router.push(`/loan-management/waiver/${id}`);
@@ -327,6 +355,16 @@ const LoanDetails: React.FC<{
               }}
             >
               Outstanding Items
+              <div className="ml-2 h-5 w-5 rounded-full bg-white font-semibold text-primary">
+                {
+                  data.outstandingItems.filter(
+                    (item) =>
+                      item.status === "DAMAGED" ||
+                      item.status === "LOST" ||
+                      item.status === "MISSING_CHECKLIST_ITEMS",
+                  ).length
+                }
+              </div>
             </Button>
           ) : null}
         </div>

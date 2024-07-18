@@ -41,8 +41,22 @@ const Dashboard = ({ currentLoans, overdueLoans }: DashboardProps) => {
     <Tabs defaultValue="current" className="mt-4">
       <div className="mt-2 rounded-md bg-white px-6 py-4">
         <TabsList className="mb-2">
-          <TabsTrigger value="current">Current Loans</TabsTrigger>
-          <TabsTrigger value="overdue">Overdue Loans</TabsTrigger>
+          <TabsTrigger value="current">
+            Current Loans&nbsp;
+            {/* {currentLoans.length === 0 ? null : (
+              <div className="focus-visible::bg-white flex h-5 w-5 items-center justify-center rounded-full bg-primary font-semibold text-primary">
+                <p>{currentLoans.length}</p>
+              </div>
+            )} */}
+          </TabsTrigger>
+          <TabsTrigger value="overdue">
+            Overdue Loans&nbsp;
+            {/* {overdueLoans.length === 0 ? null : (
+              <div className="h-5 w-5 rounded-full bg-primary text-center font-semibold text-white ">
+                {overdueLoans.length}
+              </div>
+            )} */}
+          </TabsTrigger>
         </TabsList>
         <TabsContent value="current">
           <LoanDataTable data={currentLoans} columns={CurrentColumns} />

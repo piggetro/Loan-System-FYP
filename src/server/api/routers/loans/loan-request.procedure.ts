@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { TRPCError } from "@trpc/server";
 import { protectedProcedure, createTRPCRouter } from "../../trpc";
-import { z } from "zod";
+import { number, z } from "zod";
 import { db } from "@/database";
 import { sql } from "kysely";
 import { createId } from "@paralleldrive/cuid2";
@@ -42,10 +42,10 @@ export const loanRequestRouter = createTRPCRouter({
           else throw new Error("This Account is not linked to a Course");
         }
 
-        const generalSettingsLimit = await db
-          .selectFrom("GeneralSettings")
-          .select("GeneralSettings.loanLimitPrice")
-          .executeTakeFirst();
+        // const generalSettingsLimit = await db
+        //   .selectFrom("GeneralSettings")
+        //   .select("GeneralSettings.loanLimitPrice")
+        //   .executeTakeFirst();
         let equipmentsQuery = db
           .selectFrom("Equipment as e")
           .leftJoin(
@@ -73,9 +73,13 @@ export const loanRequestRouter = createTRPCRouter({
             sql<number>`AVG(cost)`.as("avgCost"),
           ])
           .groupBy("equipmentId")
-          .where("Equipment.name", "ilike", `%${input.searchInput}%`)
-          .where("Equipment.active", "=", true);
-
+          .where((eb) =>
+            eb.and([
+              eb("Equipment.name", "ilike", `%${input.searchInput}%`),
+              eb("Equipment.active", "=", true),
+              eb("Inventory.active", "=", true),
+            ]),
+          );
         const loanItemsUnavailableQuery = db
           .selectFrom("LoanItem")
           .select([
@@ -104,7 +108,6 @@ export const loanRequestRouter = createTRPCRouter({
             inventoryAvailabilityQuery.execute(),
             loanItemsUnavailableQuery.execute(),
           ]);
-
         // const loanLimitPrice = generalSettingsLimit?.loanLimitPrice ?? 0;
         const data = equipments.map((equipment) => {
           let loanLimit = 0;
@@ -450,6 +453,25 @@ export const loanRequestRouter = createTRPCRouter({
     .input(z.object({ id: z.string().min(1) }))
     .mutation(async ({ ctx, input }) => {
       try {
+        //Check if time of request is valid
+        const generalSettingsTiming = await ctx.db
+          .selectFrom("GeneralSettings")
+          .selectAll()
+          .executeTakeFirst();
+        const startTime = parseInt(
+          `${generalSettingsTiming?.startRequestForCollection.replace(/:/g, "")}00`,
+        );
+        const endTime = parseInt(
+          `${generalSettingsTiming?.endRequestForCollection.replace(/:/g, "")}00`,
+        );
+        const now = new Date();
+        const hours = now.getHours().toString().padStart(2, "0");
+        const minutes = now.getMinutes().toString().padStart(2, "0");
+        const seconds = now.getSeconds().toString().padStart(2, "0");
+        const timeNow24hr = parseInt(`${hours}${minutes}${seconds}`);
+        if (!(timeNow24hr > startTime && timeNow24hr < endTime)) {
+          return "COLLECTION TIME ERROR";
+        }
         return await ctx.db.transaction().execute(async (trx) => {
           //Getting The Loan Items Requested For That Loan
           const loanItemsRequested = await trx
@@ -467,6 +489,18 @@ export const loanRequestRouter = createTRPCRouter({
             arrayOfEquipmentIdReq.push(loanitem.equipmentId!);
           });
 
+          //Checking if equipment is enabled
+          const equipmentCheck = await trx
+            .selectFrom("Equipment")
+            .select("Equipment.id")
+            .where("Equipment.active", "=", true)
+            .where("Equipment.id", "in", arrayOfEquipmentIdReq)
+            .execute();
+
+          if (equipmentCheck.length !== arrayOfEquipmentIdReq.length) {
+            return "UNAVAILABLE";
+          }
+
           //Getting count of requested items that exist in inventory
           const inventoryAvailability = await trx
             .selectFrom("Inventory")
@@ -475,8 +509,22 @@ export const loanRequestRouter = createTRPCRouter({
               eb.fn.count<number>("Inventory.equipmentId").as("count"),
             ])
             .groupBy("Inventory.equipmentId")
-            .where("equipmentId", "in", arrayOfEquipmentIdReq)
+            .where((eb) =>
+              eb.and([
+                eb("equipmentId", "in", arrayOfEquipmentIdReq),
+                eb("Inventory.active", "=", true),
+              ]),
+            )
             .execute();
+
+          for (const loanItem of loanItemsRequested) {
+            const numberOfAvailableItems = inventoryAvailability.find(
+              (inventory) => inventory.equipmentId === loanItem.equipmentId,
+            )?.count;
+            if (numberOfAvailableItems! < loanItem.count) {
+              return "UNAVAILABLE";
+            }
+          }
 
           //Getting Count of Current Total Unavailable Equipment grouped by equipmentID
           const loanItemsUnavailable = await trx
@@ -1304,7 +1352,7 @@ export const loanRequestRouter = createTRPCRouter({
           inventoryId: z.string().min(1),
           waiverId: z.string().min(1).optional().nullable(),
           name: z.string().min(1),
-          checklist: z.string().min(1).optional().nullable(),
+          checklist: z.string().optional().nullable(),
           remarks: z.string().optional().nullable(),
           assetNumber: z.string().min(1).optional().nullable(),
           edited: z.boolean(),
@@ -1409,18 +1457,7 @@ export const loanRequestRouter = createTRPCRouter({
           )
           .execute();
 
-        return loansForReturn.map((loan) => {
-          if (
-            loan.status === "COLLECTED" ||
-            (loan.status === "PARTIAL_RETURN" && loan.dueDate < new Date())
-          ) {
-            return {
-              ...loan,
-              status: "OVERDUE",
-            };
-          }
-          return loan;
-        });
+        return loansForReturn;
       } catch (err) {
         console.log(err);
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });

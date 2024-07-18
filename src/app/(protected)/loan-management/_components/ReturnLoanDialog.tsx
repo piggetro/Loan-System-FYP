@@ -151,7 +151,7 @@ const ReturnLoanDialog: React.FC<{
           <div className="text-xl font-bold">{data.loanId}</div>
           <div className="mt-4 text-sm">
             <p className="flex">
-              <span className="font-bold">Loaner:&nbsp;</span>
+              <span className="font-bold">Borrower:&nbsp;</span>
               {data.loanedBy === null ? "Deleted User" : data.loanedBy.name}
             </p>
             <p className="flex">
@@ -175,11 +175,29 @@ const ReturnLoanDialog: React.FC<{
             </p>
             <p className="flex">
               <span className="font-bold">Loan Status:&nbsp;</span>{" "}
-              {data.status}
+              <div className="flex items-center">
+                <div
+                  className={`mr-1 h-3 w-3 rounded-full ${
+                    data.status === "COLLECTED" || data.status === "RETURNED"
+                      ? "bg-green-500"
+                      : data.status === "REJECTED" ||
+                          data.status === "CANCELLED"
+                        ? "bg-red-500"
+                        : "bg-yellow-500"
+                  }`}
+                ></div>
+                <span>{toStartCase(data.status)}</span>
+              </div>
             </p>
             <p className="flex" suppressHydrationWarning>
               <span className="font-bold">Due Date:&nbsp;</span>
-              {new Date(data.dueDate).toLocaleDateString()}
+              {new Date(data.dueDate) < new Date() ? (
+                <p className="font-semibold text-red-500">
+                  {new Date(data.dueDate).toLocaleDateString()}&nbsp;(Overdue)
+                </p>
+              ) : (
+                <p> {new Date(data.dueDate).toLocaleDateString()}</p>
+              )}
             </p>
           </div>
         </div>
@@ -319,5 +337,12 @@ const ReturnLoanDialog: React.FC<{
     </div>
   );
 };
+function toStartCase(string: string) {
+  return string
+    .replace(/_/g, " ")
+    .split(" ")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(" ");
+}
 
 export default ReturnLoanDialog;

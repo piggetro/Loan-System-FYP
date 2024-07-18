@@ -37,7 +37,13 @@ export const PreparationColumns = ({
     header: "Due Date",
     cell: ({ row }) => (
       <div className="" suppressHydrationWarning>
-        {new Date(row.getValue("dueDate")).toLocaleDateString()}
+        {new Date(row.getValue("dueDate")) < new Date() ? (
+          <p className="font-semibold text-red-500">
+            {new Date(row.getValue("dueDate")).toLocaleDateString()}
+          </p>
+        ) : (
+          <p>{new Date(row.getValue("dueDate")).toLocaleDateString()}</p>
+        )}
       </div>
     ),
   },
@@ -52,8 +58,7 @@ export const PreparationColumns = ({
             row.getValue("status") === "RETURNED"
               ? "bg-green-500"
               : row.getValue("status") === "REJECTED" ||
-                  row.getValue("status") === "CANCELLED" ||
-                  row.getValue("status") === "OVERDUE"
+                  row.getValue("status") === "CANCELLED"
                 ? "bg-red-500"
                 : "bg-yellow-500"
           }`}
