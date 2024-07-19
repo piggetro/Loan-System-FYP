@@ -76,7 +76,7 @@ const LoanRequestComponent: React.FC<{
   const router = useRouter();
   const { data: equipmentAndInventory, mutateAsync: fetchSearch } =
     api.loanRequest.getEquipmentAndInventory.useMutation();
-
+  const { data: disabledCalendarDates } = api.loan.getHolidays.useQuery();
   function addItem(itemToAdd: Inventory) {
     if (
       selectedEquipment.some(
@@ -164,21 +164,32 @@ const LoanRequestComponent: React.FC<{
     }
   }, [approverEmail]);
 
-  //debouncer
-  useEffect(() => {
+  function executeSearch() {
     setDebouncerIsLoading(true);
-    const timeout = setTimeout(() => {
-      if (searchInput !== "") {
-        fetchSearch({ searchInput: searchInput })
-          .then(() => {
-            setDebouncerIsLoading(false);
-          })
-          .catch((e) => console.log(e));
-      }
-    }, 500);
+    if (searchInput !== "") {
+      fetchSearch({ searchInput: searchInput })
+        .then(() => {
+          setDebouncerIsLoading(false);
+        })
+        .catch((e) => console.log(e));
+    }
+  }
 
-    return () => clearTimeout(timeout);
-  }, [searchInput]);
+  //debouncer
+  // useEffect(() => {
+  //   setDebouncerIsLoading(true);
+  //   const timeout = setTimeout(() => {
+  //     if (searchInput !== "") {
+  //       fetchSearch({ searchInput: searchInput })
+  //         .then(() => {
+  //           setDebouncerIsLoading(false);
+  //         })
+  //         .catch((e) => console.log(e));
+  //     }
+  //   }, 500);
+
+  //   return () => clearTimeout(timeout);
+  // }, [searchInput]);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -193,7 +204,16 @@ const LoanRequestComponent: React.FC<{
   return (
     <div className="">
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+        <form
+          onKeyDown={(event) => {
+            if (event.keyCode == 13) {
+              event.preventDefault();
+              return false;
+            }
+          }}
+          onSubmit={form.handleSubmit(onSubmit)}
+          className="space-y-8"
+        >
           <div className="w-full rounded-lg bg-white px-5 py-3 shadow-md">
             <h1 className="font-semibold">Loan Details</h1>
             <div className="mt-3 flex">
@@ -328,7 +348,16 @@ const LoanRequestComponent: React.FC<{
                                     new Date().setDate(
                                       new Date().getDate() + 365,
                                     ),
-                                  )
+                                  ) ||
+                                disabledCalendarDates!.some(
+                                  (disabledDate) =>
+                                    date.getFullYear() ===
+                                      disabledDate.startDate.getFullYear() &&
+                                    date.getMonth() ===
+                                      disabledDate.startDate.getMonth() &&
+                                    date.getDate() ===
+                                      disabledDate.startDate.getDate(),
+                                )
                               }
                               initialFocus
                             />
@@ -350,6 +379,11 @@ const LoanRequestComponent: React.FC<{
                 value={searchInput}
                 onChange={(event) => {
                   setSearchInput(event.target.value);
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    executeSearch();
+                  }
                 }}
               />
             </div>

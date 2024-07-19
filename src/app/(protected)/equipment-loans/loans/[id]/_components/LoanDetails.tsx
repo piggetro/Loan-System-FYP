@@ -355,7 +355,18 @@ const LoanDetails: React.FC<{
               }}
             >
               Outstanding Items
-              <div className="ml-2 h-5 w-5 rounded-full bg-white font-semibold text-primary">
+              <div
+                className={`ml-2 h-5 w-5 ${
+                  data.outstandingItems.filter(
+                    (item) =>
+                      item.status === "DAMAGED" ||
+                      item.status === "LOST" ||
+                      item.status === "MISSING_CHECKLIST_ITEMS",
+                  ).length === 0
+                    ? "hidden"
+                    : ""
+                } rounded-full bg-white font-semibold text-primary`}
+              >
                 {
                   data.outstandingItems.filter(
                     (item) =>

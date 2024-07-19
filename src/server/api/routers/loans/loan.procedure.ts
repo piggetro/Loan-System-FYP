@@ -448,4 +448,17 @@ export const loanRouter = createTRPCRouter({
       throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
     }
   }),
+  getHolidays: protectedProcedure.query(async ({ ctx }) => {
+    try {
+      const holidays = await ctx.db
+        .selectFrom("Holiday")
+        .select(["Holiday.startDate", "Holiday.endDate"])
+        .execute();
+
+      return holidays;
+    } catch (err) {
+      console.log(err);
+      throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+    }
+  }),
 });
