@@ -63,7 +63,7 @@ const UnableToLoanComponent: React.FC<{
                   <TableCell className="w-[200px] text-center">
                     <Button
                       onClick={() => {
-                        router.push(`/equipment-loans/lost-damaged-loans`);
+                        router.push(`/equipment-loans/overdue-loans`);
                       }}
                     >
                       View Overdue Loans

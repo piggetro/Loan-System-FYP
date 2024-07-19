@@ -179,26 +179,9 @@ const OutstandingItemDialog: React.FC<{
 
                     <SelectContent>
                       <SelectItem value="RETURNED">Returned</SelectItem>
-                      <SelectItem
-                        className={item.status === "LOST" ? "" : "hidden"}
-                        value="LOST"
-                      >
-                        Lost
-                      </SelectItem>
-                      <SelectItem
-                        className={item.status === "DAMAGED" ? "" : "hidden"}
-                        value="DAMAGED"
-                      >
-                        Damaged
-                      </SelectItem>
-                      <SelectItem
-                        className={
-                          item.status === "MISSING_CHECKLIST_ITEMS"
-                            ? ""
-                            : "hidden"
-                        }
-                        value="MISSING_CHECKLIST_ITEMS"
-                      >
+                      <SelectItem value="LOST">Lost</SelectItem>
+                      <SelectItem value="DAMAGED">Damaged</SelectItem>
+                      <SelectItem value="MISSING_CHECKLIST_ITEMS">
                         Penalty For Checklist
                       </SelectItem>
                     </SelectContent>
