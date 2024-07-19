@@ -405,7 +405,7 @@ const LoanDetails: React.FC<{
               src={data.signature}
               width={400}
               height={200}
-              alt="Loaner's Signature"
+              alt="Borrower's Signature"
             />
           </div>
         ) : null}

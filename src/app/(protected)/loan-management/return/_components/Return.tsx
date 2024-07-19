@@ -50,7 +50,7 @@ const ReturnPage: React.FC<{
   const [returnId, setReturnId] = useState<string>("");
 
   const onView = useCallback((loanDetails: PreparationLoanType) => {
-    router.push(`/equipment-loans/loans/${loanDetails.id}`);
+    router.push(`/equipment-loans/loans/${loanDetails.id}?prev=return`);
   }, []);
   const onReturn = useCallback((loanDetails: PreparationLoanType) => {
     setReturnId(loanDetails.id);

@@ -45,7 +45,7 @@ const ApprovalManagementComponent: React.FC<{
   }
 
   const onView = useCallback((loanDetails: ApprovalManagementType) => {
-    router.push(`/equipment-loans/loans/${loanDetails.id}`);
+    router.push(`/equipment-loans/loans/${loanDetails.id}?prev=approval-management`);
   }, []);
 
   const onApprove = useCallback((loanDetails: ApprovalManagementType) => {

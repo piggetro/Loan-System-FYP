@@ -23,7 +23,7 @@ const LostDamagedPage: React.FC<{
   const router = useRouter();
 
   const onView = useCallback((loanDetails: LostDamagedLoanType) => {
-    router.push(`/equipment-loans/loans/${loanDetails.id}?ooid=true`);
+    router.push(`/equipment-loans/loans/${loanDetails.id}?ooid=true&prev=manage-lost-damaged`);
   }, []);
 
   const LostDamagedTableColumns = useMemo(

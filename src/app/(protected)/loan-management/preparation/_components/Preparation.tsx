@@ -46,7 +46,7 @@ const PreparationPage: React.FC<{
   // const [loanPendingApprovalData, setLoanPendingApprovalData] = useState()
   const { toast } = useToast();
   const onView = useCallback((loanDetails: PreparationLoanType) => {
-    router.push(`/equipment-loans/loans/${loanDetails.id}`);
+    router.push(`/equipment-loans/loans/${loanDetails.id}?prev=preparation`);
   }, []);
   const onPreparation = useCallback((loanDetails: PreparationLoanType) => {
     setPreparationId(loanDetails.id);

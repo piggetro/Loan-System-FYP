@@ -18,7 +18,7 @@ const LostDamagedLoanComponent: React.FC<{
   const router = useRouter();
 
   const onView = useCallback((LostDamagedLoanDetails: LostDamagedLoanType) => {
-    router.push(`/equipment-loans/loans/${LostDamagedLoanDetails.id}`);
+    router.push(`/equipment-loans/loans/${LostDamagedLoanDetails.id}?prev=lost-damaged`);
   }, []);
   const onViewWaiver = useCallback(
     (LostDamagedLoanDetails: LostDamagedLoanType) => {

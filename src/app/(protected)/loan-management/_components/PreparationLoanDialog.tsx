@@ -130,7 +130,7 @@ const PreparationLoanDialog: React.FC<{
               <div className="text-xl font-bold">{data.loanId}</div>
               <div className="mt-4 text-sm">
                 <p className="flex">
-                  <span className="font-bold">Loaner:&nbsp;</span>{" "}
+                  <span className="font-bold">Borrower:&nbsp;</span>{" "}
                   {data.loanedBy === null ? "Deleted User" : data.loanedBy.name}
                 </p>
                 <p className="flex">

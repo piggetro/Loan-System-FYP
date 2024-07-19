@@ -192,7 +192,7 @@ const WaiverDetails: React.FC<{
             <p className="mb-4 text-xl font-semibold">Outstanding Items</p>
             <Button
               onClick={() => {
-                router.push(`/equipment-loans/loans/${id}?ooid=true`);
+                router.push(`/equipment-loans/loans/${id}?ooid=true&prev=waiver&loan=${id}`);
               }}
             >
               Resolve Outstanding Items

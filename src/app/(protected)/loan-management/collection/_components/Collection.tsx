@@ -49,7 +49,7 @@ const CollectionPage: React.FC<{
   const [preperationId, setPreparationId] = useState<string>("");
   // const [loanPendingApprovalData, setLoanPendingApprovalData] = useState()
   const onView = useCallback((loanDetails: CollectionLoanType) => {
-    router.push(`/equipment-loans/loans/${loanDetails.id}`);
+    router.push(`/equipment-loans/loans/${loanDetails.id}?prev=collection`);
   }, []);
   const onCollect = useCallback((loanDetails: CollectionLoanType) => {
     setPreparationId(loanDetails.id);

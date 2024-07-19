@@ -20,8 +20,8 @@ const RegisterComponent = () => {
   const performRegister = () => {
     if (adminId.length == 0) {
       toast({
-        title: "Admin ID not entered",
-        description: "Please enter Admin ID",
+        title: "User ID not entered",
+        description: "Please enter User ID",
         variant: "destructive",
       });
       return;
@@ -69,7 +69,7 @@ const RegisterComponent = () => {
               className="mb-2 block text-sm font-bold text-gray-700"
               htmlFor="email"
             >
-              Admin ID
+              User ID
             </Label>
             <Input
               value={adminId}
@@ -77,11 +77,11 @@ const RegisterComponent = () => {
                 setAdminId(e.target.value);
               }}
               id="adminId"
-              placeholder="Admin ID Input"
+              placeholder="User ID Input"
               minLength={1}
               type="number"
               autoCapitalize="none"
-              autoComplete="Admin Number"
+              autoComplete="User Number"
               autoCorrect="off"
               disabled={isPending}
               className="mb-3"

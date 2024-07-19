@@ -19,7 +19,7 @@ const OverdueLoanComponent: React.FC<{
   const router = useRouter();
 
   const onView = useCallback((OverdueLoanDetails: OverdueLoanType) => {
-    router.push(`/equipment-loans/loans/${OverdueLoanDetails.id}`);
+    router.push(`/equipment-loans/loans/${OverdueLoanDetails.id}?prev=overdue`);
   }, []);
 
   const TableColumns = useMemo(() => OverdueLoanColumns({ onView }), []);

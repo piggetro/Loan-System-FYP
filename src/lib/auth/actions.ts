@@ -27,7 +27,7 @@ export async function login(adminId: string, password: string) {
       if (results == null || results.hashed_password == null) {
         return {
           title: "Login Failed",
-          description: "Admin ID or Password is wrong",
+          description: "User ID or Password is wrong",
           variant: "destructive",
         };
       }
@@ -49,7 +49,7 @@ export async function login(adminId: string, password: string) {
       } else {
         return {
           title: "Login Failed",
-          description: "Admin ID or Password is wrong",
+          description: "User ID or Password is wrong",
           variant: "destructive",
         };
       }
@@ -58,7 +58,7 @@ export async function login(adminId: string, password: string) {
       if (error == "Not Found") {
         throw {
           title: "Login Failed",
-          description: "Admin ID or Password is wrong",
+          description: "User ID or Password is wrong",
           variant: "destructive",
         };
       }
@@ -93,14 +93,14 @@ export async function register(adminId: string, mobile: string) {
       if (results == null) {
         return {
           title: "Registration Failed",
-          description: "Admin ID is invalid",
+          description: "User ID is invalid",
           variant: "destructive",
         };
       }
       if (results.hashed_password != null) {
         return {
           title: "Registration Failed",
-          description: "Admin ID is already registered",
+          description: "User ID is already registered",
           variant: "destructive",
         };
       }
@@ -137,7 +137,7 @@ export async function register(adminId: string, mobile: string) {
       } catch (error) {
         return {
           title: "Registration Failed",
-          description: "Admin ID is already registered",
+          description: "User ID is already registered",
           variant: "destructive",
         };
       }

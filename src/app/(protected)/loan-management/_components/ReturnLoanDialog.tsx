@@ -300,7 +300,7 @@ const ReturnLoanDialog: React.FC<{
         </div>
       </div>
       <div className="mt-6 flex flex-col items-center gap-2">
-        <p className=" font-semibold">Loaner Signature</p>
+        <p className=" font-semibold">Borrower Signature</p>
         <div className=" overflow-hidden">
           {data.signature !== null ? (
             <Image
@@ -308,7 +308,7 @@ const ReturnLoanDialog: React.FC<{
               src={data.signature}
               width={400}
               height={200}
-              alt="Loaner's Signature"
+              alt="Borrower's Signature"
             />
           ) : null}
         </div>

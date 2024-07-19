@@ -57,7 +57,7 @@ const LoginComponent = () => {
               className="mb-2 block text-sm font-bold text-gray-700"
               htmlFor="email"
             >
-              Admin ID
+              User ID
             </Label>
             <Input
               value={adminId}
@@ -65,11 +65,11 @@ const LoginComponent = () => {
                 setAdminId(e.target.value);
               }}
               id="adminId"
-              placeholder="Admin ID Input"
+              placeholder="User ID Input"
               minLength={1}
               type="text"
               autoCapitalize="none"
-              autoComplete="Admin Number"
+              autoComplete="User Number"
               autoCorrect="off"
               disabled={isPending}
               className="mb-3"

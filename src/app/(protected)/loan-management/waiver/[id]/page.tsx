@@ -20,6 +20,7 @@ const loanPage = async ({ params }: pageProps) => {
       <TopHeaderComponent
         pageName="Waiver Details"
         pathName="Equipment Loans / Waiver Details"
+        goBackLink="/loan-management/waiver"
       />
       <WaiverDetails id={params.id} />
     </div>

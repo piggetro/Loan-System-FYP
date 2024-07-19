@@ -40,7 +40,7 @@ const HistoryPage: React.FC<{
   const router = useRouter();
 
   const onView = useCallback((loanDetails: HistoryLoanType) => {
-    router.push(`/equipment-loans/loans/${loanDetails.id}`);
+    router.push(`/equipment-loans/loans/${loanDetails.id}?prev=history`);
   }, []);
 
   const HistoryTableColumns = useMemo(() => HistoryColumns({ onView }), []);

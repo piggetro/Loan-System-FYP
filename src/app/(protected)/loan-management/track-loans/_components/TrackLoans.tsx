@@ -71,7 +71,7 @@ const TrackLoansPage: React.FC<{ allSemesters: { name: string }[] }> = ({
   }, [searchInput]);
 
   const onView = useCallback((loanDetails: TrackLoansType) => {
-    router.push(`/equipment-loans/loans/${loanDetails.id}`);
+    router.push(`/equipment-loans/loans/${loanDetails.id}?prev=track`);
   }, []);
 
   const PreparationTableColumns = useMemo(
