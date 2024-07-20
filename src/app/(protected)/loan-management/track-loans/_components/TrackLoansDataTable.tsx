@@ -9,6 +9,7 @@ import {
   getPaginationRowModel,
   useReactTable,
   type SortingState,
+  getSortedRowModel,
 } from "@tanstack/react-table";
 import {
   Table,
@@ -73,6 +74,8 @@ export function TrackLoansDataTable<TData, TValue>({
     getPaginationRowModel: getPaginationRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     onRowSelectionChange: setRowSelection,
+    getSortedRowModel: getSortedRowModel(),
+
     filterFns: {
       overdueFilter: (row, columnId, filterValue) => {
         return new Date(row.getValue("dueDate")) < new Date();
@@ -87,7 +90,7 @@ export function TrackLoansDataTable<TData, TValue>({
     initialState: {
       pagination: {
         pageIndex: 0,
-        pageSize: 5,
+        pageSize: 10,
       },
     },
   });
@@ -165,13 +168,7 @@ export function TrackLoansDataTable<TData, TValue>({
           </div>
         </div> */}
       </div>
-      {searchInput === "" ? (
-        <div>
-          <div className="my-3 flex h-[100px] w-full items-center justify-center">
-            <div>Search For Equipment</div>
-          </div>
-        </div>
-      ) : debouncerIsLoading ? (
+      {debouncerIsLoading ? (
         <div>
           <div className="my-3 w-full">
             <Skeleton className="mb-3 h-7" />
@@ -179,7 +176,9 @@ export function TrackLoansDataTable<TData, TValue>({
           </div>
         </div>
       ) : data === undefined ? (
-        <div>Search Loans</div>
+        <div className="my-10 text-center text-lg font-semibold">
+          Search Loans
+        </div>
       ) : (
         <div>
           <div className="my-3 w-full ">

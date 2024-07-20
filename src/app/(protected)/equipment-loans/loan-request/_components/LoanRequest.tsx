@@ -26,7 +26,7 @@ import {
   FormItem,
   FormMessage,
 } from "@/app/_components/ui/form";
-import { CalendarIcon, ChevronsUpDown } from "lucide-react";
+import { CalendarIcon, ChevronsUpDown, Search } from "lucide-react";
 import { Calendar } from "@/app/_components/ui/calendar";
 import { type Inventory } from "../page";
 import { cn } from "@/lib/utils";
@@ -382,18 +382,20 @@ const LoanRequestComponent: React.FC<{
                 }}
                 onKeyDown={(event) => {
                   if (event.key === "Enter") {
-                    executeSearch();
+                    if (searchInput !== "") executeSearch();
                   }
                 }}
               />
+              <Button
+                type="button"
+                onClick={() => {
+                  if (searchInput !== "") executeSearch();
+                }}
+              >
+                <Search />
+              </Button>
             </div>
-            {searchInput === "" ? (
-              <div>
-                <div className="my-3 flex h-[100px] w-full items-center justify-center">
-                  <div>Search For Equipment</div>
-                </div>
-              </div>
-            ) : debouncerIsLoading ? (
+            {debouncerIsLoading ? (
               <div>
                 <div className="my-3 w-full">
                   <Skeleton className="mb-3 h-7" />

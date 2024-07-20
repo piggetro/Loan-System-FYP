@@ -17,6 +17,8 @@ import {
 import ReturnLoanDialog from "../../_components/ReturnLoanDialog";
 import { type LoanStatus } from "@/db/enums";
 import { Input } from "@/app/_components/ui/input";
+import { Button } from "@/app/_components/ui/button";
+import { Search } from "lucide-react";
 
 export interface TrackLoansType {
   id: string;
@@ -54,21 +56,17 @@ const TrackLoansPage: React.FC<{ allSemesters: { name: string }[] }> = ({
   const [openReturnDialog, setOpenReturnDialog] = useState<boolean>(false);
   const [returnId, setReturnId] = useState<string>("");
 
-  //debouncer
-  useEffect(() => {
+  //search funtion
+  function executeSearch() {
     setDebouncerIsLoading(true);
-    const timeout = setTimeout(() => {
-      if (searchInput !== "") {
-        fetchSearch({ searchInput: searchInput })
-          .then(() => {
-            setDebouncerIsLoading(false);
-          })
-          .catch((e) => console.log(e));
-      }
-    }, 500);
-
-    return () => clearTimeout(timeout);
-  }, [searchInput]);
+    if (searchInput !== "") {
+      fetchSearch({ searchInput: searchInput })
+        .then(() => {
+          setDebouncerIsLoading(false);
+        })
+        .catch((e) => console.log(e));
+    }
+  }
 
   const onView = useCallback((loanDetails: TrackLoansType) => {
     router.push(`/equipment-loans/loans/${loanDetails.id}?prev=track`);
@@ -85,13 +83,28 @@ const TrackLoansPage: React.FC<{ allSemesters: { name: string }[] }> = ({
         <div>
           <p className="mb-2 font-semibold">Search Loans</p>
         </div>
-        <Input
-          value={searchInput}
-          onChange={(e) => {
-            setSearchInput(e.target.value);
-          }}
-          placeholder="Search Loan ID/Borrower Name"
-        />
+        <div className="flex gap-3">
+          <Input
+            value={searchInput}
+            onChange={(e) => {
+              setSearchInput(e.target.value);
+            }}
+            placeholder="Search Loan ID/Borrower Name"
+            onKeyDown={(event) => {
+              if (event.key === "Enter") {
+                if (searchInput !== "") executeSearch();
+              }
+            }}
+          />
+          <Button
+            type="button"
+            onClick={() => {
+              if (searchInput !== "") executeSearch();
+            }}
+          >
+            <Search />
+          </Button>
+        </div>
 
         <TrackLoansDataTable
           columns={PreparationTableColumns}
