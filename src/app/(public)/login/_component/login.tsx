@@ -23,7 +23,13 @@ const LoginComponent = () => {
     setIsPending(true);
     login(adminId, password)
       .then((result) => {
-        if (result?.title != undefined) {
+        if (result?.success) {
+          router.push("/");
+          toast({
+            title: "Login Success",
+            description: "You have successfully logged in",
+          });
+        } else if (result?.title != undefined) {
           toast({
             title: result.title,
             description: result.description,
@@ -33,10 +39,11 @@ const LoginComponent = () => {
                 : null,
           });
         }
-        setIsPending(false);
       })
       .catch((error) => {
         console.log(error);
+      })
+      .finally(() => {
         setIsPending(false);
       });
   };
