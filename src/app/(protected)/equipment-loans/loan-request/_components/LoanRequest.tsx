@@ -53,7 +53,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/app/_components/ui/select";
-import { table } from "console";
 
 const formSchema = z.object({
   remarks: z.string().min(1, "Required").max(150),
@@ -236,7 +235,6 @@ const LoanRequestComponent: React.FC<{
                           <FormControl>
                             <Textarea placeholder="Remarks" {...field} />
                           </FormControl>
-
                           <FormMessage className="h-7" />
                         </FormItem>
                       )}
@@ -417,7 +415,7 @@ const LoanRequestComponent: React.FC<{
                 onValueChange={(key) => {
                   setSelectedSubCategoryId(key);
                 }}
-                value={selectedSubCategoryId}
+                value={selectedCategoryId}
               >
                 <SelectTrigger className="w-1/4 min-w-44">
                   <SelectValue placeholder="Sub-Category" />

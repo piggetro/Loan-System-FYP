@@ -7,6 +7,7 @@ import { db } from "@/database";
 import { sql } from "kysely";
 import { createId } from "@paralleldrive/cuid2";
 import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
+import { LoanStatus } from "@/db/enums";
 
 export const loanRequestRouter = createTRPCRouter({
   getCategories: protectedProcedure.query(async ({ ctx }) => {
@@ -1444,10 +1445,27 @@ export const loanRequestRouter = createTRPCRouter({
       return true;
     }),
   searchLoans: protectedProcedure
-    .input(z.object({ searchInput: z.string().min(1) }))
+    .input(
+      z.object({
+        searchInput: z.string().min(1),
+        status: z.enum([
+          "PENDING_APPROVAL",
+          "REJECTED",
+          "REQUEST_COLLECTION",
+          "PREPARING",
+          "READY",
+          "COLLECTED",
+          "CANCELLED",
+          "RETURNED",
+          "PARTIAL_RETURN",
+          "All",
+        ]),
+        semester: z.string().min(1),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       try {
-        const loansForReturn = await ctx.db
+        let loansForReturnQuery = ctx.db
           .selectFrom("Loan")
           .leftJoin("User as b", "b.id", "Loan.loanedById")
           .selectAll("Loan")
@@ -1494,8 +1512,22 @@ export const loanRequestRouter = createTRPCRouter({
               eb("b.name", "ilike", `%${input.searchInput}%`),
             ]),
           )
-          .execute();
-
+          .orderBy("Loan.loanId desc");
+        if (input.status !== "All") {
+          loansForReturnQuery = loansForReturnQuery.where(
+            "Loan.status",
+            "=",
+            input.status,
+          );
+        }
+        if (input.semester !== "All") {
+          loansForReturnQuery = loansForReturnQuery.where(
+            "Loan.loanId",
+            "ilike",
+            `${input.semester}%`,
+          );
+        }
+        const loansForReturn = await loansForReturnQuery.execute();
         return loansForReturn;
       } catch (err) {
         console.log(err);

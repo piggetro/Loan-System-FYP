@@ -39,7 +39,6 @@ interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
   allSemesters: { name: string }[];
-  searchInput: string;
   debouncerIsLoading: boolean;
 }
 
@@ -47,7 +46,6 @@ export function TrackLoansDataTable<TData, TValue>({
   columns,
   data,
   allSemesters,
-  searchInput,
   debouncerIsLoading,
 }: DataTableProps<TData, TValue>) {
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -98,7 +96,7 @@ export function TrackLoansDataTable<TData, TValue>({
   return (
     <div className="mt-3">
       <div className="mb-2 flex items-center">
-        <div>
+        {/* <div>
           <p className="mr-3 text-sm font-medium">Semester</p>
           <Select
             onValueChange={(key) => {
@@ -155,7 +153,7 @@ export function TrackLoansDataTable<TData, TValue>({
               </SelectGroup>
             </SelectContent>
           </Select>
-        </div>
+        </div> */}
         {/* <div className="h-max ">
           <p className="text-sm font-medium">Overdue Loans</p>
           <div className="flex h-10 justify-center pt-2">
