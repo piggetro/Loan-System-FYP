@@ -30,6 +30,7 @@ const LoginComponent = () => {
             description: "You have successfully logged in",
           });
         } else if (result?.title != undefined) {
+          setIsPending(false);
           toast({
             title: result.title,
             description: result.description,
@@ -43,9 +44,6 @@ const LoginComponent = () => {
       .catch((error) => {
         console.log(error);
       })
-      .finally(() => {
-        setIsPending(false);
-      });
   };
 
   return (
