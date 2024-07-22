@@ -24,7 +24,13 @@ export const loanRequestRouter = createTRPCRouter({
   }),
 
   getEquipmentAndInventory: protectedProcedure
-    .input(z.object({ searchInput: z.string().min(1) }))
+    .input(
+      z.object({
+        searchInput: z.string().min(1),
+        categoryId: z.string().min(1),
+        subCategoryId: z.string().min(1),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       try {
         //Checking if user is student
@@ -42,10 +48,6 @@ export const loanRequestRouter = createTRPCRouter({
           else throw new Error("This Account is not linked to a Course");
         }
 
-        // const generalSettingsLimit = await db
-        //   .selectFrom("GeneralSettings")
-        //   .select("GeneralSettings.loanLimitPrice")
-        //   .executeTakeFirst();
         let equipmentsQuery = db
           .selectFrom("Equipment as e")
           .leftJoin(
@@ -64,9 +66,10 @@ export const loanRequestRouter = createTRPCRouter({
           .where("e.name", "ilike", `%${input.searchInput}%`)
           .distinctOn("e.id");
 
-        const inventoryAvailabilityQuery = db
+        let inventoryAvailabilityQuery = db
           .selectFrom("Inventory")
           .leftJoin("Equipment", "Inventory.equipmentId", "Equipment.id")
+          .leftJoin("SubCategory", "SubCategory.id", "Equipment.subCategoryId")
           .select("equipmentId")
           .select([
             sql<number>`COUNT(*)`.as("count"),
@@ -80,13 +83,14 @@ export const loanRequestRouter = createTRPCRouter({
               eb("Inventory.active", "=", true),
             ]),
           );
-        const loanItemsUnavailableQuery = db
+        let loanItemsUnavailableQuery = db
           .selectFrom("LoanItem")
           .select([
             "LoanItem.equipmentId",
             sql<number>`COALESCE(COUNT(*), 0)`.as("count"),
           ])
           .leftJoin("Equipment as e", "LoanItem.equipmentId", "e.id")
+          .leftJoin("SubCategory", "SubCategory.id", "e.subCategoryId")
           .where("e.name", "ilike", `%${input.searchInput}%`)
           .where("LoanItem.status", "not in", [
             "CANCELLED",
@@ -100,6 +104,41 @@ export const loanRequestRouter = createTRPCRouter({
             "EquipmentOnCourses.courseId",
             "=",
             "clw7z6fyo00003qp95wbipxtr",
+          );
+        }
+
+        if (input.categoryId !== "All") {
+          equipmentsQuery = equipmentsQuery.where(
+            "Category.id",
+            "=",
+            input.categoryId,
+          );
+          inventoryAvailabilityQuery = inventoryAvailabilityQuery.where(
+            "SubCategory.categoryId",
+            "=",
+            input.categoryId,
+          );
+          loanItemsUnavailableQuery = loanItemsUnavailableQuery.where(
+            "SubCategory.categoryId",
+            "=",
+            input.categoryId,
+          );
+        }
+        if (input.subCategoryId !== "All") {
+          equipmentsQuery = equipmentsQuery.where(
+            "SubCategory.id",
+            "=",
+            input.subCategoryId,
+          );
+          inventoryAvailabilityQuery = inventoryAvailabilityQuery.where(
+            "SubCategory.id",
+            "=",
+            input.subCategoryId,
+          );
+          loanItemsUnavailableQuery = loanItemsUnavailableQuery.where(
+            "SubCategory.id",
+            "=",
+            input.categoryId,
           );
         }
         const [equipments, inventoryAvailability, loanItemsUnavailable] =

@@ -47,7 +47,7 @@ export const equipmentColumns = (
       if (row.original.quantityAvailable === 0) {
         return (
           <div className="flex h-10 items-center justify-center">
-            <p>Item Unavailable</p>
+            <p className="font-semibold text-red-500">Item Unavailable</p>
           </div>
         );
       }

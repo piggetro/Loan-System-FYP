@@ -133,18 +133,23 @@ const LoanDetails: React.FC<{
             title: "Request Collection Was Unsuccessful",
             description:
               "The Equipment that you have requested is currently unavailable.\nAll Loan Request are subject to Equipment Availability",
+            variant: "destructive",
           });
         } else {
           toast({
             title: "Request Collection Was Unsuccessful",
             description: `Please request during Request Collection Timing\nRequest Collection Timing is ${loanTimingData?.startRequestForCollection} to ${loanTimingData?.endRequestForCollection}`,
+            variant: "destructive",
           });
         }
       })
       .catch(() => {
         //handle error
         setIsPendingRequestCollection(false);
-        toast({ title: "Something Unexpected Happened" });
+        toast({
+          title: "Something Unexpected Happened",
+          variant: "destructive",
+        });
       });
   };
   const onPrepareLoan = useCallback(() => {
