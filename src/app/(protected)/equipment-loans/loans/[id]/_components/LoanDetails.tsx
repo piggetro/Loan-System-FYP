@@ -368,7 +368,7 @@ const LoanDetails: React.FC<{
           ) : userAccessRights?.includes("Admin Waiver Option") ? (
             <Button
               onClick={() => {
-                router.push(`/loan-management/waiver/${id}`);
+                router.push(`/loan-management/waiver/${id}?prev=loan-details&loan=${id}`);
               }}
             >
               View Waiver
