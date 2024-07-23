@@ -76,14 +76,6 @@ export function DefaultLoanDataTable<TData, TValue>({
     <div>
       <h1 className="mb-3 font-semibold">Search For Loan</h1>
       <div className="mb-2 flex">
-        <Input
-          placeholder="Search Loan ID"
-          className="mr-4 w-1/3"
-          value={(table.getColumn("loanId")?.getFilterValue() as string) ?? ""}
-          onChange={(event) =>
-            table.getColumn("loanId")?.setFilterValue(event.target.value)
-          }
-        />
         <Select
           onValueChange={(key) => {
             if (key === "All") {
