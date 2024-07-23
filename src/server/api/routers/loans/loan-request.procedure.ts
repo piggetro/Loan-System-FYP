@@ -82,7 +82,7 @@ export const loanRequestRouter = createTRPCRouter({
               eb("Equipment.name", "ilike", `%${input.searchInput}%`),
               eb("Equipment.active", "=", true),
               eb("Inventory.active", "=", true),
-              eb("Inventory.status", "!=", "UNAVAILABLE"),
+              eb("Inventory.status", "=", "AVAILABLE"),
             ]),
           );
         let loanItemsUnavailableQuery = db
@@ -94,12 +94,12 @@ export const loanRequestRouter = createTRPCRouter({
           .leftJoin("Equipment as e", "LoanItem.equipmentId", "e.id")
           .leftJoin("SubCategory", "SubCategory.id", "e.subCategoryId")
           .where("e.name", "ilike", `%${input.searchInput}%`)
-          .where("LoanItem.status", "not in", [
-            "CANCELLED",
-            "REQUEST_COLLECTION",
-            "RETURNED",
-            "REJECTED",
-          ])
+          .where((eb) =>
+            eb.or([
+              eb("LoanItem.status", "=", "REQUEST_COLLECTION"),
+              eb("LoanItem.status", "=", "PREPARING"),
+            ]),
+          )
           .groupBy("LoanItem.equipmentId");
 
         if (referingCourseId !== undefined) {
@@ -625,7 +625,7 @@ export const loanRequestRouter = createTRPCRouter({
               eb.and([
                 eb("equipmentId", "in", arrayOfEquipmentIdReq),
                 eb("Inventory.active", "=", true),
-                eb("Inventory.status", "!=", "UNAVAILABLE"),
+                eb("Inventory.status", "=", "AVAILABLE"),
               ]),
             )
             .execute();
@@ -647,15 +647,14 @@ export const loanRequestRouter = createTRPCRouter({
               eb.fn.count<number>("LoanItem.equipmentId").as("count"),
             ])
             .where((eb) =>
-              eb.and([
-                eb("LoanItem.status", "!=", "CANCELLED"),
-                eb("LoanItem.status", "!=", "REQUEST_COLLECTION"),
-                eb("LoanItem.status", "!=", "RETURNED"),
-                eb("LoanItem.status", "!=", "REJECTED"),
+              eb.or([
+                eb("LoanItem.status", "=", "REQUEST_COLLECTION"),
+                eb("LoanItem.status", "=", "PREPARING"),
               ]),
             )
             .groupBy("LoanItem.equipmentId")
             .where("LoanItem.equipmentId", "in", arrayOfEquipmentIdReq)
+            .where("LoanItem.loanId", "!=", input.id)
             .execute();
 
           let allowedToRequestForLoan = true;
