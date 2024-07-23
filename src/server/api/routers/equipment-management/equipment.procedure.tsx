@@ -292,7 +292,7 @@ export const equipmentRouter = createTRPCRouter({
                   updatedAt: new Date(),
                   active: true,
                   loanLimit:
-                    averageCost > loanLimitPrice.loanLimitPrice ? 1 : 0,
+                    averageCost >= loanLimitPrice.loanLimitPrice ? 1 : 0,
                 })
                 .returning(["id", "name", "subCategoryId"]),
             )
@@ -555,7 +555,13 @@ export const equipmentRouter = createTRPCRouter({
           .updateTable("Inventory")
           .set({
             assetNumber: input.assetNumber,
-            status: input.status as "AVAILABLE" | "LOST" | "LOANED" | "DAMAGED",
+            status: input.status as
+              | "AVAILABLE"
+              | "LOST"
+              | "LOANED"
+              | "DAMAGED"
+              | "UNAVAILABLE"
+              | "MISSING_CHECKLIST_ITEMS",
             cost: input.cost.toFixed(2),
             datePurchased: input.datePurchased,
             warrantyExpiry: input.warrantyExpiry,

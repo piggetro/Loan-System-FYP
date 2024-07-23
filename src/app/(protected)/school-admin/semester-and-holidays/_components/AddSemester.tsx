@@ -147,7 +147,7 @@ const AddSemester = ({ setSemesters }: AddSemesterProps) => {
               name="endDate"
               render={({ field }) => (
                 <FormItem className="flex flex-col">
-                  <FormLabel className="mb-2">Start Date</FormLabel>
+                  <FormLabel className="mb-2">End Date</FormLabel>
                   <Popover>
                     <PopoverTrigger asChild>
                       <FormControl>
