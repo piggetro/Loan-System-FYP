@@ -113,6 +113,7 @@ enum EquipmentStatus {
     DAMAGED
     LOANED
     AVAILABLE
+    UNAVAILABLE
     MISSING_CHECKLIST_ITEMS
 }
 
@@ -180,6 +181,7 @@ enum LoanedItemsStatus {
     LOST
     CANCELLED
     MISSING_CHECKLIST_ITEMS
+    REJECTED
 }
 
 model Waiver {
@@ -201,6 +203,7 @@ enum WaiveRequestStatus {
     AWAITING_REQUEST
     PENDING
     APPROVED
+    RESOLVED
     REJECTED
 }
 

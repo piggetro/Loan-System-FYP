@@ -92,13 +92,17 @@ const LoanDetailsTable: React.FC<{
         quantityReturned: 0,
       };
 
-      if (loanData.approvedById !== null && loanData.status !== "REJECTED") {
+      if (
+        loanData.approvedById !== null &&
+        loanData.status !== "REJECTED" &&
+        equipment.status !== "REJECTED"
+      ) {
         tempEquipmentObject.quantityApproved = 1;
       }
-      if (loanData.preparedById !== null) {
+      if (loanData.preparedById !== null && equipment.status !== "REJECTED") {
         tempEquipmentObject.quantityPrepared = 1;
       }
-      if (loanData.issuedById !== null) {
+      if (loanData.issuedById !== null && equipment.status !== "REJECTED") {
         tempEquipmentObject.quantityCollected = 1;
       }
       if (equipment.status === "RETURNED") {
@@ -109,15 +113,19 @@ const LoanDetailsTable: React.FC<{
       if (processedLoanData[index] != undefined) {
         processedLoanData[index]!.quantityRequested =
           processedLoanData[index]!.quantityRequested + 1;
-        if (loanData.approvedById != null && loanData.status !== "REJECTED") {
+        if (
+          loanData.approvedById != null &&
+          loanData.status !== "REJECTED" &&
+          equipment.status !== "REJECTED"
+        ) {
           processedLoanData[index]!.quantityApproved =
             processedLoanData[index]!.quantityApproved + 1;
         }
-        if (loanData.preparedById != null) {
+        if (loanData.preparedById != null && equipment.status !== "REJECTED") {
           processedLoanData[index]!.quantityPrepared =
             processedLoanData[index]!.quantityPrepared + 1;
         }
-        if (loanData.issuedById !== null) {
+        if (loanData.issuedById !== null && equipment.status !== "REJECTED") {
           processedLoanData[index]!.quantityCollected =
             processedLoanData[index]!.quantityCollected + 1;
         }

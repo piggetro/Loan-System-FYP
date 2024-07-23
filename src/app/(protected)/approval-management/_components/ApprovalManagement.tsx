@@ -22,6 +22,7 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/app/_components/ui/tabs";
+import ApprovalLoanDialog from "../../loan-management/_components/ApprovalLoanDialog";
 
 const ApprovalManagementComponent: React.FC<{
   loanRequests: ApprovalManagementType[];
@@ -30,6 +31,8 @@ const ApprovalManagementComponent: React.FC<{
 }> = ({ loanRequests, loanRequestHistory, allSemesters }) => {
   const [loanRequestsData, setLoanRequestsData] =
     useState<ApprovalManagementType[]>(loanRequests);
+  const [openApprovalDialog, setOpenApprovalDialog] = useState<boolean>(false);
+  const [approveLoanId, setApproveLoanId] = useState<string>();
   const router = useRouter();
   const { toast } = useToast();
   const approveRequest =
@@ -44,30 +47,40 @@ const ApprovalManagementComponent: React.FC<{
     );
   }
 
+  function closeDialogOnSuccess() {
+    setOpenApprovalDialog(false);
+    removeLoan(approveLoanId!);
+  }
+
   const onView = useCallback((loanDetails: ApprovalManagementType) => {
-    router.push(`/equipment-loans/loans/${loanDetails.id}?prev=approval-management`);
+    router.push(
+      `/equipment-loans/loans/${loanDetails.id}?prev=approval-management`,
+    );
   }, []);
 
   const onApprove = useCallback((loanDetails: ApprovalManagementType) => {
-    approveRequest
-      .mutateAsync({
-        loanId: loanDetails.loanId,
-      })
-      .then(() => {
-        toast({
-          title: "Loan has been approved",
-          description: `Loan ${loanDetails.loanId} has been approved`,
-        });
+    setApproveLoanId(loanDetails.id);
+    setOpenApprovalDialog(true);
+    // approveRequest
+    //   .mutateAsync({
+    //     loanId: loanDetails.loanId,
+    //   })
+    //   .then(() => {
+    //     toast({
+    //       title: "Loan has been approved",
+    //       description: `Loan ${loanDetails.loanId} has been approved`,
+    //     });
 
-        //Updating frontend for UX
-        removeLoan(loanDetails.loanId);
-        loanDetails.status = "REQUEST_COLLECTION";
-        setApproveRequestHistoryData((prev) => [...prev, loanDetails]);
-      })
-      .catch((error) => {
-        console.log(error);
-      });
+    //     //Updating frontend for UX
+    //     removeLoan(loanDetails.loanId);
+    //     loanDetails.status = "REQUEST_COLLECTION";
+    //     setApproveRequestHistoryData((prev) => [...prev, loanDetails]);
+    //   })
+    //   .catch((error) => {
+    //     console.log(error);
+    //   });
   }, []);
+
   const onReject = useCallback((loanDetails: ApprovalManagementType) => {
     //Derricks part, use api.loanRequest.rejectLoanRequest
     rejectRequest
@@ -100,6 +113,15 @@ const ApprovalManagementComponent: React.FC<{
   );
   return (
     <div className="bg-white">
+      {approveLoanId !== undefined ? (
+        <ApprovalLoanDialog
+          successCloseDialog={closeDialogOnSuccess}
+          id={approveLoanId}
+          isDialogOpen={openApprovalDialog}
+          setIsDialogOpen={setOpenApprovalDialog}
+        />
+      ) : null}
+
       <Tabs defaultValue="loanApprovals" className="mt-4">
         <div className="mt-2 rounded-md bg-white px-6 py-4">
           <TabsList className="mb-2">

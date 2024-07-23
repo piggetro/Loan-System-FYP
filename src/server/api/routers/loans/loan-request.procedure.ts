@@ -82,6 +82,7 @@ export const loanRequestRouter = createTRPCRouter({
               eb("Equipment.name", "ilike", `%${input.searchInput}%`),
               eb("Equipment.active", "=", true),
               eb("Inventory.active", "=", true),
+              eb("Inventory.status", "!=", "UNAVAILABLE"),
             ]),
           );
         let loanItemsUnavailableQuery = db
@@ -97,6 +98,7 @@ export const loanRequestRouter = createTRPCRouter({
             "CANCELLED",
             "REQUEST_COLLECTION",
             "RETURNED",
+            "REJECTED",
           ])
           .groupBy("LoanItem.equipmentId");
 
@@ -401,7 +403,20 @@ export const loanRequestRouter = createTRPCRouter({
     },
   ),
   approveLoanRequestWithLoanId: protectedProcedure
-    .input(z.object({ loanId: z.string().min(1) }))
+    .input(
+      z.object({
+        loanId: z.string().min(1),
+        loanItems: z.array(
+          z.object({
+            equipmentId: z.string().min(1),
+            description: z.string().min(1),
+            checklist: z.string().optional(),
+            quantityRequested: z.number().min(1),
+            quantityApproved: z.string().min(1),
+          }),
+        ),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       try {
         await ctx.db.transaction().execute(async (trx) => {
@@ -424,6 +439,25 @@ export const loanRequestRouter = createTRPCRouter({
                 .where("Loan.loanId", "=", input.loanId),
             )
             .execute();
+          for (const item of input.loanItems) {
+            if (parseInt(item.quantityApproved) !== item.quantityRequested) {
+              await trx
+                .updateTable("LoanItem")
+                .set({ status: "REJECTED" })
+                .where(
+                  "LoanItem.id",
+                  "in",
+                  trx
+                    .selectFrom("LoanItem")
+                    .select("LoanItem.id")
+                    .where("LoanItem.equipmentId", "=", item.equipmentId)
+                    .limit(
+                      item.quantityRequested - parseInt(item.quantityApproved),
+                    ),
+                )
+                .execute();
+            }
+          }
         });
 
         return "Approved";
@@ -433,25 +467,62 @@ export const loanRequestRouter = createTRPCRouter({
       }
     }),
   approveLoanRequestWithId: protectedProcedure
-    .input(z.object({ id: z.string().min(1) }))
+    .input(
+      z.object({
+        id: z.string().min(1),
+        loanItems: z.array(
+          z.object({
+            equipmentId: z.string().min(1),
+            description: z.string().min(1),
+            checklist: z.string().optional(),
+            quantityRequested: z.number().min(1),
+            quantityApproved: z.string().min(1),
+          }),
+        ),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       try {
         await ctx.db.transaction().execute(async (trx) => {
-          const data = await trx
+          await trx
             .updateTable("Loan")
             .set({ status: "REQUEST_COLLECTION", approvedById: ctx.user.id })
             .where("Loan.id", "=", input.id)
             .where("Loan.approverId", "=", ctx.user.id)
-            .returning("Loan.loanId")
-            .executeTakeFirstOrThrow();
+            .execute();
 
           await trx
             .updateTable("LoanItem")
             .set({ status: "REQUEST_COLLECTION" })
-            .where("LoanItem.id", "=", input.id)
+            .where("LoanItem.loanId", "=", input.id)
             .execute();
-          return data.loanId;
+          for (const item of input.loanItems) {
+            if (parseInt(item.quantityApproved) !== item.quantityRequested) {
+              await trx
+                .updateTable("LoanItem")
+                .set({ status: "REJECTED" })
+                .where(
+                  "LoanItem.id",
+                  "in",
+                  trx
+                    .selectFrom("LoanItem")
+                    .select("LoanItem.id")
+                    .where("LoanItem.equipmentId", "=", item.equipmentId)
+                    .where("LoanItem.loanId", "=", input.id)
+                    .limit(
+                      item.quantityRequested - parseInt(item.quantityApproved),
+                    ),
+                )
+                .execute();
+            }
+          }
         });
+
+        return {
+          title: "Loan Successfully Approved",
+          description: "Loan status is now Request Collection",
+          variant: "default",
+        };
       } catch (err) {
         console.log(err);
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
@@ -522,6 +593,7 @@ export const loanRequestRouter = createTRPCRouter({
               eb.fn.count<number>("LoanItem.equipmentId").as("count"),
             ])
             .where("loanId", "=", input.id)
+            .where("LoanItem.status", "=", "REQUEST_COLLECTION")
             .execute();
 
           const arrayOfEquipmentIdReq: string[] = [];
@@ -553,6 +625,7 @@ export const loanRequestRouter = createTRPCRouter({
               eb.and([
                 eb("equipmentId", "in", arrayOfEquipmentIdReq),
                 eb("Inventory.active", "=", true),
+                eb("Inventory.status", "!=", "UNAVAILABLE"),
               ]),
             )
             .execute();
@@ -578,6 +651,7 @@ export const loanRequestRouter = createTRPCRouter({
                 eb("LoanItem.status", "!=", "CANCELLED"),
                 eb("LoanItem.status", "!=", "REQUEST_COLLECTION"),
                 eb("LoanItem.status", "!=", "RETURNED"),
+                eb("LoanItem.status", "!=", "REJECTED"),
               ]),
             )
             .groupBy("LoanItem.equipmentId")
@@ -612,6 +686,7 @@ export const loanRequestRouter = createTRPCRouter({
               .updateTable("LoanItem")
               .set({ status: "PREPARING" })
               .where("LoanItem.loanId", "=", input.id)
+              .where("LoanItem.status", "=", "REQUEST_COLLECTION")
               .execute();
 
             return "PREPARING";
@@ -753,6 +828,7 @@ export const loanRequestRouter = createTRPCRouter({
                 .leftJoin("Loan", "LoanItem.loanId", "Loan.id")
                 .selectAll("LoanItem")
                 .where("Loan.id", "=", input.id)
+                .where("LoanItem.status", "=", "PREPARING")
                 .select((eb1) => [
                   jsonObjectFrom(
                     eb1
@@ -939,6 +1015,7 @@ export const loanRequestRouter = createTRPCRouter({
                 .leftJoin("Loan", "LoanItem.loanId", "Loan.id")
                 .selectAll("LoanItem")
                 .where("Loan.id", "=", input.id)
+                .where("LoanItem.status", "=", "COLLECTED")
                 .select((eb1) => [
                   jsonObjectFrom(
                     eb1
@@ -987,6 +1064,7 @@ export const loanRequestRouter = createTRPCRouter({
             .updateTable("LoanItem")
             .set({ status: "COLLECTED" })
             .where("LoanItem.loanId", "=", input.id)
+            .where("LoanItem.status", "!=", "REJECTED")
             .execute();
 
           return {
@@ -1529,6 +1607,66 @@ export const loanRequestRouter = createTRPCRouter({
         }
         const loansForReturn = await loansForReturnQuery.execute();
         return loansForReturn;
+      } catch (err) {
+        console.log(err);
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      }
+    }),
+  getLoanToApproveById: protectedProcedure
+    .input(z.object({ id: z.string().min(1) }))
+    .query(async ({ ctx, input }) => {
+      try {
+        const getLoanToApprove = await ctx.db
+          .selectFrom("Loan")
+          .selectAll("Loan")
+          .select((eb) => [
+            jsonObjectFrom(
+              eb
+                .selectFrom("User")
+                .select("User.name")
+                .whereRef("Loan.loanedById", "=", "User.id"),
+            ).as("loanedBy"),
+            jsonObjectFrom(
+              eb
+                .selectFrom("User")
+                .select("User.name")
+                .whereRef("Loan.approvedById", "=", "User.id"),
+            ).as("approvedBy"),
+            jsonObjectFrom(
+              eb
+                .selectFrom("User")
+                .select("User.name")
+                .whereRef("Loan.preparedById", "=", "User.id"),
+            ).as("preparedBy"),
+            jsonObjectFrom(
+              eb
+                .selectFrom("User")
+                .select("User.name")
+                .whereRef("Loan.issuedById", "=", "User.id"),
+            ).as("issuedBy"),
+            jsonObjectFrom(
+              eb
+                .selectFrom("User")
+                .select("User.name")
+                .whereRef("Loan.returnedToId", "=", "User.id"),
+            ).as("returnedTo"),
+            jsonArrayFrom(
+              eb
+                .selectFrom("LoanItem")
+                .leftJoin("Equipment", "Equipment.id", "LoanItem.equipmentId")
+                .select([
+                  "Equipment.name",
+                  "Equipment.id",
+                  "Equipment.checklist",
+                  sql<number>`COUNT(*)`.as("quantityRequested"),
+                ])
+                .groupBy("Equipment.id")
+                .whereRef("LoanItem.loanId", "=", "Loan.id"),
+            ).as("loanItems"),
+          ])
+          .where("Loan.id", "=", input.id)
+          .executeTakeFirstOrThrow();
+        return getLoanToApprove;
       } catch (err) {
         console.log(err);
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });

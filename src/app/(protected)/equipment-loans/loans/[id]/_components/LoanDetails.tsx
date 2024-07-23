@@ -26,6 +26,7 @@ import ReturnLoanDialog from "@/app/(protected)/loan-management/_components/Retu
 import { Button } from "@/app/_components/ui/button";
 import { Dialog, DialogContent } from "@/app/_components/ui/dialog";
 import OutstandingItemDialog from "./OutstandingItemsDialog";
+import ApprovalLoanDialog from "@/app/(protected)/loan-management/_components/ApprovalLoanDialog";
 
 const LoanDetails: React.FC<{
   id: string;
@@ -39,7 +40,7 @@ const LoanDetails: React.FC<{
     useState<boolean>(false);
   const [isPendingApproveLoan, setIsPendingApproveLoan] =
     useState<boolean>(false);
-  const [isPendingRequestCollection, setIsPendingRequestCollection] =
+  const [isActionButtonPending, setIsActionButtonPending] =
     useState<boolean>(false);
 
   const [openCollectLoanDialog, setOpenCollectLoanDialog] =
@@ -48,6 +49,7 @@ const LoanDetails: React.FC<{
     useState<boolean>(false);
   const [openReturnDialog, setOpenReturnDialog] = useState<boolean>(false);
   const [openRequestDialog, setOpenRequestDialog] = useState<boolean>(false);
+  const [openApproveDialog, setOpenApproveDialog] = useState<boolean>(false);
   const [openOutstandingItemsDialog, setOpenOutstandingItemsDialog] =
     useState<boolean>(false);
   useEffect(() => {
@@ -66,7 +68,6 @@ const LoanDetails: React.FC<{
   } = api.loan.getUsersLoanAccess.useQuery({
     id: id,
   });
-  const approveRequest = api.loanRequest.approveLoanRequestWithId.useMutation();
   const requestCollection = api.loanRequest.requestForCollection.useMutation();
   const { toast } = useToast();
   const { refetch, data } = api.loan.getLoanById.useQuery({
@@ -74,30 +75,14 @@ const LoanDetails: React.FC<{
   });
   const { data: loanTimingData } = api.loan.getLoanTimings.useQuery();
   const rejectLoan = api.loanRequest.rejectLoanRequest.useMutation();
+  const cancelLoan = api.loanRequest.cancelLoan.useMutation();
   function refresh() {
     refetch().catch((error) => {
       console.log(error);
     });
   }
   const onApprove = useCallback(() => {
-    setIsPendingApproveLoan(true);
-    approveRequest
-      .mutateAsync({
-        id: id,
-      })
-      .then(() => {
-        setIsPendingApproveLoan(false);
-        //Check if still need this
-        userAccessRightsRefetch().catch((error) => {
-          console.log(error);
-        });
-        toast({ title: "Loan Successfully Approved" });
-        refresh();
-      })
-      .catch(() => {
-        setIsPendingApproveLoan(false);
-        toast({ title: "Something Unexpected Happened" });
-      });
+    setOpenApproveDialog(true);
   }, []);
   const onReject = useCallback(() => {
     setIsPendingRejectLoan(true);
@@ -117,11 +102,11 @@ const LoanDetails: React.FC<{
     setOpenRequestDialog(true);
   }, []);
   const executeRequestCollection = () => {
-    setIsPendingRequestCollection(true);
+    setIsActionButtonPending(true);
     requestCollection
       .mutateAsync({ id: id })
       .then((results) => {
-        setIsPendingRequestCollection(false);
+        setIsActionButtonPending(false);
         if (results === "PREPARING") {
           toast({
             title: "Request For Collection is Successful",
@@ -145,13 +130,18 @@ const LoanDetails: React.FC<{
       })
       .catch(() => {
         //handle error
-        setIsPendingRequestCollection(false);
+        setIsActionButtonPending(false);
         toast({
           title: "Something Unexpected Happened",
           variant: "destructive",
         });
       });
   };
+
+  function successCloseApproveDialog() {
+    setOpenApproveDialog(false);
+    refresh();
+  }
   const onPrepareLoan = useCallback(() => {
     setOpenPreparationDialog(true);
   }, []);
@@ -161,6 +151,32 @@ const LoanDetails: React.FC<{
   const onReturnLoan = useCallback(() => {
     setOpenReturnDialog(true);
   }, []);
+
+  const executeCancelLoan = () => {
+    setIsActionButtonPending(true);
+
+    cancelLoan
+      .mutateAsync({ id: id })
+      .then(() => {
+        setIsActionButtonPending(false);
+        refetch().catch((error) => {
+          console.log(error);
+          toast({
+            title: "Something Unexpected Happened",
+            description: "Please contact help desk",
+            variant: "destructive",
+          });
+        });
+      })
+      .catch(() => {
+        setIsActionButtonPending(false);
+        toast({
+          title: "Something Unexpected Happened",
+          description: "Please contact help desk",
+          variant: "destructive",
+        });
+      });
+  };
   if (!data) {
     return (
       <div className="w-7/8 h-full  rounded-lg bg-white p-5 shadow-lg">
@@ -176,6 +192,12 @@ const LoanDetails: React.FC<{
 
   return (
     <div className="w-full">
+      <ApprovalLoanDialog
+        id={id}
+        successCloseDialog={successCloseApproveDialog}
+        isDialogOpen={openApproveDialog}
+        setIsDialogOpen={setOpenApproveDialog}
+      />
       <Dialog
         open={openOutstandingItemsDialog}
         onOpenChange={setOpenOutstandingItemsDialog}
@@ -431,7 +453,8 @@ const LoanDetails: React.FC<{
             <Skeleton className="h-10 w-1/6" />
           ) : (
             <LoanActions
-              isPendingRequestCollection={isPendingRequestCollection}
+              cancelLoan={executeCancelLoan}
+              isActionButtonPending={isActionButtonPending}
               isPendingApproveLoan={isPendingApproveLoan}
               isPendingRejectLoan={isPendingRejectLoan}
               userAccessRights={userAccessRights}

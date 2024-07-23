@@ -51,8 +51,8 @@ export const LoanTablePendingApprovalRowActionsProps = <TData,>({
             Request Collection
           </DropdownMenuItem>
         ) : null}
-        {row.getValue("status") == "PENDING_APPROVAL" ||
-        row.getValue("status") == "APPROVED" ? (
+        {row.getValue("status") === "PENDING_APPROVAL" ||
+        row.getValue("status") === "REQUEST_COLLECTION" ? (
           <DropdownMenuItem
             onClick={() => {
               onCancel(row.original);
