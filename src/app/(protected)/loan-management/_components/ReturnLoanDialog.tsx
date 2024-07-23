@@ -298,12 +298,6 @@ const ReturnLoanDialog: React.FC<{
           }}
         />
       </div>
-      <div className="mt-10 flex justify-center">
-        <div className="flex flex-col items-center">
-          <p className="font-semibold">Collection Reference Number</p>
-          <p>{data.collectionReferenceNumber}</p>
-        </div>
-      </div>
       <div className="mt-6 flex flex-col items-center gap-2">
         <p className=" font-semibold">Borrower Signature</p>
         <div className=" overflow-hidden">
