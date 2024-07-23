@@ -393,6 +393,7 @@ const LoanRequestComponent: React.FC<{
                 onValueChange={(key) => {
                   setSelectedCategoryId(key);
                 }}
+                value={selectedCategoryId}
               >
                 <SelectTrigger className="w-1/4  min-w-44">
                   <SelectValue placeholder="Category" />
@@ -401,7 +402,7 @@ const LoanRequestComponent: React.FC<{
                   <SelectGroup>
                     <SelectLabel>Category</SelectLabel>
                     <SelectItem key={"All"} value={"All"}>
-                      All
+                      All Category
                     </SelectItem>
                     {categoriesAndSubCategories.categories.map((category) => (
                       <SelectItem key={category.id} value={category.id}>
@@ -415,7 +416,7 @@ const LoanRequestComponent: React.FC<{
                 onValueChange={(key) => {
                   setSelectedSubCategoryId(key);
                 }}
-                value={selectedCategoryId}
+                value={selectedSubCategoryId}
               >
                 <SelectTrigger className="w-1/4 min-w-44">
                   <SelectValue placeholder="Sub-Category" />
@@ -424,7 +425,7 @@ const LoanRequestComponent: React.FC<{
                   <SelectGroup>
                     <SelectLabel>Sub Category</SelectLabel>
                     <SelectItem key={"All"} value={"All"}>
-                      All
+                      All Sub Category
                     </SelectItem>
                     {categoriesAndSubCategories.subCategories.map(
                       (subCategory) =>
