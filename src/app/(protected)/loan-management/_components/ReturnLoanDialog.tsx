@@ -41,7 +41,7 @@ const ReturnLoanDialog: React.FC<{
 }> = ({ closeDialog, id }) => {
   const [isReturning, setIsReturning] = useState<boolean>(false);
   const { isFetching, data, isFetched, refetch } =
-    api.loanRequest.getReadyLoanById.useQuery({
+    api.loanRequest.getReturnLoanById.useQuery({
       id: id,
     });
   const processLoanCollection = api.loanRequest.processLoanReturn.useMutation();
@@ -79,15 +79,16 @@ const ReturnLoanDialog: React.FC<{
     setProcessLoanData((prev) => prev.slice(0, data?.loanItems.length));
   }, [data?.loanItems, isFetched]);
 
-  useEffect(() => {
+  function updateReturn() {
     const index = processedLoanData.findIndex(
-      (loanData) => loanData.assetNumber === returnedInventoryAssetNum,
+      (loanData) =>
+        loanData.assetNumber === returnedInventoryAssetNum.toUpperCase(),
     );
 
     if (index !== -1) {
       setProcessLoanData((prevItems) => {
         const updatedItems = [...prevItems];
-        updatedItems[index]!.returned = "Returned";
+        updatedItems[index]!.returned = "RETURNED";
         return updatedItems;
       });
 
@@ -96,12 +97,12 @@ const ReturnLoanDialog: React.FC<{
     }
     let returnCount = 0;
     processedLoanData.forEach((loan) => {
-      if (loan.returned !== "Not Returned") {
+      if (loan.returned !== "NOT RETURNED") {
         returnCount++;
       }
     });
     setReturnedItemLength(returnCount);
-  }, [processedLoanData, returnedInventoryAssetNum, returnedItemLength]);
+  }
 
   function onSubmit() {
     setIsReturning(true);
@@ -143,7 +144,6 @@ const ReturnLoanDialog: React.FC<{
       </div>
     );
   }
-  console.log(processedLoanData);
   return (
     <div className="w-7/8 h-full overflow-y-scroll p-5">
       <div className="flex">
@@ -290,6 +290,11 @@ const ReturnLoanDialog: React.FC<{
           value={returnedInventoryAssetNum}
           onChange={(event) => {
             setReturnedInventoryAssetNum(event.target.value);
+          }}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") {
+              updateReturn();
+            }
           }}
         />
       </div>

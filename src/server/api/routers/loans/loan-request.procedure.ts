@@ -1015,6 +1015,77 @@ export const loanRequestRouter = createTRPCRouter({
                 .leftJoin("Loan", "LoanItem.loanId", "Loan.id")
                 .selectAll("LoanItem")
                 .where("Loan.id", "=", input.id)
+                .where("LoanItem.status", "=", "READY")
+                .select((eb1) => [
+                  jsonObjectFrom(
+                    eb1
+                      .selectFrom("Equipment")
+                      .selectAll()
+                      .whereRef("Equipment.id", "=", "LoanItem.equipmentId"),
+                  ).as("equipment"),
+                  jsonObjectFrom(
+                    eb1
+                      .selectFrom("Inventory")
+                      .selectAll()
+                      .whereRef("LoanItem.inventoryId", "=", "Inventory.id"),
+                  ).as("loanedInventory"),
+                ])
+                .orderBy("LoanItem.equipmentId"),
+            ).as("loanItems") ?? "",
+          ])
+          .executeTakeFirstOrThrow();
+
+        return loanDetails;
+      } catch (err) {
+        console.log(err);
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      }
+    }),
+  getReturnLoanById: protectedProcedure
+    .input(z.object({ id: z.string().min(1) }))
+    .query(async ({ ctx, input }) => {
+      try {
+        const loanDetails = await ctx.db
+          .selectFrom("Loan")
+          .selectAll("Loan")
+          .where("Loan.id", "=", input.id)
+          .select((eb) => [
+            jsonObjectFrom(
+              eb
+                .selectFrom("User")
+                .select("User.name")
+                .whereRef("Loan.loanedById", "=", "User.id"),
+            ).as("loanedBy"),
+            jsonObjectFrom(
+              eb
+                .selectFrom("User")
+                .select("User.name")
+                .whereRef("Loan.approvedById", "=", "User.id"),
+            ).as("approvedBy"),
+            jsonObjectFrom(
+              eb
+                .selectFrom("User")
+                .select("User.name")
+                .whereRef("Loan.preparedById", "=", "User.id"),
+            ).as("preparedBy"),
+            jsonObjectFrom(
+              eb
+                .selectFrom("User")
+                .select("User.name")
+                .whereRef("Loan.issuedById", "=", "User.id"),
+            ).as("issuedBy"),
+            jsonObjectFrom(
+              eb
+                .selectFrom("User")
+                .select("User.name")
+                .whereRef("Loan.returnedToId", "=", "User.id"),
+            ).as("returnedTo"),
+            jsonArrayFrom(
+              eb
+                .selectFrom("LoanItem")
+                .leftJoin("Loan", "LoanItem.loanId", "Loan.id")
+                .selectAll("LoanItem")
+                .where("Loan.id", "=", input.id)
                 .where("LoanItem.status", "=", "COLLECTED")
                 .select((eb1) => [
                   jsonObjectFrom(
@@ -1041,7 +1112,6 @@ export const loanRequestRouter = createTRPCRouter({
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
       }
     }),
-
   processLoanCollection: protectedProcedure
     .input(
       z.object({ signatureData: z.string().min(1), id: z.string().min(1) }),
