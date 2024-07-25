@@ -18,7 +18,7 @@
 next-env.d.ts
 
 # production
-# /build
+/build
 
 # misc
 .DS_Store
