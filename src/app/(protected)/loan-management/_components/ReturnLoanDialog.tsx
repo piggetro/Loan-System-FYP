@@ -201,15 +201,6 @@ const ReturnLoanDialog: React.FC<{
             </p>
           </div>
         </div>
-        <div className="flex w-1/2 justify-end">
-          <div
-            onClick={() => {
-              closeDialog();
-            }}
-          >
-            <X></X>
-          </div>
-        </div>
       </div>
 
       <div className="mt-7">
@@ -247,12 +238,35 @@ const ReturnLoanDialog: React.FC<{
                     </SelectTrigger>
 
                     <SelectContent>
-                      <SelectItem value="COLLECTED">Not Returned</SelectItem>
-                      <SelectItem value="RETURNED">Returned</SelectItem>
-                      <SelectItem value="LOST">Lost</SelectItem>
-                      <SelectItem value="DAMAGED">Damaged</SelectItem>
+                      <SelectItem value="COLLECTED">
+                        <div className="flex items-center justify-start gap-2">
+                          <div className="h-3 w-3 rounded-full bg-orange-500"></div>
+                          <p>Not Returned</p>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="RETURNED">
+                        <div className="flex items-center justify-start gap-2">
+                          <div className="h-3 w-3 rounded-full bg-green-500"></div>
+                          <p>Returned</p>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="DAMAGED">
+                        <div className="flex items-center justify-start gap-2">
+                          <div className="h-3 w-3 rounded-full bg-red-500"></div>
+                          <p>Damaged</p>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="LOST">
+                        <div className="flex items-center justify-start gap-2">
+                          <div className="h-3 w-3 rounded-full bg-red-500"></div>
+                          <p>Lost</p>
+                        </div>
+                      </SelectItem>
                       <SelectItem value="MISSING_CHECKLIST_ITEMS">
-                        Penalty For Checklist
+                        <div className="flex items-center justify-start gap-2">
+                          <div className="h-3 w-3 rounded-full bg-red-500"></div>
+                          <p>Penalty For Checklist</p>
+                        </div>
                       </SelectItem>
                     </SelectContent>
                   </Select>

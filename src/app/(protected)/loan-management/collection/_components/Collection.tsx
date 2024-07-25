@@ -15,6 +15,7 @@ import {
 } from "@/app/_components/ui/alert-dialog";
 import { Skeleton } from "@/app/_components/ui/skeleton";
 import { type LoanStatus } from "@/db/enums";
+import { Dialog, DialogContent } from "@/app/_components/ui/dialog";
 
 export interface CollectionLoanType {
   id: string;
@@ -63,8 +64,8 @@ const CollectionPage: React.FC<{
 
   return (
     <div className="rounded-lg bg-white p-5 shadow-lg">
-      <AlertDialog open={openCollectDialog}>
-        <AlertDialogContent className=" h-3/4 w-11/12 max-w-none">
+      <Dialog open={openCollectDialog} onOpenChange={setOpenCollectDialog}>
+        <DialogContent className=" h-3/4 w-11/12 max-w-none">
           <CollectionLoanDialog
             closeDialog={() => {
               setOpenCollectDialog(false);
@@ -78,8 +79,8 @@ const CollectionPage: React.FC<{
             }}
             id={preperationId}
           />
-        </AlertDialogContent>
-      </AlertDialog>
+        </DialogContent>
+      </Dialog>
       {data === undefined ? (
         <div className="flex flex-col gap-2">
           <Skeleton className="h-7 w-1/3" />

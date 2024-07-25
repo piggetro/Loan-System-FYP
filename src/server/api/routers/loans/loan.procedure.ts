@@ -277,7 +277,7 @@ export const loanRouter = createTRPCRouter({
 
         item.outstandingItems.forEach((outstandingItem) => {
           if (
-            outstandingItem.status === "AWAITING_REQUEST" ||
+            outstandingItem.status === "PENDING_REQUEST" ||
             outstandingItem.status === "REJECTED"
           ) {
             remarks += outstandingItem.remarks;
@@ -291,7 +291,7 @@ export const loanRouter = createTRPCRouter({
         } else if (statusArray.every((status) => status === "PENDING")) {
           status = "Pending";
         } else if (
-          statusArray.every((status) => status === "AWAITING_REQUEST")
+          statusArray.every((status) => status === "PENDING_REQUEST")
         ) {
           status = "Awaiting Request";
         } else {

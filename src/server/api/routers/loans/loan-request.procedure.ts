@@ -348,6 +348,7 @@ export const loanRequestRouter = createTRPCRouter({
           ])
           .where("Loan.approverId", "=", ctx.user.id)
           .where("Loan.status", "=", "PENDING_APPROVAL")
+          .orderBy("Loan.dateCreated desc")
           .execute();
 
         return userApprovalManagementLoanRequests;
@@ -393,6 +394,7 @@ export const loanRequestRouter = createTRPCRouter({
           ])
           .where("Loan.approverId", "=", ctx.user.id)
           .where("Loan.status", "!=", "PENDING_APPROVAL")
+          .orderBy("Loan.dateCreated desc")
           .execute();
 
         return userApprovalManagementLoanRequests;
@@ -774,6 +776,7 @@ export const loanRequestRouter = createTRPCRouter({
               ]),
           ).as("loanItems"),
         ])
+        .orderBy("Loan.dateCreated desc")
         .execute();
 
       return results;
@@ -861,6 +864,7 @@ export const loanRequestRouter = createTRPCRouter({
           ).as("loanedBy"),
         ])
         .where("Loan.status", "=", "READY")
+        .orderBy("Loan.dateCreated desc")
         .execute();
 
       return results;
@@ -1216,6 +1220,7 @@ export const loanRequestRouter = createTRPCRouter({
               .orderBy("LoanItem.equipmentId"),
           ).as("loanItems") ?? "",
         ])
+        .orderBy("Loan.dateCreated desc")
         .execute();
 
       return loansForReturn;
@@ -1343,7 +1348,7 @@ export const loanRequestRouter = createTRPCRouter({
                 .insertInto("Waiver")
                 .values({
                   id: waiverId,
-                  status: "AWAITING_REQUEST",
+                  status: "PENDING_REQUEST",
                   loanId: input.id,
                   remarks: outstandingItemsRemarks,
                 })
@@ -1412,6 +1417,7 @@ export const loanRequestRouter = createTRPCRouter({
           "MISSING_CHECKLIST_ITEMS",
         ])
         .distinctOn("Loan.id")
+        .orderBy("Loan.dateCreated desc")
         .execute();
       const data = lostAndDamagedLoan.map((item) => {
         let remarks = "";
@@ -1498,7 +1504,7 @@ export const loanRequestRouter = createTRPCRouter({
 
       item.outstandingItems.forEach((outstandingItem) => {
         if (
-          outstandingItem.status === "AWAITING_REQUEST" ||
+          outstandingItem.status === "PENDING_REQUEST" ||
           outstandingItem.status === "REJECTED"
         ) {
           remarks += outstandingItem.remarks + " ";
@@ -1511,7 +1517,7 @@ export const loanRequestRouter = createTRPCRouter({
         status = "Approved";
       } else if (statusArray.every((status) => status === "PENDING")) {
         status = "Pending";
-      } else if (statusArray.every((status) => status === "AWAITING_REQUEST")) {
+      } else if (statusArray.every((status) => status === "PENDING_REQUEST")) {
         status = "Awaiting Request";
       } else {
         status = "Partially Outstanding";

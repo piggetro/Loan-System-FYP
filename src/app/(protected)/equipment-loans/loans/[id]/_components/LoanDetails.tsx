@@ -213,8 +213,11 @@ const LoanDetails: React.FC<{
           />
         </DialogContent>
       </Dialog>
-      <AlertDialog open={openCollectLoanDialog}>
-        <AlertDialogContent className=" h-3/4 w-11/12 max-w-none">
+      <Dialog
+        open={openCollectLoanDialog}
+        onOpenChange={setOpenCollectLoanDialog}
+      >
+        <DialogContent className=" h-3/4 w-11/12 max-w-none">
           <CollectionLoanDialog
             closeDialog={() => {
               setOpenCollectLoanDialog(false);
@@ -222,11 +225,11 @@ const LoanDetails: React.FC<{
             }}
             id={id}
           />
-        </AlertDialogContent>
-      </AlertDialog>
+        </DialogContent>
+      </Dialog>
 
-      <AlertDialog open={openRequestDialog} onOpenChange={setOpenRequestDialog}>
-        <AlertDialogContent>
+      <Dialog open={openRequestDialog} onOpenChange={setOpenRequestDialog}>
+        <DialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Request Collection</AlertDialogTitle>
             <AlertDialogDescription>
@@ -270,8 +273,8 @@ const LoanDetails: React.FC<{
               Continue
             </AlertDialogAction>
           </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        </DialogContent>
+      </Dialog>
 
       <PreparationLoanDialog
         isDialogOpen={openPreparationDialog}
@@ -283,8 +286,8 @@ const LoanDetails: React.FC<{
         id={id}
       />
 
-      <AlertDialog open={openReturnDialog}>
-        <AlertDialogContent className=" h-3/4 w-11/12 max-w-none">
+      <Dialog open={openReturnDialog} onOpenChange={setOpenReturnDialog}>
+        <DialogContent className=" h-3/4 w-11/12 max-w-none">
           <ReturnLoanDialog
             closeDialog={() => {
               setOpenReturnDialog(false);
@@ -298,8 +301,8 @@ const LoanDetails: React.FC<{
             }}
             id={id}
           />
-        </AlertDialogContent>
-      </AlertDialog>
+        </DialogContent>
+      </Dialog>
       <div className="w-7/8 h-full  rounded-lg bg-white p-5 shadow-lg">
         <div className="text-xl font-bold">{data.loanId}</div>
         <div className="mt-4 text-sm">
@@ -368,7 +371,9 @@ const LoanDetails: React.FC<{
           ) : userAccessRights?.includes("Admin Waiver Option") ? (
             <Button
               onClick={() => {
-                router.push(`/loan-management/waiver/${id}?prev=loan-details&loan=${id}`);
+                router.push(
+                  `/loan-management/waiver/${id}?prev=loan-details&loan=${id}`,
+                );
               }}
             >
               View Waiver

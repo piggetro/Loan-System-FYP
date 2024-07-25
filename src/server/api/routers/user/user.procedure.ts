@@ -43,6 +43,7 @@ export const userRouter = createTRPCRouter({
         .where("Loan.loanedById", "=", ctx.user.id)
         .where("Loan.status", "not in", ["REJECTED", "CANCELLED", "RETURNED"])
         .where("Loan.dueDate", ">", new Date())
+        .orderBy("Loan.dateCreated desc")
         .execute();
     } catch (err) {
       console.log(err);

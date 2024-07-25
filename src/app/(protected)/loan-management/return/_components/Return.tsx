@@ -16,6 +16,7 @@ import {
 } from "@/app/_components/ui/alert-dialog";
 import ReturnLoanDialog from "../../_components/ReturnLoanDialog";
 import { type LoanStatus } from "@/db/enums";
+import { Dialog, DialogContent } from "@/app/_components/ui/dialog";
 
 export interface PreparationLoanType {
   id: string;
@@ -64,8 +65,8 @@ const ReturnPage: React.FC<{
 
   return (
     <div className="rounded-lg bg-white p-5 shadow-lg">
-      <AlertDialog open={openReturnDialog}>
-        <AlertDialogContent className=" h-3/4 w-11/12 max-w-none">
+      <Dialog open={openReturnDialog} onOpenChange={setOpenReturnDialog}>
+        <DialogContent className=" h-3/4 w-11/12 max-w-none">
           <ReturnLoanDialog
             closeDialog={() => {
               setOpenReturnDialog(false);
@@ -79,8 +80,8 @@ const ReturnPage: React.FC<{
             }}
             id={returnId}
           />
-        </AlertDialogContent>
-      </AlertDialog>
+        </DialogContent>
+      </Dialog>
       {data === undefined ? (
         <div className="flex flex-col gap-2">
           <Skeleton className="h-7 w-1/3" />

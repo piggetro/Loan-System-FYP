@@ -141,7 +141,7 @@ const LostBrokenLoanDetails: React.FC<{
                   data.status === "APPROVED"
                     ? "bg-green-500"
                     : data.status === "PENDING" ||
-                        data.status === "AWAITING_REQUEST"
+                        data.status === "PENDING_REQUEST"
                       ? "bg-yellow-500"
                       : "bg-red-500"
                 }`}
@@ -161,7 +161,7 @@ const LostBrokenLoanDetails: React.FC<{
                   <FormItem>
                     <FormControl>
                       <Textarea
-                        disabled={data.status !== "AWAITING_REQUEST"}
+                        disabled={data.status !== "PENDING_REQUEST"}
                         {...field}
                       />
                     </FormControl>
@@ -179,7 +179,7 @@ const LostBrokenLoanDetails: React.FC<{
                 <Button
                   disabled={
                     form.getValues("waiverRequest") === "" ||
-                    data.status !== "AWAITING_REQUEST" ||
+                    data.status !== "PENDING_REQUEST" ||
                     form.getValues("waiverRequest") === null ||
                     form.getValues("waiverRequest") === undefined
                   }

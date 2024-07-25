@@ -200,11 +200,11 @@ model Waiver {
 }
 
 enum WaiveRequestStatus {
-    AWAITING_REQUEST
     PENDING
     APPROVED
     RESOLVED
     REJECTED
+    PENDING_REQUEST
 }
 
 model AccessRights {
