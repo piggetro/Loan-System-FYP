@@ -27,7 +27,7 @@ export const loanRequestRouter = createTRPCRouter({
   getEquipmentAndInventory: protectedProcedure
     .input(
       z.object({
-        searchInput: z.string().min(1),
+        searchInput: z.string(),
         categoryId: z.string().min(1),
         subCategoryId: z.string().min(1),
       }),

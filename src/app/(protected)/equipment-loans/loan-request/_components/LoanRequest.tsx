@@ -182,7 +182,10 @@ const LoanRequestComponent: React.FC<{
 
   function executeSearch() {
     setDebouncerIsLoading(true);
-    if (searchInput !== "") {
+    if (
+      searchInput !== "" ||
+      (searchInput === "" && selectedCategoryId !== "All")
+    ) {
       fetchSearch({
         searchInput: searchInput,
         categoryId: selectedCategoryId,
@@ -386,6 +389,8 @@ const LoanRequestComponent: React.FC<{
                 onKeyDown={(event) => {
                   if (event.key === "Enter") {
                     if (searchInput !== "") executeSearch();
+                    else if (searchInput === "" && selectedCategoryId !== "All")
+                      executeSearch();
                   }
                 }}
               />
@@ -445,6 +450,8 @@ const LoanRequestComponent: React.FC<{
                 type="button"
                 onClick={() => {
                   if (searchInput !== "") executeSearch();
+                  else if (searchInput === "" && selectedCategoryId !== "All")
+                    executeSearch();
                 }}
               >
                 <Search />
