@@ -14,6 +14,7 @@ import EditInventoryItem from "./EditInventoryItem";
 import DeleteInventoryItem from "./DeleteInventoryItem";
 import { Button } from "@/app/_components/ui/button";
 import { EquipmentInventoryItemsDataTable } from "./EquipmentInventoryItemsDataTable";
+import Image from "next/image";
 
 interface EquipmentDetailsProps {
   equipment: Equipment;

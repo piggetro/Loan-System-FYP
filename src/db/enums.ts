@@ -3,6 +3,7 @@ export const EquipmentStatus = {
     DAMAGED: "DAMAGED",
     LOANED: "LOANED",
     AVAILABLE: "AVAILABLE",
+    UNAVAILABLE: "UNAVAILABLE",
     MISSING_CHECKLIST_ITEMS: "MISSING_CHECKLIST_ITEMS"
 } as const;
 export type EquipmentStatus = (typeof EquipmentStatus)[keyof typeof EquipmentStatus];
@@ -27,13 +28,15 @@ export const LoanedItemsStatus = {
     DAMAGED: "DAMAGED",
     LOST: "LOST",
     CANCELLED: "CANCELLED",
-    MISSING_CHECKLIST_ITEMS: "MISSING_CHECKLIST_ITEMS"
+    MISSING_CHECKLIST_ITEMS: "MISSING_CHECKLIST_ITEMS",
+    REJECTED: "REJECTED"
 } as const;
 export type LoanedItemsStatus = (typeof LoanedItemsStatus)[keyof typeof LoanedItemsStatus];
 export const WaiveRequestStatus = {
     AWAITING_REQUEST: "AWAITING_REQUEST",
     PENDING: "PENDING",
     APPROVED: "APPROVED",
+    RESOLVED: "RESOLVED",
     REJECTED: "REJECTED"
 } as const;
 export type WaiveRequestStatus = (typeof WaiveRequestStatus)[keyof typeof WaiveRequestStatus];

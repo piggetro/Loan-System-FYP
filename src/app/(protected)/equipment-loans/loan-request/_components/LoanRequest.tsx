@@ -26,7 +26,7 @@ import {
   FormItem,
   FormMessage,
 } from "@/app/_components/ui/form";
-import { CalendarIcon, ChevronsUpDown } from "lucide-react";
+import { CalendarIcon, ChevronsUpDown, Search } from "lucide-react";
 import { Calendar } from "@/app/_components/ui/calendar";
 import { type Inventory } from "../page";
 import { cn } from "@/lib/utils";
@@ -44,6 +44,15 @@ import {
   CommandItem,
   CommandList,
 } from "@/app/_components/ui/command";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/app/_components/ui/select";
 
 const formSchema = z.object({
   remarks: z.string().min(1, "Required").max(150),
@@ -66,6 +75,9 @@ const LoanRequestComponent: React.FC<{
   const [approverEmail, setApproverEmail] = useState<string>("");
   const [openApproverDropdown, setOpenApproverDropdown] =
     useState<boolean>(false);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string>("All");
+  const [selectedSubCategoryId, setSelectedSubCategoryId] =
+    useState<string>("All");
   const [searchInput, setSearchInput] = useState<string>("");
   const [debouncerIsLoading, setDebouncerIsLoading] = useState<boolean>(false);
   const [reviewLoanRequestOpen, setReviewLoanRequestOpen] =
@@ -127,6 +139,10 @@ const LoanRequestComponent: React.FC<{
 
     selectedEquipment.splice(index, 1, equipmentData);
   }
+
+  useEffect(() => {
+    setSelectedSubCategoryId("All");
+  }, [selectedCategoryId]);
   const closeDialog = (successMessage: {
     title: string;
     description: string;
@@ -166,30 +182,21 @@ const LoanRequestComponent: React.FC<{
 
   function executeSearch() {
     setDebouncerIsLoading(true);
-    if (searchInput !== "") {
-      fetchSearch({ searchInput: searchInput })
+    if (
+      searchInput !== "" ||
+      (searchInput === "" && selectedCategoryId !== "All")
+    ) {
+      fetchSearch({
+        searchInput: searchInput,
+        categoryId: selectedCategoryId,
+        subCategoryId: selectedSubCategoryId,
+      })
         .then(() => {
           setDebouncerIsLoading(false);
         })
         .catch((e) => console.log(e));
     }
   }
-
-  //debouncer
-  // useEffect(() => {
-  //   setDebouncerIsLoading(true);
-  //   const timeout = setTimeout(() => {
-  //     if (searchInput !== "") {
-  //       fetchSearch({ searchInput: searchInput })
-  //         .then(() => {
-  //           setDebouncerIsLoading(false);
-  //         })
-  //         .catch((e) => console.log(e));
-  //     }
-  //   }, 500);
-
-  //   return () => clearTimeout(timeout);
-  // }, [searchInput]);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -231,7 +238,6 @@ const LoanRequestComponent: React.FC<{
                           <FormControl>
                             <Textarea placeholder="Remarks" {...field} />
                           </FormControl>
-
                           <FormMessage className="h-7" />
                         </FormItem>
                       )}
@@ -382,18 +388,76 @@ const LoanRequestComponent: React.FC<{
                 }}
                 onKeyDown={(event) => {
                   if (event.key === "Enter") {
-                    executeSearch();
+                    if (searchInput !== "") executeSearch();
+                    else if (searchInput === "" && selectedCategoryId !== "All")
+                      executeSearch();
                   }
                 }}
               />
+              <Select
+                onValueChange={(key) => {
+                  setSelectedCategoryId(key);
+                }}
+                value={selectedCategoryId}
+              >
+                <SelectTrigger className="w-1/4  min-w-44">
+                  <SelectValue placeholder="Category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectLabel>Category</SelectLabel>
+                    <SelectItem key={"All"} value={"All"}>
+                      All Category
+                    </SelectItem>
+                    {categoriesAndSubCategories.categories.map((category) => (
+                      <SelectItem key={category.id} value={category.id}>
+                        {category.name}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+              <Select
+                onValueChange={(key) => {
+                  setSelectedSubCategoryId(key);
+                }}
+                value={selectedSubCategoryId}
+              >
+                <SelectTrigger className="w-1/4 min-w-44">
+                  <SelectValue placeholder="Sub-Category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectLabel>Sub Category</SelectLabel>
+                    <SelectItem key={"All"} value={"All"}>
+                      All Sub Category
+                    </SelectItem>
+                    {categoriesAndSubCategories.subCategories.map(
+                      (subCategory) =>
+                        selectedCategoryId == subCategory.categoryId ? (
+                          <SelectItem
+                            key={subCategory.id}
+                            value={subCategory.id}
+                          >
+                            {subCategory.name}
+                          </SelectItem>
+                        ) : null,
+                    )}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+              <Button
+                type="button"
+                onClick={() => {
+                  if (searchInput !== "") executeSearch();
+                  else if (searchInput === "" && selectedCategoryId !== "All")
+                    executeSearch();
+                }}
+              >
+                <Search />
+              </Button>
             </div>
-            {searchInput === "" ? (
-              <div>
-                <div className="my-3 flex h-[100px] w-full items-center justify-center">
-                  <div>Search For Equipment</div>
-                </div>
-              </div>
-            ) : debouncerIsLoading ? (
+            {debouncerIsLoading ? (
               <div>
                 <div className="my-3 w-full">
                   <Skeleton className="mb-3 h-7" />
@@ -404,7 +468,6 @@ const LoanRequestComponent: React.FC<{
               <EquipmentDataTable
                 data={equipmentAndInventory}
                 columns={equipmentColumns(addItem)}
-                categoriesAndSubCategories={categoriesAndSubCategories}
               />
             ) : (
               <div>

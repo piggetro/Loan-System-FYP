@@ -5,6 +5,7 @@ import { api } from "@/trpc/server";
 
 const page = async () => {
   const allSemesters = await api.loan.getSemesters();
+  const categoriesAndSubCategories = await api.loanRequest.getCategories();
   return (
     <div>
       <TopHeaderComponent

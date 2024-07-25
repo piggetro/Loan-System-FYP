@@ -18,6 +18,7 @@ export const equipmentRouter = createTRPCRouter({
           "Category.name",
           "Category.id",
           "SubCategory.id",
+          "Equipment.photoPath",
         ])
         .select([
           "Equipment.id",
@@ -26,6 +27,7 @@ export const equipmentRouter = createTRPCRouter({
           "Category.name as category",
           "Category.id as categoryId",
           "SubCategory.id as subCategoryId",
+          "Equipment.photoPath",
           ctx.db.fn
             .count("Inventory.id")
             .filterWhere("Inventory.active", "=", true)
@@ -54,6 +56,7 @@ export const equipmentRouter = createTRPCRouter({
         unavailableCount: parseInt(
           equipment.unavailableCount?.toString() ?? "",
         ),
+        photoPath: equipment.photoPath ?? "",
       }));
     } catch (err) {
       console.log(err);
@@ -267,6 +270,7 @@ export const equipmentRouter = createTRPCRouter({
             warrantyExpiry: z.date(),
           }),
         ),
+        photoType: z.union([z.string(), z.null()]),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -292,9 +296,12 @@ export const equipmentRouter = createTRPCRouter({
                   updatedAt: new Date(),
                   active: true,
                   loanLimit:
-                    averageCost > loanLimitPrice.loanLimitPrice ? 1 : 0,
+                    averageCost >= loanLimitPrice.loanLimitPrice ? 1 : 0,
+                  photoPath: input.photoType
+                    ? createId() + input.photoType
+                    : "default.jpg",
                 })
-                .returning(["id", "name", "subCategoryId"]),
+                .returning(["id", "name", "subCategoryId", "photoPath"]),
             )
             .with("equipmentDetails", (db) =>
               db
@@ -312,6 +319,7 @@ export const equipmentRouter = createTRPCRouter({
                   "Category.name as category",
                   "Category.id as categoryId",
                   "SubCategory.id as subCategoryId",
+                  "newEquipment.photoPath",
                 ]),
             )
             .selectFrom("equipmentDetails")
@@ -355,6 +363,7 @@ export const equipmentRouter = createTRPCRouter({
           categoryId: equipment.categoryId ?? "",
           totalCount: input.inventoryItems.length,
           availableCount: input.inventoryItems.length,
+          photoPath: equipment.photoPath ?? "",
           unavailableCount: 0,
         };
       } catch (err) {
@@ -555,7 +564,13 @@ export const equipmentRouter = createTRPCRouter({
           .updateTable("Inventory")
           .set({
             assetNumber: input.assetNumber,
-            status: input.status as "AVAILABLE" | "LOST" | "LOANED" | "DAMAGED",
+            status: input.status as
+              | "AVAILABLE"
+              | "LOST"
+              | "LOANED"
+              | "DAMAGED"
+              | "UNAVAILABLE"
+              | "MISSING_CHECKLIST_ITEMS",
             cost: input.cost.toFixed(2),
             datePurchased: input.datePurchased,
             warrantyExpiry: input.warrantyExpiry,

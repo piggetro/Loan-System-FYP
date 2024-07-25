@@ -16,11 +16,11 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
         status: 403,
       });
     }
+    return NextResponse.next();
   }
 
   const cookieHeader = request.headers.get("Cookie");
   if (cookieHeader?.includes("auth_session")) {
-    request.headers.delete("content-length");
     const checkAuthorisation = await fetch(`${process.env.DOMAIN}/api/prisma`, {
       method: "POST",
       headers: request.headers,
@@ -37,7 +37,6 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
 
       return response;
     }
-
     return NextResponse.next();
   }
   return NextResponse.redirect(new URL("/not-found", request.url));

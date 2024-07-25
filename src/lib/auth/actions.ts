@@ -45,7 +45,9 @@ export async function login(adminId: string, password: string) {
           sessionCookie.value,
           sessionCookie.attributes,
         );
-        return redirect("/");
+        return {
+          success: true,
+        };
       } else {
         return {
           title: "Login Failed",

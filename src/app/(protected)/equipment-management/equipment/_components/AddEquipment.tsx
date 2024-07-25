@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Form,
   FormField,
@@ -14,7 +14,7 @@ import { SubmitHandler, useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "@/app/_components/ui/input";
-import { Loader2 } from "lucide-react";
+import { FileType, Loader2 } from "lucide-react";
 import { api } from "@/trpc/react";
 import { useToast } from "@/app/_components/ui/use-toast";
 import { Equipment } from "./EquipmentColumns";
@@ -53,8 +53,10 @@ export type Category = {
 const formSchema = z.object({
   name: z
     .string()
-    .min(1, { message: "Course Name must be at least 1 character long" })
-    .max(255, { message: "Course Name must be at most 255 characters long" }),
+    .min(1, { message: "Equipment Name must be at least 1 character long" })
+    .max(255, {
+      message: "Equipment Name must be at most 255 characters long",
+    }),
   checkList: z.string().optional(),
   category: z.string({ required_error: "Please select a category" }).min(1),
   subCategory: z
@@ -85,19 +87,74 @@ const AddEquipment = ({
   const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
   const [valid, setValid] = useState<boolean>(false);
   const [reset, setReset] = useState<boolean>(false);
+  const [file, setFile] = useState<File | undefined>();
+  const [fileType, setFileType] = useState<string | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0] ?? undefined;
+
+    if (selectedFile) {
+      const validImageTypes = ["image/jpeg", "image/png", "image/gif"];
+
+      if (!validImageTypes.includes(selectedFile.type)) {
+        alert("Please select a valid image file (JPG, PNG, GIF).");
+        setFile(undefined);
+        setFileType(null);
+        setImagePreview(null);
+        return;
+      }
+
+      setFile(selectedFile);
+
+      const previewUrl = URL.createObjectURL(selectedFile);
+      setImagePreview(previewUrl);
+
+      const mimeTypeToExtension: Record<string, string> = {
+        "image/jpeg": ".jpg",
+        "image/png": ".png",
+        "image/gif": ".gif",
+      };
+
+      const fileExtension = mimeTypeToExtension[selectedFile.type] ?? "unknown";
+      setFileType(fileExtension);
+    } else {
+      setFile(undefined);
+      setFileType(null);
+      setImagePreview(null);
+    }
+  };
 
   const { mutate: addEquipment, isPending } =
     api.equipment.addEquipment.useMutation({
-      onSuccess: (data) => {
-        setEquipment((prev) => [...prev, data]);
-        toast({
-          title: "Success",
-          description: "Equipment added successfully",
-        });
-        form.reset();
-        setInventoryItems([]);
-        setSelectedCategory("");
-        setReset(true);
+      onSuccess: async (data) => {
+        try {
+          if (!file) return;
+          const formData = new FormData();
+          formData.set("file", file);
+          formData.set("photoPath", data.photoPath);
+
+          const res = await fetch("/api/uploads", {
+            method: "POST",
+            body: formData,
+          });
+          if (!res.ok) throw new Error(await res.text());
+        } catch (e) {
+          console.error(e);
+        } finally {
+          setEquipment((prev) => [...prev, data]);
+          toast({
+            title: "Success",
+            description: "Equipment added successfully",
+          });
+          form.reset();
+          setInventoryItems([]);
+          setSelectedCategory("");
+          setReset(true);
+          setFile(undefined);
+          setFileType(null);
+          setImagePreview(null);
+        }
       },
       onError: (err) => {
         console.log(err);
@@ -109,6 +166,10 @@ const AddEquipment = ({
       },
     });
 
+  useEffect(() => {
+    console.log(fileType);
+  }, [fileType]);
+
   const onSubmit: SubmitHandler<z.infer<typeof formSchema>> = (
     values: z.infer<typeof formSchema>,
   ) => {
@@ -118,6 +179,7 @@ const AddEquipment = ({
         ...item,
         cost: parseFloat(item.cost),
       })),
+      photoType: fileType,
     });
   };
 
@@ -283,6 +345,41 @@ const AddEquipment = ({
                 </FormItem>
               )}
             />
+            <div className="space-y-4">
+              <div className="flex items-start space-x-4">
+                <div className="flex-0.5">
+                  <label
+                    htmlFor="file-upload"
+                    className="block text-base font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    Upload Equipment Image
+                  </label>
+                  <input
+                    id="file-upload"
+                    type="file"
+                    name="file"
+                    className="mt-2"
+                    accept="image/jpeg, image/png, image/gif"
+                    onChange={handleFileChange}
+                  />
+                </div>
+                {imagePreview && (
+                  <div className="flex-shrink-0">
+                    <img
+                      src={imagePreview}
+                      alt="Selected File Preview"
+                      className="h-20 w-20 border border-gray-300 object-cover"
+                    />
+                  </div>
+                )}
+                {file && (
+                  <div className="mt-2">
+                    <p>Selected file: {file.name}</p>
+                    <p>File type: {fileType}</p>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       </Form>

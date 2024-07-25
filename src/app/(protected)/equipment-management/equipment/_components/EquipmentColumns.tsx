@@ -13,6 +13,7 @@ export type Equipment = {
   unavailableCount: number;
   subCategoryId: string;
   categoryId: string;
+  photoPath: string;
 };
 
 interface equipmentColumnsProps {
@@ -27,6 +28,16 @@ export const equipmentColumns = ({
   {
     accessorKey: "name",
     header: "Equipment",
+    cell: ({ row }) => (
+      <div className="flex items-center">
+        <img
+          src={"/api/uploads/" + row.original.photoPath}
+          alt={row.original.name}
+          className="h-10 w-10"
+        />
+        <span className="ml-2">{row.original.name}</span>
+      </div>
+    ),
   },
   {
     accessorKey: "category",

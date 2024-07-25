@@ -3,6 +3,8 @@
 import { type ColumnDef } from "@tanstack/react-table";
 import { PreparationRowActionsProps } from "./TrackLoansLoanRowAction";
 import { type TrackLoansType } from "./TrackLoans";
+import { Button } from "@/app/_components/ui/button";
+import { ArrowUpDown } from "lucide-react";
 
 interface LoanProps {
   onView: (value: TrackLoansType) => void;
@@ -13,7 +15,17 @@ export const PreparationColumns = ({
 }: LoanProps): ColumnDef<TrackLoansType>[] => [
   {
     accessorKey: "loanId",
-    header: "Loan ID",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Loan ID
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      );
+    },
     cell: ({ row }) => <div className="w-96">{row.getValue("loanId")}</div>,
   },
   {

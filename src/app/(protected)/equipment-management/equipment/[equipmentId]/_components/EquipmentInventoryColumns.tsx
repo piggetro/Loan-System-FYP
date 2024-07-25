@@ -76,6 +76,7 @@ export const equipmentInventoryItemColumns = ({
 
 function toStartCase(string: string) {
   return string
+    .replace(/_/g, " ")
     .split(" ")
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
     .join(" ");

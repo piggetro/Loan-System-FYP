@@ -7,6 +7,7 @@ import { db } from "@/database";
 import { sql } from "kysely";
 import { createId } from "@paralleldrive/cuid2";
 import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
+import { LoanStatus } from "@/db/enums";
 
 export const loanRequestRouter = createTRPCRouter({
   getCategories: protectedProcedure.query(async ({ ctx }) => {
@@ -24,7 +25,13 @@ export const loanRequestRouter = createTRPCRouter({
   }),
 
   getEquipmentAndInventory: protectedProcedure
-    .input(z.object({ searchInput: z.string().min(1) }))
+    .input(
+      z.object({
+        searchInput: z.string(),
+        categoryId: z.string().min(1),
+        subCategoryId: z.string().min(1),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       try {
         //Checking if user is student
@@ -42,10 +49,6 @@ export const loanRequestRouter = createTRPCRouter({
           else throw new Error("This Account is not linked to a Course");
         }
 
-        // const generalSettingsLimit = await db
-        //   .selectFrom("GeneralSettings")
-        //   .select("GeneralSettings.loanLimitPrice")
-        //   .executeTakeFirst();
         let equipmentsQuery = db
           .selectFrom("Equipment as e")
           .leftJoin(
@@ -64,9 +67,10 @@ export const loanRequestRouter = createTRPCRouter({
           .where("e.name", "ilike", `%${input.searchInput}%`)
           .distinctOn("e.id");
 
-        const inventoryAvailabilityQuery = db
+        let inventoryAvailabilityQuery = db
           .selectFrom("Inventory")
           .leftJoin("Equipment", "Inventory.equipmentId", "Equipment.id")
+          .leftJoin("SubCategory", "SubCategory.id", "Equipment.subCategoryId")
           .select("equipmentId")
           .select([
             sql<number>`COUNT(*)`.as("count"),
@@ -78,21 +82,24 @@ export const loanRequestRouter = createTRPCRouter({
               eb("Equipment.name", "ilike", `%${input.searchInput}%`),
               eb("Equipment.active", "=", true),
               eb("Inventory.active", "=", true),
+              eb("Inventory.status", "=", "AVAILABLE"),
             ]),
           );
-        const loanItemsUnavailableQuery = db
+        let loanItemsUnavailableQuery = db
           .selectFrom("LoanItem")
           .select([
             "LoanItem.equipmentId",
             sql<number>`COALESCE(COUNT(*), 0)`.as("count"),
           ])
           .leftJoin("Equipment as e", "LoanItem.equipmentId", "e.id")
+          .leftJoin("SubCategory", "SubCategory.id", "e.subCategoryId")
           .where("e.name", "ilike", `%${input.searchInput}%`)
-          .where("LoanItem.status", "not in", [
-            "CANCELLED",
-            "REQUEST_COLLECTION",
-            "RETURNED",
-          ])
+          .where((eb) =>
+            eb.or([
+              eb("LoanItem.status", "=", "REQUEST_COLLECTION"),
+              eb("LoanItem.status", "=", "PREPARING"),
+            ]),
+          )
           .groupBy("LoanItem.equipmentId");
 
         if (referingCourseId !== undefined) {
@@ -100,6 +107,41 @@ export const loanRequestRouter = createTRPCRouter({
             "EquipmentOnCourses.courseId",
             "=",
             "clw7z6fyo00003qp95wbipxtr",
+          );
+        }
+
+        if (input.categoryId !== "All") {
+          equipmentsQuery = equipmentsQuery.where(
+            "Category.id",
+            "=",
+            input.categoryId,
+          );
+          inventoryAvailabilityQuery = inventoryAvailabilityQuery.where(
+            "SubCategory.categoryId",
+            "=",
+            input.categoryId,
+          );
+          loanItemsUnavailableQuery = loanItemsUnavailableQuery.where(
+            "SubCategory.categoryId",
+            "=",
+            input.categoryId,
+          );
+        }
+        if (input.subCategoryId !== "All") {
+          equipmentsQuery = equipmentsQuery.where(
+            "SubCategory.id",
+            "=",
+            input.subCategoryId,
+          );
+          inventoryAvailabilityQuery = inventoryAvailabilityQuery.where(
+            "SubCategory.id",
+            "=",
+            input.subCategoryId,
+          );
+          loanItemsUnavailableQuery = loanItemsUnavailableQuery.where(
+            "SubCategory.id",
+            "=",
+            input.categoryId,
           );
         }
         const [equipments, inventoryAvailability, loanItemsUnavailable] =
@@ -361,7 +403,20 @@ export const loanRequestRouter = createTRPCRouter({
     },
   ),
   approveLoanRequestWithLoanId: protectedProcedure
-    .input(z.object({ loanId: z.string().min(1) }))
+    .input(
+      z.object({
+        loanId: z.string().min(1),
+        loanItems: z.array(
+          z.object({
+            equipmentId: z.string().min(1),
+            description: z.string().min(1),
+            checklist: z.string().optional(),
+            quantityRequested: z.number().min(1),
+            quantityApproved: z.string().min(1),
+          }),
+        ),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       try {
         await ctx.db.transaction().execute(async (trx) => {
@@ -384,6 +439,25 @@ export const loanRequestRouter = createTRPCRouter({
                 .where("Loan.loanId", "=", input.loanId),
             )
             .execute();
+          for (const item of input.loanItems) {
+            if (parseInt(item.quantityApproved) !== item.quantityRequested) {
+              await trx
+                .updateTable("LoanItem")
+                .set({ status: "REJECTED" })
+                .where(
+                  "LoanItem.id",
+                  "in",
+                  trx
+                    .selectFrom("LoanItem")
+                    .select("LoanItem.id")
+                    .where("LoanItem.equipmentId", "=", item.equipmentId)
+                    .limit(
+                      item.quantityRequested - parseInt(item.quantityApproved),
+                    ),
+                )
+                .execute();
+            }
+          }
         });
 
         return "Approved";
@@ -393,25 +467,62 @@ export const loanRequestRouter = createTRPCRouter({
       }
     }),
   approveLoanRequestWithId: protectedProcedure
-    .input(z.object({ id: z.string().min(1) }))
+    .input(
+      z.object({
+        id: z.string().min(1),
+        loanItems: z.array(
+          z.object({
+            equipmentId: z.string().min(1),
+            description: z.string().min(1),
+            checklist: z.string().optional(),
+            quantityRequested: z.number().min(1),
+            quantityApproved: z.string().min(1),
+          }),
+        ),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       try {
         await ctx.db.transaction().execute(async (trx) => {
-          const data = await trx
+          await trx
             .updateTable("Loan")
             .set({ status: "REQUEST_COLLECTION", approvedById: ctx.user.id })
             .where("Loan.id", "=", input.id)
             .where("Loan.approverId", "=", ctx.user.id)
-            .returning("Loan.loanId")
-            .executeTakeFirstOrThrow();
+            .execute();
 
           await trx
             .updateTable("LoanItem")
             .set({ status: "REQUEST_COLLECTION" })
-            .where("LoanItem.id", "=", input.id)
+            .where("LoanItem.loanId", "=", input.id)
             .execute();
-          return data.loanId;
+          for (const item of input.loanItems) {
+            if (parseInt(item.quantityApproved) !== item.quantityRequested) {
+              await trx
+                .updateTable("LoanItem")
+                .set({ status: "REJECTED" })
+                .where(
+                  "LoanItem.id",
+                  "in",
+                  trx
+                    .selectFrom("LoanItem")
+                    .select("LoanItem.id")
+                    .where("LoanItem.equipmentId", "=", item.equipmentId)
+                    .where("LoanItem.loanId", "=", input.id)
+                    .limit(
+                      item.quantityRequested - parseInt(item.quantityApproved),
+                    ),
+                )
+                .execute();
+            }
+          }
         });
+
+        return {
+          title: "Loan Successfully Approved",
+          description: "Loan status is now Request Collection",
+          variant: "default",
+        };
       } catch (err) {
         console.log(err);
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
@@ -482,6 +593,7 @@ export const loanRequestRouter = createTRPCRouter({
               eb.fn.count<number>("LoanItem.equipmentId").as("count"),
             ])
             .where("loanId", "=", input.id)
+            .where("LoanItem.status", "=", "REQUEST_COLLECTION")
             .execute();
 
           const arrayOfEquipmentIdReq: string[] = [];
@@ -513,6 +625,7 @@ export const loanRequestRouter = createTRPCRouter({
               eb.and([
                 eb("equipmentId", "in", arrayOfEquipmentIdReq),
                 eb("Inventory.active", "=", true),
+                eb("Inventory.status", "=", "AVAILABLE"),
               ]),
             )
             .execute();
@@ -534,14 +647,14 @@ export const loanRequestRouter = createTRPCRouter({
               eb.fn.count<number>("LoanItem.equipmentId").as("count"),
             ])
             .where((eb) =>
-              eb.and([
-                eb("LoanItem.status", "!=", "CANCELLED"),
-                eb("LoanItem.status", "!=", "REQUEST_COLLECTION"),
-                eb("LoanItem.status", "!=", "RETURNED"),
+              eb.or([
+                eb("LoanItem.status", "=", "REQUEST_COLLECTION"),
+                eb("LoanItem.status", "=", "PREPARING"),
               ]),
             )
             .groupBy("LoanItem.equipmentId")
             .where("LoanItem.equipmentId", "in", arrayOfEquipmentIdReq)
+            .where("LoanItem.loanId", "!=", input.id)
             .execute();
 
           let allowedToRequestForLoan = true;
@@ -572,6 +685,7 @@ export const loanRequestRouter = createTRPCRouter({
               .updateTable("LoanItem")
               .set({ status: "PREPARING" })
               .where("LoanItem.loanId", "=", input.id)
+              .where("LoanItem.status", "=", "REQUEST_COLLECTION")
               .execute();
 
             return "PREPARING";
@@ -713,6 +827,7 @@ export const loanRequestRouter = createTRPCRouter({
                 .leftJoin("Loan", "LoanItem.loanId", "Loan.id")
                 .selectAll("LoanItem")
                 .where("Loan.id", "=", input.id)
+                .where("LoanItem.status", "=", "PREPARING")
                 .select((eb1) => [
                   jsonObjectFrom(
                     eb1
@@ -899,6 +1014,7 @@ export const loanRequestRouter = createTRPCRouter({
                 .leftJoin("Loan", "LoanItem.loanId", "Loan.id")
                 .selectAll("LoanItem")
                 .where("Loan.id", "=", input.id)
+                .where("LoanItem.status", "=", "READY")
                 .select((eb1) => [
                   jsonObjectFrom(
                     eb1
@@ -924,7 +1040,77 @@ export const loanRequestRouter = createTRPCRouter({
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
       }
     }),
+  getReturnLoanById: protectedProcedure
+    .input(z.object({ id: z.string().min(1) }))
+    .query(async ({ ctx, input }) => {
+      try {
+        const loanDetails = await ctx.db
+          .selectFrom("Loan")
+          .selectAll("Loan")
+          .where("Loan.id", "=", input.id)
+          .select((eb) => [
+            jsonObjectFrom(
+              eb
+                .selectFrom("User")
+                .select("User.name")
+                .whereRef("Loan.loanedById", "=", "User.id"),
+            ).as("loanedBy"),
+            jsonObjectFrom(
+              eb
+                .selectFrom("User")
+                .select("User.name")
+                .whereRef("Loan.approvedById", "=", "User.id"),
+            ).as("approvedBy"),
+            jsonObjectFrom(
+              eb
+                .selectFrom("User")
+                .select("User.name")
+                .whereRef("Loan.preparedById", "=", "User.id"),
+            ).as("preparedBy"),
+            jsonObjectFrom(
+              eb
+                .selectFrom("User")
+                .select("User.name")
+                .whereRef("Loan.issuedById", "=", "User.id"),
+            ).as("issuedBy"),
+            jsonObjectFrom(
+              eb
+                .selectFrom("User")
+                .select("User.name")
+                .whereRef("Loan.returnedToId", "=", "User.id"),
+            ).as("returnedTo"),
+            jsonArrayFrom(
+              eb
+                .selectFrom("LoanItem")
+                .leftJoin("Loan", "LoanItem.loanId", "Loan.id")
+                .selectAll("LoanItem")
+                .where("Loan.id", "=", input.id)
+                .where("LoanItem.status", "=", "COLLECTED")
+                .select((eb1) => [
+                  jsonObjectFrom(
+                    eb1
+                      .selectFrom("Equipment")
+                      .selectAll()
+                      .whereRef("Equipment.id", "=", "LoanItem.equipmentId"),
+                  ).as("equipment"),
+                  jsonObjectFrom(
+                    eb1
+                      .selectFrom("Inventory")
+                      .selectAll()
+                      .whereRef("LoanItem.inventoryId", "=", "Inventory.id"),
+                  ).as("loanedInventory"),
+                ])
+                .orderBy("LoanItem.equipmentId"),
+            ).as("loanItems") ?? "",
+          ])
+          .executeTakeFirstOrThrow();
 
+        return loanDetails;
+      } catch (err) {
+        console.log(err);
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      }
+    }),
   processLoanCollection: protectedProcedure
     .input(
       z.object({ signatureData: z.string().min(1), id: z.string().min(1) }),
@@ -947,6 +1133,7 @@ export const loanRequestRouter = createTRPCRouter({
             .updateTable("LoanItem")
             .set({ status: "COLLECTED" })
             .where("LoanItem.loanId", "=", input.id)
+            .where("LoanItem.status", "!=", "REJECTED")
             .execute();
 
           return {
@@ -1405,10 +1592,27 @@ export const loanRequestRouter = createTRPCRouter({
       return true;
     }),
   searchLoans: protectedProcedure
-    .input(z.object({ searchInput: z.string().min(1) }))
+    .input(
+      z.object({
+        searchInput: z.string().min(1),
+        status: z.enum([
+          "PENDING_APPROVAL",
+          "REJECTED",
+          "REQUEST_COLLECTION",
+          "PREPARING",
+          "READY",
+          "COLLECTED",
+          "CANCELLED",
+          "RETURNED",
+          "PARTIAL_RETURN",
+          "All",
+        ]),
+        semester: z.string().min(1),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       try {
-        const loansForReturn = await ctx.db
+        let loansForReturnQuery = ctx.db
           .selectFrom("Loan")
           .leftJoin("User as b", "b.id", "Loan.loanedById")
           .selectAll("Loan")
@@ -1455,9 +1659,83 @@ export const loanRequestRouter = createTRPCRouter({
               eb("b.name", "ilike", `%${input.searchInput}%`),
             ]),
           )
-          .execute();
-
+          .orderBy("Loan.loanId desc");
+        if (input.status !== "All") {
+          loansForReturnQuery = loansForReturnQuery.where(
+            "Loan.status",
+            "=",
+            input.status,
+          );
+        }
+        if (input.semester !== "All") {
+          loansForReturnQuery = loansForReturnQuery.where(
+            "Loan.loanId",
+            "ilike",
+            `${input.semester}%`,
+          );
+        }
+        const loansForReturn = await loansForReturnQuery.execute();
         return loansForReturn;
+      } catch (err) {
+        console.log(err);
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      }
+    }),
+  getLoanToApproveById: protectedProcedure
+    .input(z.object({ id: z.string().min(1) }))
+    .query(async ({ ctx, input }) => {
+      try {
+        const getLoanToApprove = await ctx.db
+          .selectFrom("Loan")
+          .selectAll("Loan")
+          .select((eb) => [
+            jsonObjectFrom(
+              eb
+                .selectFrom("User")
+                .select("User.name")
+                .whereRef("Loan.loanedById", "=", "User.id"),
+            ).as("loanedBy"),
+            jsonObjectFrom(
+              eb
+                .selectFrom("User")
+                .select("User.name")
+                .whereRef("Loan.approvedById", "=", "User.id"),
+            ).as("approvedBy"),
+            jsonObjectFrom(
+              eb
+                .selectFrom("User")
+                .select("User.name")
+                .whereRef("Loan.preparedById", "=", "User.id"),
+            ).as("preparedBy"),
+            jsonObjectFrom(
+              eb
+                .selectFrom("User")
+                .select("User.name")
+                .whereRef("Loan.issuedById", "=", "User.id"),
+            ).as("issuedBy"),
+            jsonObjectFrom(
+              eb
+                .selectFrom("User")
+                .select("User.name")
+                .whereRef("Loan.returnedToId", "=", "User.id"),
+            ).as("returnedTo"),
+            jsonArrayFrom(
+              eb
+                .selectFrom("LoanItem")
+                .leftJoin("Equipment", "Equipment.id", "LoanItem.equipmentId")
+                .select([
+                  "Equipment.name",
+                  "Equipment.id",
+                  "Equipment.checklist",
+                  sql<number>`COUNT(*)`.as("quantityRequested"),
+                ])
+                .groupBy("Equipment.id")
+                .whereRef("LoanItem.loanId", "=", "Loan.id"),
+            ).as("loanItems"),
+          ])
+          .where("Loan.id", "=", input.id)
+          .executeTakeFirstOrThrow();
+        return getLoanToApprove;
       } catch (err) {
         console.log(err);
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });

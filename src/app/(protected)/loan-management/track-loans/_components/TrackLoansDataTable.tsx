@@ -9,6 +9,7 @@ import {
   getPaginationRowModel,
   useReactTable,
   type SortingState,
+  getSortedRowModel,
 } from "@tanstack/react-table";
 import {
   Table,
@@ -38,7 +39,6 @@ interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
   allSemesters: { name: string }[];
-  searchInput: string;
   debouncerIsLoading: boolean;
 }
 
@@ -46,7 +46,6 @@ export function TrackLoansDataTable<TData, TValue>({
   columns,
   data,
   allSemesters,
-  searchInput,
   debouncerIsLoading,
 }: DataTableProps<TData, TValue>) {
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -73,6 +72,8 @@ export function TrackLoansDataTable<TData, TValue>({
     getPaginationRowModel: getPaginationRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     onRowSelectionChange: setRowSelection,
+    getSortedRowModel: getSortedRowModel(),
+
     filterFns: {
       overdueFilter: (row, columnId, filterValue) => {
         return new Date(row.getValue("dueDate")) < new Date();
@@ -87,7 +88,7 @@ export function TrackLoansDataTable<TData, TValue>({
     initialState: {
       pagination: {
         pageIndex: 0,
-        pageSize: 5,
+        pageSize: 10,
       },
     },
   });
@@ -95,7 +96,7 @@ export function TrackLoansDataTable<TData, TValue>({
   return (
     <div className="mt-3">
       <div className="mb-2 flex items-center">
-        <div>
+        {/* <div>
           <p className="mr-3 text-sm font-medium">Semester</p>
           <Select
             onValueChange={(key) => {
@@ -152,7 +153,7 @@ export function TrackLoansDataTable<TData, TValue>({
               </SelectGroup>
             </SelectContent>
           </Select>
-        </div>
+        </div> */}
         {/* <div className="h-max ">
           <p className="text-sm font-medium">Overdue Loans</p>
           <div className="flex h-10 justify-center pt-2">
@@ -165,13 +166,7 @@ export function TrackLoansDataTable<TData, TValue>({
           </div>
         </div> */}
       </div>
-      {searchInput === "" ? (
-        <div>
-          <div className="my-3 flex h-[100px] w-full items-center justify-center">
-            <div>Search For Equipment</div>
-          </div>
-        </div>
-      ) : debouncerIsLoading ? (
+      {debouncerIsLoading ? (
         <div>
           <div className="my-3 w-full">
             <Skeleton className="mb-3 h-7" />
@@ -179,7 +174,9 @@ export function TrackLoansDataTable<TData, TValue>({
           </div>
         </div>
       ) : data === undefined ? (
-        <div>Search Loans</div>
+        <div className="my-10 text-center text-lg font-semibold">
+          Search Loans
+        </div>
       ) : (
         <div>
           <div className="my-3 w-full ">

@@ -11,9 +11,10 @@ const LoanActions: React.FC<{
   prepareLoan: () => void;
   collectLoan: () => void;
   returnLoan: () => void;
+  cancelLoan: () => void;
   isPendingRejectLoan: boolean;
   isPendingApproveLoan: boolean;
-  isPendingRequestCollection: boolean;
+  isActionButtonPending: boolean;
 }> = ({
   userAccessRights,
   approveLoan,
@@ -23,9 +24,10 @@ const LoanActions: React.FC<{
   collectLoan,
   returnLoan,
   rejectLoan,
+  cancelLoan,
   isPendingRejectLoan,
   isPendingApproveLoan,
-  isPendingRequestCollection,
+  isActionButtonPending,
 }) => {
   if (
     userAccessRights.includes("userAllowedToApproveLoan") &&
@@ -67,11 +69,23 @@ const LoanActions: React.FC<{
       <div className="flex justify-center gap-4">
         <Button
           onClick={() => {
+            cancelLoan();
+          }}
+          disabled={isActionButtonPending}
+          variant={"destructive"}
+        >
+          {isActionButtonPending && (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          )}
+          Cancel Loan
+        </Button>
+        <Button
+          onClick={() => {
             requestForCollectionLoan();
           }}
-          disabled={isPendingRequestCollection}
+          disabled={isActionButtonPending}
         >
-          {isPendingRequestCollection && (
+          {isActionButtonPending && (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           )}
           Request For Collection
@@ -114,6 +128,27 @@ const LoanActions: React.FC<{
           }}
         >
           Return Loan
+        </Button>
+      </div>
+    );
+  }
+  if (
+    userAccessRights.includes("usersOwnLoan") &&
+    status === "PENDING_APPROVAL"
+  ) {
+    return (
+      <div className="flex justify-center gap-4">
+        <Button
+          onClick={() => {
+            cancelLoan();
+          }}
+          variant={"destructive"}
+          disabled={isActionButtonPending}
+        >
+          {isActionButtonPending && (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          )}
+          Cancel Loan
         </Button>
       </div>
     );

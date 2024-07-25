@@ -194,6 +194,9 @@ const EditInventoryItem = ({
                         <SelectItem key="AVAILABLE" value="AVAILABLE">
                           Available
                         </SelectItem>
+                        <SelectItem key="UNAVAILABLE" value="UNAVAILABLE">
+                          Unavailable
+                        </SelectItem>
                         <SelectItem key="LOANED" value="LOANED">
                           Loaned
                         </SelectItem>
@@ -202,6 +205,12 @@ const EditInventoryItem = ({
                         </SelectItem>
                         <SelectItem key="BROKEN" value="BROKEN">
                           Broken
+                        </SelectItem>
+                        <SelectItem
+                          key="MISSING_CHECKLIST_ITEMS"
+                          value="MISSING_CHECKLIST_ITEMS"
+                        >
+                          Missing Checklist Items
                         </SelectItem>
                       </SelectContent>
                     </Select>
