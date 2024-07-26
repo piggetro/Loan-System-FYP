@@ -98,6 +98,11 @@ export type OrganizationUnit = {
     id: string;
     name: string;
 };
+export type PasswordResetToken = {
+    token_hash: string;
+    user_id: string;
+    expires_at: Timestamp;
+};
 export type Role = {
     id: string;
     role: string;
@@ -172,6 +177,7 @@ export type DB = {
     Loan: Loan;
     LoanItem: LoanItem;
     OrganizationUnit: OrganizationUnit;
+    PasswordResetToken: PasswordResetToken;
     Role: Role;
     Semesters: Semesters;
     Session: Session;

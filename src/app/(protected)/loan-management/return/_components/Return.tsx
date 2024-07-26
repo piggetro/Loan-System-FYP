@@ -44,6 +44,7 @@ const ReturnPage: React.FC<{
   allSemesters: { name: string }[];
 }> = ({ allSemesters }) => {
   const { data, refetch } = api.loanRequest.getLoansForReturn.useQuery();
+  const isUserOwnLoad = api.loanRequest.checkIfUsersOwnLoan.useMutation();
 
   const { toast } = useToast();
   const router = useRouter();
@@ -54,8 +55,26 @@ const ReturnPage: React.FC<{
     router.push(`/equipment-loans/loans/${loanDetails.id}?prev=return`);
   }, []);
   const onReturn = useCallback((loanDetails: PreparationLoanType) => {
-    setReturnId(loanDetails.id);
-    setOpenReturnDialog(true);
+    isUserOwnLoad
+      .mutateAsync({ id: loanDetails.id })
+      .then((results) => {
+        if (results) {
+          toast({
+            title: "Unable to Return loan",
+            description: "Unable to return own loan",
+            variant: "destructive",
+          });
+        } else {
+          setReturnId(loanDetails.id);
+          setOpenReturnDialog(true);
+        }
+      })
+      .catch((e) => {
+        toast({
+          title: "An error occurred. Please try again later.",
+          variant: "destructive",
+        });
+      });
   }, []);
 
   const PreparationTableColumns = useMemo(

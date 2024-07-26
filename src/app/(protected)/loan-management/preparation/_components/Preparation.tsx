@@ -10,6 +10,7 @@ import PreparationLoanDialog from "../../_components/PreparationLoanDialog";
 import { Skeleton } from "@/app/_components/ui/skeleton";
 import { useToast } from "@/app/_components/ui/use-toast";
 import { type LoanStatus } from "@/db/enums";
+import { validateRequest } from "@/lib/auth/validate-request";
 
 export interface PreparationLoanType {
   id: string;
@@ -39,6 +40,8 @@ const PreparationPage: React.FC<{
   const { data: loanToPrepareData, refetch } =
     api.loanRequest.getLoansToPrepare.useQuery();
 
+  const isUserOwnLoad = api.loanRequest.checkIfUsersOwnLoan.useMutation();
+
   const router = useRouter();
   const [openPreparationDialog, setOpenPreparationDialog] =
     useState<boolean>(false);
@@ -49,8 +52,26 @@ const PreparationPage: React.FC<{
     router.push(`/equipment-loans/loans/${loanDetails.id}?prev=preparation`);
   }, []);
   const onPreparation = useCallback((loanDetails: PreparationLoanType) => {
-    setPreparationId(loanDetails.id);
-    setOpenPreparationDialog(true);
+    isUserOwnLoad
+      .mutateAsync({ id: loanDetails.id })
+      .then((results) => {
+        if (results) {
+          toast({
+            title: "Unable to prepare loan",
+            description: "Unable to prepare own loan",
+            variant: "destructive",
+          });
+        } else {
+          setPreparationId(loanDetails.id);
+          setOpenPreparationDialog(true);
+        }
+      })
+      .catch((e) => {
+        toast({
+          title: "An error occurred. Please try again later.",
+          variant: "destructive",
+        });
+      });
   }, []);
   const onSuccessClose = () => {
     setOpenPreparationDialog(false);

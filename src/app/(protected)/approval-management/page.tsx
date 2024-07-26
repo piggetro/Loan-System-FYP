@@ -37,12 +37,6 @@ export interface ApprovalManagementType {
 }
 
 const ApprovalManagementPage = async () => {
-  const loanRequests =
-    await api.loanRequest.getUserApprovalManagementLoanRequests();
-
-  const loanRequestsHistory =
-    await api.loanRequest.getUserApprovalManagementLoanHistory();
-
   const allSemesters = await api.loan.getSemesters();
 
   return (
@@ -51,11 +45,7 @@ const ApprovalManagementPage = async () => {
         pathName="Approval Management"
         pageName="Approval Management"
       />
-      <ApprovalManagementComponent
-        loanRequests={loanRequests}
-        loanRequestHistory={loanRequestsHistory}
-        allSemesters={allSemesters}
-      />
+      <ApprovalManagementComponent allSemesters={allSemesters} />
     </div>
   );
 };

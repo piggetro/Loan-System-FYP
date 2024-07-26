@@ -23,33 +23,42 @@ import {
   TabsTrigger,
 } from "@/app/_components/ui/tabs";
 import ApprovalLoanDialog from "../../loan-management/_components/ApprovalLoanDialog";
+import { Skeleton } from "@/app/_components/ui/skeleton";
 
 const ApprovalManagementComponent: React.FC<{
-  loanRequests: ApprovalManagementType[];
-  loanRequestHistory: ApprovalManagementType[];
   allSemesters: { name: string }[];
-}> = ({ loanRequests, loanRequestHistory, allSemesters }) => {
-  const [loanRequestsData, setLoanRequestsData] =
-    useState<ApprovalManagementType[]>(loanRequests);
+}> = ({ allSemesters }) => {
   const [openApprovalDialog, setOpenApprovalDialog] = useState<boolean>(false);
   const [approveLoanId, setApproveLoanId] = useState<string>();
   const router = useRouter();
   const { toast } = useToast();
-  const approveRequest =
-    api.loanRequest.approveLoanRequestWithLoanId.useMutation();
-  const rejectRequest = api.loanRequest.rejectLoanRequest.useMutation();
-  const [approveRequestHistoryData, setApproveRequestHistoryData] =
-    useState<ApprovalManagementType[]>(loanRequestHistory);
+  const { data: approvalLoanRequest, refetch: approvalLoanRequestRefetch } =
+    api.loanRequest.getUserApprovalManagementLoanRequests.useQuery();
+  const {
+    data: approvalLoanRequestHistory,
+    refetch: approvalLoanRequestHistoryRefetch,
+  } = api.loanRequest.getUserApprovalManagementLoanHistory.useQuery();
 
-  function removeLoan(loanId: string) {
-    setLoanRequestsData((loanData) =>
-      loanData.filter((s) => s.loanId != loanId),
-    );
+  const rejectRequest = api.loanRequest.rejectLoanRequest.useMutation();
+
+  function refresh() {
+    approvalLoanRequestRefetch().catch(() => {
+      toast({
+        title: "Something unexepected happened",
+        variant: "destructive",
+      });
+    });
+    approvalLoanRequestHistoryRefetch().catch(() => {
+      toast({
+        title: "Something unexepected happened",
+        variant: "destructive",
+      });
+    });
   }
 
   function closeDialogOnSuccess() {
     setOpenApprovalDialog(false);
-    removeLoan(approveLoanId!);
+    refresh();
   }
 
   const onView = useCallback((loanDetails: ApprovalManagementType) => {
@@ -82,7 +91,6 @@ const ApprovalManagementComponent: React.FC<{
   }, []);
 
   const onReject = useCallback((loanDetails: ApprovalManagementType) => {
-    //Derricks part, use api.loanRequest.rejectLoanRequest
     rejectRequest
       .mutateAsync({ id: loanDetails.id })
       .then(() => {
@@ -90,10 +98,7 @@ const ApprovalManagementComponent: React.FC<{
           title: "Loan has been rejected",
           description: `Loan ${loanDetails.loanId} has been rejected`,
         });
-        //Updating frontend for UX
-        removeLoan(loanDetails.loanId);
-        loanDetails.status = "REJECTED";
-        setApproveRequestHistoryData((prev) => [...prev, loanDetails]);
+        refresh();
       })
       .catch(() => {
         toast({
@@ -111,6 +116,7 @@ const ApprovalManagementComponent: React.FC<{
     () => ApprovalManagementHistoryColumns({ onView }),
     [],
   );
+
   return (
     <div className="bg-white">
       {approveLoanId !== undefined ? (
@@ -129,18 +135,34 @@ const ApprovalManagementComponent: React.FC<{
             <TabsTrigger value="approvalHistory">Approval History</TabsTrigger>
           </TabsList>
           <TabsContent value="loanApprovals">
-            <ApprovalManagementTable
-              data={loanRequestsData}
-              columns={TableColumns}
-              allSemesters={allSemesters}
-            />
+            {approvalLoanRequest === undefined ? (
+              <div className="flex flex-col gap-2">
+                <Skeleton className="h-7 w-1/3" />
+                <Skeleton className="h-7 w-1/2" />
+                <Skeleton className="h-96 w-full" />
+              </div>
+            ) : (
+              <ApprovalManagementTable
+                data={approvalLoanRequest}
+                columns={TableColumns}
+                allSemesters={allSemesters}
+              />
+            )}
           </TabsContent>
           <TabsContent value="approvalHistory" className="flex-1">
-            <ApprovalManagementHistoryTable
-              data={approveRequestHistoryData}
-              columns={TableColumnsHistory}
-              allSemesters={allSemesters}
-            />
+            {approvalLoanRequestHistory === undefined ? (
+              <div className="flex flex-col gap-2">
+                <Skeleton className="h-7 w-1/3" />
+                <Skeleton className="h-7 w-1/2" />
+                <Skeleton className="h-96 w-full" />
+              </div>
+            ) : (
+              <ApprovalManagementHistoryTable
+                data={approvalLoanRequestHistory}
+                columns={TableColumnsHistory}
+                allSemesters={allSemesters}
+              />
+            )}
           </TabsContent>
         </div>
       </Tabs>

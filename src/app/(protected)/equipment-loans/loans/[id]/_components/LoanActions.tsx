@@ -93,7 +93,29 @@ const LoanActions: React.FC<{
       </div>
     );
   }
-  if (userAccessRights.includes("Preparation") && status === "PREPARING") {
+  if (status === "REQUEST_COLLECTION") {
+    return (
+      <div className="flex justify-center gap-4">
+        <Button
+          onClick={() => {
+            cancelLoan();
+          }}
+          disabled={isActionButtonPending}
+          variant={"destructive"}
+        >
+          {isActionButtonPending && (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          )}
+          Cancel Loan
+        </Button>
+      </div>
+    );
+  }
+  if (
+    userAccessRights.includes("Preparation") &&
+    status === "PREPARING" &&
+    !userAccessRights.includes("usersOwnLoan")
+  ) {
     return (
       <div className="flex justify-center gap-4">
         <Button
@@ -106,7 +128,11 @@ const LoanActions: React.FC<{
       </div>
     );
   }
-  if (userAccessRights.includes("Collection") && status === "READY") {
+  if (
+    userAccessRights.includes("Collection") &&
+    status === "READY" &&
+    !userAccessRights.includes("usersOwnLoan")
+  ) {
     return (
       <div className="flex justify-center gap-4">
         <Button
@@ -119,7 +145,11 @@ const LoanActions: React.FC<{
       </div>
     );
   }
-  if (userAccessRights.includes("Return") && status === "COLLECTED") {
+  if (
+    userAccessRights.includes("Return") &&
+    status === "COLLECTED" &&
+    !userAccessRights.includes("usersOwnLoan")
+  ) {
     return (
       <div className="flex justify-center gap-4">
         <Button

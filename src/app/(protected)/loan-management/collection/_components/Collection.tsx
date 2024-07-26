@@ -9,10 +9,6 @@ import { useToast } from "@/app/_components/ui/use-toast";
 import { CollectionColumns } from "./CollectionColumns";
 import { CollectionDataTable } from "./CollectionDataTable";
 import CollectionLoanDialog from "../../_components/CollectionLoanDialog";
-import {
-  AlertDialog,
-  AlertDialogContent,
-} from "@/app/_components/ui/alert-dialog";
 import { Skeleton } from "@/app/_components/ui/skeleton";
 import { type LoanStatus } from "@/db/enums";
 import { Dialog, DialogContent } from "@/app/_components/ui/dialog";
@@ -43,6 +39,7 @@ const CollectionPage: React.FC<{
   allSemesters: { name: string }[];
 }> = ({ allSemesters }) => {
   const { data, refetch } = api.loanRequest.getLoansForCollection.useQuery();
+  const isUserOwnLoad = api.loanRequest.checkIfUsersOwnLoan.useMutation();
 
   const { toast } = useToast();
   const router = useRouter();
@@ -53,8 +50,26 @@ const CollectionPage: React.FC<{
     router.push(`/equipment-loans/loans/${loanDetails.id}?prev=collection`);
   }, []);
   const onCollect = useCallback((loanDetails: CollectionLoanType) => {
-    setPreparationId(loanDetails.id);
-    setOpenCollectDialog(true);
+    isUserOwnLoad
+      .mutateAsync({ id: loanDetails.id })
+      .then((results) => {
+        if (results) {
+          toast({
+            title: "Unable to Return loan",
+            description: "Unable to return own loan",
+            variant: "destructive",
+          });
+        } else {
+          setPreparationId(loanDetails.id);
+          setOpenCollectDialog(true);
+        }
+      })
+      .catch(() => {
+        toast({
+          title: "An error occurred. Please try again later.",
+          variant: "destructive",
+        });
+      });
   }, []);
 
   const CollectionTableColumns = useMemo(

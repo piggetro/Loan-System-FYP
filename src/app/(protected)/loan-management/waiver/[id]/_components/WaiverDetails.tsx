@@ -25,7 +25,7 @@ const WaiverDetails: React.FC<{
   });
   const approveWaiver = api.waiver.approveWaiver.useMutation();
   const rejectLoan = api.waiver.rejectWaiver.useMutation();
-
+  const resolveLoan = api.waiver.resolveWaiver.useMutation();
   useEffect(() => {
     if (data !== undefined) {
       if (data.status === "REJECTED" || data.status === "APPROVED")
@@ -51,6 +51,19 @@ const WaiverDetails: React.FC<{
       .mutateAsync({ id: id })
       .then(() => {
         toast({ title: "Successfully Rejected Waive Request" });
+        refresh();
+        setIsLoading(false);
+      })
+      .catch((error) => {
+        toast({ title: "An Error Occured", description: error });
+      });
+  }, []);
+  const onResolve = useCallback(() => {
+    setIsLoading(true);
+    resolveLoan
+      .mutateAsync({ id: id })
+      .then(() => {
+        toast({ title: "Successfully Resolved Waive Request" });
         refresh();
         setIsLoading(false);
       })
@@ -128,7 +141,7 @@ const WaiverDetails: React.FC<{
             <b>Waiver Status: </b>
             <div
               className={`ml-2 mr-1 h-3 w-3 rounded-full ${
-                data.status === "APPROVED"
+                data.status === "APPROVED" || data.status === "RESOLVED"
                   ? "bg-green-500"
                   : data.status === "REJECTED"
                     ? "bg-red-500"
@@ -168,6 +181,7 @@ const WaiverDetails: React.FC<{
                 onClick={() => {
                   onReject();
                 }}
+                className={`${data.status === "REJECTED" || data.status === "APPROVED" || data.status === "RESOLVED" ? "hidden" : ""}`}
                 disabled={isLoading || !isSubmitEnabled}
                 variant={"destructive"}
               >
@@ -176,10 +190,22 @@ const WaiverDetails: React.FC<{
               </Button>
               <Button
                 onClick={() => {
+                  onResolve();
+                }}
+                className={`${data.status === "APPROVED" || data.status === "RESOLVED" ? "hidden" : ""}`}
+                disabled={isLoading || !isSubmitEnabled}
+                variant={"default"}
+              >
+                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Resolve
+              </Button>
+              <Button
+                onClick={() => {
                   onApprove();
                 }}
                 disabled={isLoading || !isSubmitEnabled}
                 variant={"default"}
+                className={`${data.status === "REJECTED" || data.status === "APPROVED" || data.status === "RESOLVED" ? "hidden" : ""}`}
               >
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Approve
@@ -192,7 +218,9 @@ const WaiverDetails: React.FC<{
             <p className="mb-4 text-xl font-semibold">Outstanding Items</p>
             <Button
               onClick={() => {
-                router.push(`/equipment-loans/loans/${id}?ooid=true&prev=waiver&loan=${id}`);
+                router.push(
+                  `/equipment-loans/loans/${id}?ooid=true&prev=waiver&loan=${id}`,
+                );
               }}
             >
               Resolve Outstanding Items

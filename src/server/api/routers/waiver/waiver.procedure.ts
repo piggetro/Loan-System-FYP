@@ -117,6 +117,26 @@ export const waiverRouter = createTRPCRouter({
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
       }
     }),
+  resolveWaiver: protectedProcedure
+    .input(z.object({ id: z.string().min(1) }))
+    .mutation(async ({ ctx, input }) => {
+      try {
+        const data = await ctx.db
+          .updateTable("Waiver")
+          .set({
+            status: "RESOLVED",
+            dateUpdated: new Date(),
+            updatedById: ctx.user.id,
+          })
+          .where("Waiver.loanId", "=", input.id)
+          .execute();
+
+        return true;
+      } catch (err) {
+        console.log(err);
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      }
+    }),
   getWaiverByLoanId: protectedProcedure
     .input(z.object({ id: z.string().min(1) }))
     .query(async ({ ctx, input }) => {

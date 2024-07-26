@@ -79,7 +79,7 @@ const UnableToLoanComponent: React.FC<{
                       <div
                         className={`mr-2 h-3 w-3 rounded-full ${
                           loan.status === "Partially Outstanding" ||
-                          loan.status === "Awaiting Request" ||
+                          loan.status === "Pending Request" ||
                           loan.status === "Pending"
                             ? "bg-yellow-500"
                             : "bg-red-500"

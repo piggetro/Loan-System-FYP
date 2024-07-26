@@ -709,7 +709,6 @@ export const loanRequestRouter = createTRPCRouter({
             .updateTable("Loan")
             .set({ status: "CANCELLED" })
             .where("Loan.id", "=", input.id)
-            .where("loanedById", "=", ctx.user.id)
             .execute();
           await trx
             .updateTable("LoanItem")
@@ -1518,7 +1517,7 @@ export const loanRequestRouter = createTRPCRouter({
       } else if (statusArray.every((status) => status === "PENDING")) {
         status = "Pending";
       } else if (statusArray.every((status) => status === "PENDING_REQUEST")) {
-        status = "Awaiting Request";
+        status = "Pending Request";
       } else {
         status = "Partially Outstanding";
       }
@@ -1742,6 +1741,25 @@ export const loanRequestRouter = createTRPCRouter({
           .where("Loan.id", "=", input.id)
           .executeTakeFirstOrThrow();
         return getLoanToApprove;
+      } catch (err) {
+        console.log(err);
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      }
+    }),
+  checkIfUsersOwnLoan: protectedProcedure
+    .input(z.object({ id: z.string().min(1) }))
+    .mutation(async ({ ctx, input }) => {
+      try {
+        const data = await ctx.db
+          .selectFrom("Loan")
+          .select("Loan.loanedById")
+          .where("Loan.id", "=", input.id)
+          .executeTakeFirstOrThrow();
+
+        if (data.loanedById === ctx.user.id) {
+          return true;
+        }
+        return false;
       } catch (err) {
         console.log(err);
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });

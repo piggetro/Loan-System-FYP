@@ -27,6 +27,7 @@ import { Button } from "@/app/_components/ui/button";
 import { Dialog, DialogContent } from "@/app/_components/ui/dialog";
 import OutstandingItemDialog from "./OutstandingItemsDialog";
 import ApprovalLoanDialog from "@/app/(protected)/loan-management/_components/ApprovalLoanDialog";
+import { Loader2 } from "lucide-react";
 
 const LoanDetails: React.FC<{
   id: string;
@@ -51,6 +52,8 @@ const LoanDetails: React.FC<{
   const [openRequestDialog, setOpenRequestDialog] = useState<boolean>(false);
   const [openApproveDialog, setOpenApproveDialog] = useState<boolean>(false);
   const [openOutstandingItemsDialog, setOpenOutstandingItemsDialog] =
+    useState<boolean>(false);
+  const [openCancelLoanDialog, setOpenCancelLoanDialog] =
     useState<boolean>(false);
   useEffect(() => {
     if (outsandingItemsOptionFromURL === "true") {
@@ -151,7 +154,9 @@ const LoanDetails: React.FC<{
   const onReturnLoan = useCallback(() => {
     setOpenReturnDialog(true);
   }, []);
-
+  const onCancelLoan = () => {
+    setOpenCancelLoanDialog(true);
+  };
   const executeCancelLoan = () => {
     setIsActionButtonPending(true);
 
@@ -159,14 +164,11 @@ const LoanDetails: React.FC<{
       .mutateAsync({ id: id })
       .then(() => {
         setIsActionButtonPending(false);
-        refetch().catch((error) => {
-          console.log(error);
-          toast({
-            title: "Something Unexpected Happened",
-            description: "Please contact help desk",
-            variant: "destructive",
-          });
+        setOpenCancelLoanDialog(false);
+        toast({
+          title: "Loan Successfully Cancelled",
         });
+        refresh();
       })
       .catch(() => {
         setIsActionButtonPending(false);
@@ -192,6 +194,37 @@ const LoanDetails: React.FC<{
 
   return (
     <div className="w-full">
+      <AlertDialog open={openCancelLoanDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will cancel your the Request.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              onClick={() => {
+                setOpenCancelLoanDialog(false);
+              }}
+              disabled={isActionButtonPending}
+            >
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                executeCancelLoan();
+              }}
+              disabled={isActionButtonPending}
+            >
+              Continue
+              {isActionButtonPending && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
       <ApprovalLoanDialog
         id={id}
         successCloseDialog={successCloseApproveDialog}
@@ -458,7 +491,7 @@ const LoanDetails: React.FC<{
             <Skeleton className="h-10 w-1/6" />
           ) : (
             <LoanActions
-              cancelLoan={executeCancelLoan}
+              cancelLoan={onCancelLoan}
               isActionButtonPending={isActionButtonPending}
               isPendingApproveLoan={isPendingApproveLoan}
               isPendingRejectLoan={isPendingRejectLoan}

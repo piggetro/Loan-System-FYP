@@ -199,6 +199,12 @@ model Waiver {
     updatedById   String?
 }
 
+model PasswordResetToken {
+    token_hash String   @id
+    user_id    String
+    expires_at DateTime
+}
+
 enum WaiveRequestStatus {
     PENDING
     APPROVED
