@@ -166,10 +166,6 @@ const AddEquipment = ({
       },
     });
 
-  useEffect(() => {
-    console.log(fileType);
-  }, [fileType]);
-
   const onSubmit: SubmitHandler<z.infer<typeof formSchema>> = (
     values: z.infer<typeof formSchema>,
   ) => {
@@ -361,6 +357,7 @@ const AddEquipment = ({
                     className="mt-2"
                     accept="image/jpeg, image/png, image/gif"
                     onChange={handleFileChange}
+                    style={{ color: "transparent" }}
                   />
                 </div>
                 {imagePreview && (
@@ -368,7 +365,7 @@ const AddEquipment = ({
                     <img
                       src={imagePreview}
                       alt="Selected File Preview"
-                      className="h-20 w-20 border border-gray-300 object-cover"
+                      className="h-40 w-40 border border-gray-300 object-cover"
                     />
                   </div>
                 )}

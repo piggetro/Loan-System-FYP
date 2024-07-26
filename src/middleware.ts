@@ -39,7 +39,7 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
     }
     return NextResponse.next();
   }
-  return NextResponse.redirect(new URL("/not-found", request.url));
+  return NextResponse.redirect(new URL("/", request.url));
 }
 
 export const config = {

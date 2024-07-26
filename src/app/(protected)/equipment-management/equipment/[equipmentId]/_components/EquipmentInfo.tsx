@@ -12,7 +12,7 @@ import { SubmitHandler, useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "@/app/_components/ui/input";
-import { Loader2 } from "lucide-react";
+import { Loader2, XCircle } from "lucide-react";
 import { api } from "@/trpc/react";
 import { useToast } from "@/app/_components/ui/use-toast";
 import { Textarea } from "@/app/_components/ui/textarea";
@@ -42,6 +42,7 @@ export type Equipment = {
   category: string;
   subCategory: string;
   loanLimit: number;
+  photoPath: string;
 };
 
 const formSchema = z.object({
@@ -83,6 +84,44 @@ const EquipmentInfo = ({
   const [selectedCategory, setSelectedCategory] = useState<string>(
     equipment.category,
   );
+  const [file, setFile] = useState<File | undefined>();
+  const [fileType, setFileType] = useState<string | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [deletePhoto, setDeletePhoto] = useState<boolean>(false);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0] ?? undefined;
+
+    if (selectedFile) {
+      const validImageTypes = ["image/jpeg", "image/png", "image/gif"];
+
+      if (!validImageTypes.includes(selectedFile.type)) {
+        alert("Please select a valid image file (JPG, PNG, GIF).");
+        setFile(undefined);
+        setFileType(null);
+        setImagePreview(null);
+        return;
+      }
+
+      setFile(selectedFile);
+
+      const previewUrl = URL.createObjectURL(selectedFile);
+      setImagePreview(previewUrl);
+
+      const mimeTypeToExtension: Record<string, string> = {
+        "image/jpeg": ".jpg",
+        "image/png": ".png",
+        "image/gif": ".gif",
+      };
+
+      const fileExtension = mimeTypeToExtension[selectedFile.type] ?? "unknown";
+      setFileType(fileExtension);
+    } else {
+      setFile(undefined);
+      setFileType(null);
+      setImagePreview(null);
+    }
+  };
 
   const { mutate: updateEquipment, isPending } =
     api.equipment.updateEquipment.useMutation({
@@ -313,6 +352,62 @@ const EquipmentInfo = ({
                 </FormItem>
               )}
             />
+            <div className="space-y-4">
+              <div className="flex items-start ">
+                <div className="flex-1/2">
+                  <label
+                    htmlFor="file-upload"
+                    className="block text-base font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    Upload Equipment Image
+                  </label>
+                  <input
+                    id="file-upload"
+                    type="file"
+                    name="file"
+                    className="mt-2"
+                    accept="image/jpeg, image/png, image/gif"
+                    onChange={handleFileChange}
+                    disabled={disabled}
+                    style={{ color: "transparent" }}
+                  />
+                </div>
+                {equipment.photoPath && (
+                  <div className="relative">
+                    <div className="flex-shrink-0">
+                      <img
+                        src={
+                          imagePreview
+                            ? imagePreview
+                            : deletePhoto
+                              ? "/api/uploads/default.jpg"
+                              : "/api/uploads/" + equipment.photoPath
+                        }
+                        alt="Selected File Preview"
+                        className="h-40 w-40 border border-gray-300 object-cover"
+                      />
+                      <div
+                        className={`absolute right-0 top-0 mr-1 mt-1 cursor-pointer ${disabled && "hidden"}`}
+                        onClick={() => {
+                          setDeletePhoto(true);
+                          setFile(undefined);
+                          setFileType(null);
+                          setImagePreview(null);
+                        }}
+                      >
+                        <XCircle className="h-6 w-6 text-red-500" />
+                      </div>
+                    </div>
+                  </div>
+                )}
+                {file && (
+                  <div className="ms-4 mt-2">
+                    <p>Selected file: {file.name}</p>
+                    <p>File type: {fileType}</p>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       </Form>
@@ -334,6 +429,10 @@ const EquipmentInfo = ({
             if (!disabled) {
               form.reset();
               setSelectedCategory(equipment.category);
+              setImagePreview(null);
+              setFile(undefined);
+              setFileType(null);
+              setDeletePhoto(false);
             }
             setDisabled(!disabled);
           }}

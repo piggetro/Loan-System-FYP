@@ -391,6 +391,7 @@ export const equipmentRouter = createTRPCRouter({
               "SubCategory.id as subCategory",
               "Category.id as category",
               "Equipment.loanLimit",
+              "Equipment.photoPath"
             ])
             .where("Equipment.id", "=", input.id)
             .where("Equipment.active", "=", true)
@@ -429,6 +430,7 @@ export const equipmentRouter = createTRPCRouter({
             category: equipment?.category ?? "",
             loanLimit: equipment?.loanLimit ?? 0,
             courses: courses.map((course) => course.courseId),
+            photoPath: equipment?.photoPath ?? "default.jpg",
           },
           inventoryItems: inventory.map((item) => ({
             ...item,
