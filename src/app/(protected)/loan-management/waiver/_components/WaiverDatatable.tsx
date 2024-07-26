@@ -78,9 +78,10 @@ export function WaiverTable<TData, TValue>({
           placeholder="Search Loan ID"
           className="mr-4  w-1/3"
           value={(table.getColumn("loanId")?.getFilterValue() as string) ?? ""}
-          onChange={(event) =>
-            table.getColumn("loanId")?.setFilterValue(event.target.value)
-          }
+          onChange={(event) => {
+            table.getColumn("loanId")?.setFilterValue(event.target.value);
+            table.getColumn("loanedBy")?.setFilterValue(event.target.value);
+          }}
         />
         <Select
           onValueChange={(key) => {

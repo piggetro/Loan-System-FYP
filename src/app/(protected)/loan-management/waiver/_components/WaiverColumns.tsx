@@ -61,7 +61,8 @@ export const WaiverColumns = ({
       <div className="flex items-center">
         <div
           className={`mr-2 h-3 w-3 rounded-full ${
-            row.getValue("status") === "APPROVED"
+            row.getValue("status") === "APPROVED" ||
+            row.getValue("status") === "RESOLVED"
               ? "bg-green-500"
               : row.getValue("status") === "REJECTED"
                 ? "bg-red-500"
@@ -130,12 +131,10 @@ export const WaiverHistoryColumns = ({
       <div className="flex items-center">
         <div
           className={`mr-2 h-3 w-3 rounded-full ${
-            row.getValue("status") === "COLLECTED" ||
-            row.getValue("status") === "RETURNED"
+            row.getValue("status") === "APPROVED" ||
+            row.getValue("status") === "RESOLVED"
               ? "bg-green-500"
-              : row.getValue("status") === "REJECTED" ||
-                  row.getValue("status") === "CANCELLED" ||
-                  row.getValue("status") === "OVERDUE"
+              : row.getValue("status") === "REJECTED"
                 ? "bg-red-500"
                 : "bg-yellow-500"
           }`}

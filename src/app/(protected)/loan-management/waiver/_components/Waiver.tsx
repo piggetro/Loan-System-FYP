@@ -24,9 +24,33 @@ const WaiverComponent: React.FC<{
   const [loanRequestsData, setLoanRequestsData] =
     useState<WaiverType[]>(loanRequests);
   const router = useRouter();
-
+  const isUserOwnLoad = api.loanRequest.checkIfUsersOwnLoan.useMutation();
+  const { toast } = useToast();
   const onView = useCallback((waiverDetails: WaiverType) => {
-    router.push(`/loan-management/waiver/${waiverDetails.loan_id}`);
+    if (waiverDetails.loan_id !== null) {
+      isUserOwnLoad
+        .mutateAsync({ id: waiverDetails.loan_id })
+        .then((results) => {
+          if (results) {
+            router.push(
+              `/equipment-loans/lost-damaged-loans/${waiverDetails.loan_id}`,
+            );
+          } else {
+            router.push(`/loan-management/waiver/${waiverDetails.loan_id}`);
+          }
+        })
+        .catch(() => {
+          toast({
+            title: "An error occurred. Please try again later.",
+            variant: "destructive",
+          });
+        });
+    } else {
+      toast({
+        title: "An error occurred. Please try again later.",
+        variant: "destructive",
+      });
+    }
   }, []);
 
   const TableColumns = useMemo(() => WaiverColumns({ onView }), []);
