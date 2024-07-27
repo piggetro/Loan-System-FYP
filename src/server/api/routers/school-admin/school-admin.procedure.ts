@@ -890,6 +890,99 @@ export const schoolAdminRouter = createTRPCRouter({
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
       }
     }),
+  bulkAddStudents: protectedProcedure
+    .input(
+      z.array(
+        z.object({
+          id: z.string().min(1),
+          email: z.string().email(),
+          name: z.string().min(1),
+          course: z.string().min(1),
+          batch: z.string().min(1),
+          graduationDate: z.union([z.date(), z.string()]),
+        }),
+      ),
+    )
+    .mutation(async ({ ctx, input }) => {
+      try {
+        const result = await ctx.db.transaction().execute(async (trx) => {
+          const role = await trx
+            .selectFrom("Role")
+            .select((eb) => [
+              "id",
+              "role",
+              jsonArrayFrom(
+                eb
+                  .selectFrom("AccessRightsOnRoles")
+                  .select(["AccessRightsOnRoles.accessRightId"])
+                  .whereRef(
+                    "AccessRightsOnRoles.roleId",
+                    "=",
+                    eb.ref("Role.id"),
+                  ),
+              ).as("accessRights"),
+            ])
+            .where("role", "=", "Student")
+            .executeTakeFirstOrThrow();
+
+          const studentsToInsert = input.map((student) => ({
+            id: student.id,
+            email: student.email,
+            name: student.name,
+            courseId: student.course,
+            batch: student.batch,
+            graduationDate: student.graduationDate,
+            roleId: role.id,
+          }));
+
+          await trx.insertInto("User").values(studentsToInsert).execute();
+
+          const userAccessRights = studentsToInsert.flatMap((student) =>
+            role.accessRights.map((accessRight) => ({
+              id: createId(),
+              accessRightId: accessRight.accessRightId ?? "",
+              grantedUserId: student.id,
+              grantedById: ctx.user.id,
+            })),
+          );
+
+          await trx
+            .insertInto("UserAccessRights")
+            .values(userAccessRights)
+            .execute();
+
+          const insertedStudentIds = studentsToInsert.map(
+            (student) => student.id,
+          );
+          const students = await trx
+            .selectFrom("User")
+            .where("User.id", "in", insertedStudentIds)
+            .leftJoin("Course", "User.courseId", "Course.id")
+            .select([
+              "User.id",
+              "User.email",
+              "User.name",
+              "Course.name as course",
+              "User.batch",
+              "User.graduationDate",
+            ])
+            .execute();
+
+          return students.map((student) => ({
+            ...student,
+            graduationDate:
+              student.graduationDate?.toLocaleDateString("en-SG") ?? "",
+            batch: student.batch ?? "",
+            course: student.course ?? "",
+          }));
+        });
+
+        return result;
+      } catch (err) {
+        console.error(err);
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      }
+    }),
   deleteStudent: protectedProcedure
     .input(z.object({ id: z.string().min(1) }))
     .mutation(async ({ ctx, input }) => {

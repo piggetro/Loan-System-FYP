@@ -70,15 +70,19 @@ const LoginComponent = () => {
                 setAdminId(e.target.value);
               }}
               id="adminId"
-              placeholder="User ID Input"
+              placeholder="XXXXXXX"
               minLength={1}
               type="text"
               autoCapitalize="none"
               autoComplete="User Number"
               autoCorrect="off"
               disabled={isPending}
-              className="mb-3"
+              className="mb-1"
             />
+
+            <p className="text-sm text-muted-foreground mb-2">
+              Your School ID, pXXXXXXX, omit the &quot;p&quot;
+            </p>
             <div className="mb-2 flex items-center text-sm">
               <Label
                 className="block w-1/2 font-bold text-gray-700"

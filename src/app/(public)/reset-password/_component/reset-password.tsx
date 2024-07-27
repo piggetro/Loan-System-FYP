@@ -57,15 +57,19 @@ const ResetPasswordComponent = () => {
                 setAdminId(e.target.value);
               }}
               id="adminId"
-              placeholder="User ID Input"
+              placeholder="XXXXXXX"
               minLength={1}
               type="text"
               autoCapitalize="none"
               autoComplete="User Number"
               autoCorrect="off"
               disabled={isPending}
-              className="mb-3"
+              className="mb-1"
             />
+
+            <p className="mb-2 text-sm text-muted-foreground">
+              Your School ID, pXXXXXXX, omit the &quot;p&quot;
+            </p>
           </div>
           <Button disabled={isPending} className="w-full">
             {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

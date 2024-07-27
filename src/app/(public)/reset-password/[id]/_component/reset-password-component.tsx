@@ -70,15 +70,18 @@ const ResetPasswordComponent: React.FC<{
             <Input
               value={user_id}
               id="adminId"
-              placeholder="User ID Input"
+              placeholder="XXXXXXX"
               minLength={1}
               type="text"
               autoCapitalize="none"
               autoComplete="User Number"
               autoCorrect="off"
               disabled={true}
-              className="mb-3"
+              className="mb-1"
             />
+            <p className="mb-2 text-sm text-muted-foreground">
+              Your School ID, pXXXXXXX, omit the &quot;p&quot;
+            </p>
             <div className="mb-2 flex items-center text-sm">
               <Label
                 className="block w-1/2 font-bold text-gray-700"

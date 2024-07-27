@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Form,
   FormField,
@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/app/_components/ui/select";
-import { format } from "date-fns";
+import { format, isValid, parse } from "date-fns";
 import { Button } from "@/app/_components/ui/button";
 import { type SubmitHandler, useForm } from "react-hook-form";
 import { z } from "zod";
@@ -117,17 +117,61 @@ const AddStaff = ({ setStudent, courses, batches }: AddStaffProps) => {
   };
 
   const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
+  const [bulkStudents, setBulkStudents] = useState<Student[]>([]);
 
   const onSelectedFileChange = (acceptedFiles: File[]) => {
     if (acceptedFiles.length > 0 && acceptedFiles[0]) {
       setUploadedFileName(acceptedFiles[0].name);
-      Papa.parse(acceptedFiles[0], {
+      Papa.parse<Student>(acceptedFiles[0], {
+        header: true,
         complete: (results) => {
-          console.log(results);
+          const data = results.data.map((item: Student) => {
+            // Find course object by code and get the ID
+            const course = courses.find((c) => c.code === item.course);
+            const courseId = course ? course.id : null;
+
+            const parsedDate = parse(
+              String(item.graduationDate),
+              "dd/MM/yyyy",
+              new Date(),
+            );
+            const formattedDate = isValid(parsedDate)
+              ? format(parsedDate, "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
+              : null;
+            return {
+              ...item,
+              course: courseId ?? "",
+              graduationDate: formattedDate ?? new Date(),
+            };
+          });
+
+          setBulkStudents(data);
         },
+        skipEmptyLines: true,
       });
     }
   };
+
+  const { mutate: bulkAddStudents, isPending: isAdding } =
+    api.schoolAdmin.bulkAddStudents.useMutation({
+      onSuccess: (data) => {
+        setStudent((prev) => [...prev, ...data]);
+        toast({
+          title: "Success",
+          description: "Student added successfully",
+        });
+        setBulkStudents([]);
+        setUploadedFileName(null);        
+      },
+      onError: (err) => {
+        console.log(err);
+        toast({
+          title: "Error",
+          description: "An error occurred while adding student",
+          variant: "destructive",
+        });
+      },
+    });
 
   return (
     <div className="w-full">
@@ -135,7 +179,6 @@ const AddStaff = ({ setStudent, courses, batches }: AddStaffProps) => {
         <div className="mb-4 flex">
           {/* Left Column */}
           <div className="mr-4 flex-1 space-y-4">
-            {" "}
             {/* Added margin right for spacing between columns */}
             <FormField
               name="id"
@@ -300,8 +343,6 @@ const AddStaff = ({ setStudent, courses, batches }: AddStaffProps) => {
           multiple={false}
           accept={{
             "text/csv": [],
-            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
-              [],
           }}
         >
           {(dropzone: DropzoneState) => (
@@ -311,7 +352,7 @@ const AddStaff = ({ setStudent, courses, batches }: AddStaffProps) => {
               ) : (
                 <div className="flex flex-col items-center gap-1.5">
                   <div className="flex flex-row items-center gap-0.5 text-lg font-medium">
-                    Upload CSV or XLSX file
+                    Upload CSV file
                   </div>
                 </div>
               )}
@@ -332,7 +373,15 @@ const AddStaff = ({ setStudent, courses, batches }: AddStaffProps) => {
           )}
         </Dropzone>
         <div className="mt-2 self-end">
-          <Button>Upload</Button>
+          <Button
+            onClick={() => {
+              bulkAddStudents(bulkStudents);
+            }}
+            disabled={!uploadedFileName || isAdding}
+          >
+            {isAdding && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Upload
+          </Button>
         </div>
       </div>
     </div>
