@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Form,
   FormField,
@@ -24,9 +24,15 @@ import { CalendarIcon, Loader2 } from "lucide-react";
 import { api } from "@/trpc/react";
 import { useToast } from "@/app/_components/ui/use-toast";
 import type { Student } from "./StudentColumns";
-import { Popover, PopoverContent, PopoverTrigger } from "@/app/_components/ui/popover";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/app/_components/ui/popover";
 import { cn } from "@/lib/utils";
 import { Calendar } from "@/app/_components/ui/calendar";
+import Dropzone, { DropzoneState } from "shadcn-dropzone";
+import Papa from "papaparse";
 
 export type Course = {
   id: string;
@@ -108,6 +114,19 @@ const AddStaff = ({ setStudent, courses, batches }: AddStaffProps) => {
     values: z.infer<typeof formSchema>,
   ) => {
     addStudent(values);
+  };
+
+  const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
+
+  const onSelectedFileChange = (acceptedFiles: File[]) => {
+    if (acceptedFiles.length > 0 && acceptedFiles[0]) {
+      setUploadedFileName(acceptedFiles[0].name);
+      Papa.parse(acceptedFiles[0], {
+        complete: (results) => {
+          console.log(results);
+        },
+      });
+    }
   };
 
   return (
@@ -274,6 +293,47 @@ const AddStaff = ({ setStudent, courses, batches }: AddStaffProps) => {
           {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           Confirm
         </Button>
+      </div>
+      <div className="mt-2 flex flex-col">
+        <Dropzone
+          onDrop={onSelectedFileChange}
+          multiple={false}
+          accept={{
+            "text/csv": [],
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
+              [],
+          }}
+        >
+          {(dropzone: DropzoneState) => (
+            <div className="flex flex-col items-center justify-between p-4">
+              {dropzone.isDragAccept ? (
+                <div className="text-lg font-medium">Drop your file here!</div>
+              ) : (
+                <div className="flex flex-col items-center gap-1.5">
+                  <div className="flex flex-row items-center gap-0.5 text-lg font-medium">
+                    Upload CSV or XLSX file
+                  </div>
+                </div>
+              )}
+              <div
+                className={`text-sm font-medium ${
+                  uploadedFileName
+                    ? "font-bold text-[#1c6c91]"
+                    : "text-gray-400"
+                }`}
+              >
+                {uploadedFileName ? (
+                  <span>{uploadedFileName}</span>
+                ) : (
+                  `${dropzone.acceptedFiles.length} file uploaded so far.`
+                )}
+              </div>
+            </div>
+          )}
+        </Dropzone>
+        <div className="mt-2 self-end">
+          <Button>Upload</Button>
+        </div>
       </div>
     </div>
   );
