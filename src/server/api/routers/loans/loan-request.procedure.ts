@@ -586,6 +586,47 @@ export const loanRequestRouter = createTRPCRouter({
         if (!(timeNow24hr > startTime && timeNow24hr < endTime)) {
           return "COLLECTION TIME ERROR";
         }
+
+        //Check if today is a holiday
+        const holidays = await ctx.db
+          .selectFrom("Holiday")
+          .select(["Holiday.startDate", "Holiday.endDate"])
+          .where(
+            "Holiday.startDate",
+            "<=",
+            new Date(
+              new Date(
+                new Date().setFullYear(new Date().getFullYear() + 1),
+              ).setHours(0, 0, 0, 0),
+            ),
+          )
+          .where(
+            "Holiday.endDate",
+            ">=",
+            new Date(new Date().setHours(0, 0, 0, 0)),
+          )
+          .execute();
+        const arrayOfDates: Date[] = [];
+
+        holidays.forEach((holiday) => {
+          if (holiday.endDate === holiday.startDate) {
+            arrayOfDates.push(new Date(holiday.startDate));
+          } else {
+            const startDate = new Date(holiday.startDate);
+
+            while (startDate <= new Date(holiday.endDate)) {
+              arrayOfDates.push(new Date(startDate));
+              startDate.setDate(startDate.getDate() + 1);
+            }
+          }
+        });
+        const isHoliday = arrayOfDates.find(
+          (date) => date.toDateString() === new Date().toDateString(),
+        );
+        if (isHoliday !== undefined) {
+          return "COLLECTION DATE ERROR";
+        }
+
         return await ctx.db.transaction().execute(async (trx) => {
           //Getting The Loan Items Requested For That Loan
           const loanItemsRequested = await trx
@@ -1597,7 +1638,7 @@ export const loanRequestRouter = createTRPCRouter({
   searchLoans: protectedProcedure
     .input(
       z.object({
-        searchInput: z.string().min(1),
+        searchInput: z.string(),
         status: z.enum([
           "PENDING_APPROVAL",
           "REJECTED",

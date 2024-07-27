@@ -4,6 +4,7 @@ import { protectedProcedure, createTRPCRouter } from "../../trpc";
 import { z } from "zod";
 import { type LoanDetailsData } from "@/app/(protected)/equipment-loans/loans/[id]/_components/LoanDetailsTable";
 import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
+import { Timestamp } from "@/db/types";
 
 export const loanRouter = createTRPCRouter({
   verifyLoanById: protectedProcedure
@@ -455,12 +456,41 @@ export const loanRouter = createTRPCRouter({
   }),
   getHolidays: protectedProcedure.query(async ({ ctx }) => {
     try {
+      //get all holidays from today till next year
       const holidays = await ctx.db
         .selectFrom("Holiday")
         .select(["Holiday.startDate", "Holiday.endDate"])
+        .where(
+          "Holiday.startDate",
+          "<=",
+          new Date(
+            new Date(
+              new Date().setFullYear(new Date().getFullYear() + 1),
+            ).setHours(0, 0, 0, 0),
+          ),
+        )
+        .where(
+          "Holiday.endDate",
+          ">=",
+          new Date(new Date().setHours(0, 0, 0, 0)),
+        )
         .execute();
+      const arrayOfDates: Date[] = [];
 
-      return holidays;
+      holidays.forEach((holiday) => {
+        if (holiday.endDate === holiday.startDate) {
+          arrayOfDates.push(new Date(holiday.startDate));
+        } else {
+          const startDate = new Date(holiday.startDate);
+
+          while (startDate <= new Date(holiday.endDate)) {
+            arrayOfDates.push(new Date(startDate));
+            startDate.setDate(startDate.getDate() + 1);
+          }
+        }
+      });
+
+      return arrayOfDates;
     } catch (err) {
       console.log(err);
       throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });

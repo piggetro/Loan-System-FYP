@@ -80,8 +80,12 @@ const TrackLoansPage: React.FC<{ allSemesters: { name: string }[] }> = ({
 
   //search funtion
   function executeSearch() {
-    setDebouncerIsLoading(true);
-    if (searchInput !== "") {
+    if (
+      searchInput !== "" ||
+      (searchInput === "" && semester !== "All") ||
+      (searchInput === "" && status !== "All")
+    ) {
+      setDebouncerIsLoading(true);
       fetchSearch({
         searchInput: searchInput,
         status: status,
@@ -118,7 +122,12 @@ const TrackLoansPage: React.FC<{ allSemesters: { name: string }[] }> = ({
             placeholder="Search Loan ID/Borrower Name"
             onKeyDown={(event) => {
               if (event.key === "Enter") {
-                if (searchInput !== "") executeSearch();
+                if (
+                  searchInput !== "" ||
+                  (searchInput === "" && semester !== "All") ||
+                  (searchInput === "" && status !== "All")
+                )
+                  executeSearch();
               }
             }}
           />
@@ -169,7 +178,12 @@ const TrackLoansPage: React.FC<{ allSemesters: { name: string }[] }> = ({
           <Button
             type="button"
             onClick={() => {
-              if (searchInput !== "") executeSearch();
+              if (
+                searchInput !== "" ||
+                (searchInput === "" && semester !== "All") ||
+                (searchInput === "" && status !== "All")
+              )
+                executeSearch();
             }}
           >
             <Search />

@@ -199,7 +199,7 @@ const CollectionLoanDialog: React.FC<{
               {data.returnedTo?.name ?? "-"}
             </p>
             <p className="flex">
-              <span className="font-bold">Loan Status:&nbsp;</span>{" "}
+              <span className="font-bold">Loan Status:&nbsp;</span>
               <div className="flex items-center">
                 <div
                   className={`mr-1 h-3 w-3 rounded-full ${

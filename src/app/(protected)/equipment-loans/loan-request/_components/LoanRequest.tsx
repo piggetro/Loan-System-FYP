@@ -358,11 +358,10 @@ const LoanRequestComponent: React.FC<{
                                 disabledCalendarDates!.some(
                                   (disabledDate) =>
                                     date.getFullYear() ===
-                                      disabledDate.startDate.getFullYear() &&
+                                      disabledDate.getFullYear() &&
                                     date.getMonth() ===
-                                      disabledDate.startDate.getMonth() &&
-                                    date.getDate() ===
-                                      disabledDate.startDate.getDate(),
+                                      disabledDate.getMonth() &&
+                                    date.getDate() === disabledDate.getDate(),
                                 )
                               }
                               initialFocus
