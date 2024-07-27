@@ -129,10 +129,16 @@ const LoanDetails: React.FC<{
               "The Equipment that you have requested is currently unavailable.\nAll Loan Request are subject to Equipment Availability",
             variant: "destructive",
           });
-        } else {
+        } else if (results === "COLLECTION TIME ERROR") {
           toast({
             title: "Request Collection Was Unsuccessful",
             description: `Please request during Request Collection Timing\nRequest Collection Timing is ${loanTimingData?.startRequestForCollection} to ${loanTimingData?.endRequestForCollection}`,
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Request Collection Was Unsuccessful",
+            description: `Request Collection is unavailable on block out dates, Please try again on another day`,
             variant: "destructive",
           });
         }
