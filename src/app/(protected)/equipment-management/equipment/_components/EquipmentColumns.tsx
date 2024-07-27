@@ -35,7 +35,14 @@ export const equipmentColumns = ({
           alt={row.original.name}
           className="h-10 w-10"
         />
-        <span className="ml-2">{row.original.name}</span>
+        <a
+          href={`/api/uploads/${row.original.photoPath}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="ml-2 underline hover:no-underline"
+        >
+          {row.original.name}
+        </a>
       </div>
     ),
   },

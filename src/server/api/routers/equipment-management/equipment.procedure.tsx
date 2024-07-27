@@ -391,7 +391,7 @@ export const equipmentRouter = createTRPCRouter({
               "SubCategory.id as subCategory",
               "Category.id as category",
               "Equipment.loanLimit",
-              "Equipment.photoPath"
+              "Equipment.photoPath",
             ])
             .where("Equipment.id", "=", input.id)
             .where("Equipment.active", "=", true)
@@ -452,6 +452,7 @@ export const equipmentRouter = createTRPCRouter({
         subCategory: z.string().min(1),
         courses: z.array(z.string().min(1)),
         loanLimit: z.number().min(0),
+        photoType: z.union([z.string(), z.null()]),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -464,9 +465,22 @@ export const equipmentRouter = createTRPCRouter({
             subCategoryId: input.subCategory,
             updatedAt: new Date(),
             loanLimit: input.loanLimit,
+            ...(input.photoType && {
+              photoPath:
+                input.photoType === "default.jpg"
+                  ? "default.jpg"
+                  : createId() + input.photoType,
+            }),
           })
           .where("id", "=", input.id)
-          .returning(["id", "name", "checklist", "subCategoryId", "loanLimit"])
+          .returning([
+            "id",
+            "name",
+            "checklist",
+            "subCategoryId",
+            "loanLimit",
+            "photoPath",
+          ])
           .executeTakeFirst();
 
         await ctx.db.transaction().execute(async (trx) => {
@@ -495,6 +509,7 @@ export const equipmentRouter = createTRPCRouter({
           category: input.category,
           courses: input.courses,
           loanLimit: equipment?.loanLimit ?? 0,
+          photoPath: equipment?.photoPath ?? "default.jpg",
         };
       } catch (err) {
         console.log(err);

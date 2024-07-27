@@ -68,6 +68,7 @@ type EquipmentDataType = {
   quantityPrepared: number;
   quantityCollected: number;
   quantityReturned: number;
+  photoPath: string;
 };
 
 const LoanDetailsTable: React.FC<{
@@ -90,6 +91,7 @@ const LoanDetailsTable: React.FC<{
         quantityPrepared: 0,
         quantityCollected: 0,
         quantityReturned: 0,
+        photoPath: equipment.photoPath ?? "default.jpg",
       };
 
       if (
@@ -161,7 +163,14 @@ const LoanDetailsTable: React.FC<{
             }
           >
             <TableCell className="font-medium">
-              {loanItem.description}
+              <a
+                href={`/api/uploads/${loanItem.photoPath}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="ml-2 underline hover:no-underline"
+              >
+                {loanItem.description}
+              </a>
             </TableCell>
             <TableCell>{loanItem.checklist}</TableCell>
             <TableCell>{loanItem.quantityRequested}</TableCell>

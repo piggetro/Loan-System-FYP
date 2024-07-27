@@ -119,6 +119,7 @@ const LoanRequestComponent: React.FC<{
           category: updatedItems[indexOfItem]!.category,
           subCategory: updatedItems[indexOfItem]!.subCategory,
           quantityAvailable: updatedItems[indexOfItem]!.quantityAvailable,
+          photoPath: updatedItems[indexOfItem]!.photoPath,
         };
         setSelectedEquipment(updatedItems);
       }

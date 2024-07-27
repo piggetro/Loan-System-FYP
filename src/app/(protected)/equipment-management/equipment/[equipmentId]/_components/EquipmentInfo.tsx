@@ -26,6 +26,7 @@ import {
 import { Checkbox } from "@/app/_components/ui/checkbox";
 import { Category } from "../../_components/AddEquipment";
 import { Course } from "@/app/(protected)/school-admin/courses/_components/CoursesColumns";
+import { Label } from "@/app/_components/ui/label";
 
 interface EquipmentInfoProps {
   equipment: Equipment;
@@ -89,7 +90,7 @@ const EquipmentInfo = ({
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [deletePhoto, setDeletePhoto] = useState<boolean>(false);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0] ?? undefined;
 
     if (selectedFile) {
@@ -116,6 +117,8 @@ const EquipmentInfo = ({
 
       const fileExtension = mimeTypeToExtension[selectedFile.type] ?? "unknown";
       setFileType(fileExtension);
+      setDeletePhoto(false);
+      await form.trigger();
     } else {
       setFile(undefined);
       setFileType(null);
@@ -125,18 +128,38 @@ const EquipmentInfo = ({
 
   const { mutate: updateEquipment, isPending } =
     api.equipment.updateEquipment.useMutation({
-      onSuccess: (data) => {
-        setEquipment(data);
-        setSelectedCategory(data.category);
-        setDisabled(true);
-        toast({
-          title: "Success",
-          description: "Equipment updated successfully",
-        });
-        form.reset({
-          ...data,
-          loanLimit: data.loanLimit.toString(),
-        });
+      onSuccess: async (data) => {
+        try {
+          if (equipment.photoPath === data.photoPath) return;
+          const formData = new FormData();
+          file && formData.set("file", file);
+          formData.set("oldPath", equipment.photoPath);
+          formData.set("newPath", data.photoPath);
+
+          const res = await fetch("/api/uploads/update", {
+            method: "POST",
+            body: formData,
+          });
+          if (!res.ok) throw new Error(await res.text());
+        } catch (e) {
+          console.error(e);
+        } finally {
+          setEquipment(data);
+          setSelectedCategory(data.category);
+          setDisabled(true);
+          toast({
+            title: "Success",
+            description: "Equipment updated successfully",
+          });
+          form.reset({
+            ...data,
+            loanLimit: data.loanLimit.toString(),
+          });
+          setFile(undefined);
+          setFileType(null);
+          setImagePreview(null);
+          setDeletePhoto(false);
+        }
       },
       onError: (err) => {
         console.log(err);
@@ -174,6 +197,12 @@ const EquipmentInfo = ({
       id: equipment.id,
       ...values,
       loanLimit: parseInt(values?.loanLimit ?? ""),
+      photoType:
+        !deletePhoto && !fileType
+          ? null
+          : deletePhoto
+            ? "default.jpg"
+            : fileType,
     });
   };
 
@@ -353,19 +382,14 @@ const EquipmentInfo = ({
               )}
             />
             <div className="space-y-4">
-              <div className="flex items-start ">
+              <div className="flex items-start space-x-10 ">
                 <div className="flex-1/2">
-                  <label
-                    htmlFor="file-upload"
-                    className="block text-base font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                  >
-                    Upload Equipment Image
-                  </label>
-                  <input
+                  <Label htmlFor="file-upload">Upload Equipment Image</Label>
+                  <Input
                     id="file-upload"
                     type="file"
                     name="file"
-                    className="mt-2"
+                    className={`mt-2 ${!disabled && "cursor-pointer"}`}
                     accept="image/jpeg, image/png, image/gif"
                     onChange={handleFileChange}
                     disabled={disabled}
@@ -388,11 +412,12 @@ const EquipmentInfo = ({
                       />
                       <div
                         className={`absolute right-0 top-0 mr-1 mt-1 cursor-pointer ${disabled && "hidden"}`}
-                        onClick={() => {
+                        onClick={async () => {
                           setDeletePhoto(true);
                           setFile(undefined);
                           setFileType(null);
                           setImagePreview(null);
+                          await form.trigger();
                         }}
                       >
                         <XCircle className="h-6 w-6 text-red-500" />

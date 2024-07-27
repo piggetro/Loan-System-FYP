@@ -195,6 +195,7 @@ export const loanRequestRouter = createTRPCRouter({
             subCategory: equipment.subCategoryName ?? "",
             quantityAvailable: loanLimit,
             quantitySelected: 1,
+            photoPath: equipment.photoPath ?? "default.jpg",
           };
         });
         return data;

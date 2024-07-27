@@ -11,6 +11,7 @@ export type Inventory = {
   subCategory: string;
   quantityAvailable: number;
   quantitySelected: number;
+  photoPath: string;
 };
 
 const LoanRequestPage = async () => {

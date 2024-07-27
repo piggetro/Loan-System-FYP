@@ -34,6 +34,7 @@ import InventoryItemsForm, {
   InventoryItem,
 } from "@/app/_components/InventoryItemsForm";
 import { Separator } from "@/app/_components/ui/separator";
+import { Label } from "@/app/_components/ui/label";
 
 interface AddEquipmentProps {
   setEquipment: React.Dispatch<React.SetStateAction<Equipment[]>>;
@@ -342,19 +343,14 @@ const AddEquipment = ({
               )}
             />
             <div className="space-y-4">
-              <div className="flex items-start space-x-4">
+              <div className="flex items-start space-x-10">
                 <div className="flex-0.5">
-                  <label
-                    htmlFor="file-upload"
-                    className="block text-base font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                  >
-                    Upload Equipment Image
-                  </label>
-                  <input
+                  <Label htmlFor="file-upload">Upload Equipment Image</Label>
+                  <Input
                     id="file-upload"
                     type="file"
                     name="file"
-                    className="mt-2"
+                    className={`mt-2 cursor-pointer`}
                     accept="image/jpeg, image/png, image/gif"
                     onChange={handleFileChange}
                     style={{ color: "transparent" }}

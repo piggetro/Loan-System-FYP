@@ -13,7 +13,16 @@ export const equipmentColumns = (
     accessorKey: "itemDescription",
     header: "Item Description",
     cell: ({ row }) => (
-      <div className="w-96">{row.getValue("itemDescription")}</div>
+      <div className="w-96">
+        <a
+          href={`/api/uploads/${row.original.photoPath}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="ml-2 underline hover:no-underline"
+        >
+          {row.getValue("itemDescription")}
+        </a>
+      </div>
     ),
   },
   {
@@ -111,7 +120,16 @@ export const summaryColumns = (
     accessorKey: "itemDescription",
     header: "Item Description",
     cell: ({ row }) => (
-      <div className="w-96">{row.getValue("itemDescription")}</div>
+      <div className="w-96">
+        <a
+          href={`/api/uploads/${row.original.photoPath}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="ml-2 underline hover:no-underline"
+        >
+          {row.getValue("itemDescription")}
+        </a>
+      </div>
     ),
   },
   {
