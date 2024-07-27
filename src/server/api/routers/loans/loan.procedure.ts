@@ -250,17 +250,19 @@ export const loanRouter = createTRPCRouter({
         .selectAll("Loan")
         .innerJoin("LoanItem", "Loan.id", "LoanItem.loanId")
         .select((eb) => [
-          jsonArrayFrom(
-            eb
-              .selectFrom("Waiver")
-              .whereRef("Waiver.loanId", "=", "Loan.id")
-              .selectAll(),
-          ).as("outstandingItems"),
           eb
             .selectFrom("User")
             .whereRef("User.id", "=", "Loan.loanedById")
             .select("User.name")
             .as("loanedByName"),
+          jsonArrayFrom(
+            eb
+              .selectFrom("LoanItem")
+              .leftJoin("Equipment", "Equipment.id", "LoanItem.equipmentId")
+              .selectAll("LoanItem")
+              .select("Equipment.name")
+              .whereRef("LoanItem.loanId", "=", "Loan.id"),
+          ).as("outstandingItems"),
         ])
         .where("LoanItem.status", "in", [
           "DAMAGED",
@@ -270,17 +272,20 @@ export const loanRouter = createTRPCRouter({
         .where("Loan.loanedById", "=", ctx.user.id)
         .distinctOn("Loan.id")
         .execute();
-
+      console.log(lostAndDamagedLoan[0]?.outstandingItems);
       const data = lostAndDamagedLoan.map((item) => {
         let remarks = "";
         const statusArray: string[] = [];
 
         item.outstandingItems.forEach((outstandingItem) => {
           if (
-            outstandingItem.status === "PENDING_REQUEST" ||
-            outstandingItem.status === "REJECTED"
+            outstandingItem.status === "DAMAGED" ||
+            outstandingItem.status === "LOST" ||
+            outstandingItem.status === "MISSING_CHECKLIST_ITEMS"
           ) {
-            remarks += outstandingItem.remarks;
+            remarks +=
+              outstandingItem.name +
+              ` (${toStartCase(outstandingItem.status)})`;
           }
           statusArray.push(outstandingItem.status!);
         });
@@ -462,3 +467,10 @@ export const loanRouter = createTRPCRouter({
     }
   }),
 });
+function toStartCase(string: string) {
+  return string
+    .replace(/_/g, " ")
+    .split(" ")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(" ");
+}

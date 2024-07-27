@@ -8,6 +8,7 @@ import { sql } from "kysely";
 import { createId } from "@paralleldrive/cuid2";
 import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 import { LoanStatus } from "@/db/enums";
+import { stat } from "fs";
 
 export const loanRequestRouter = createTRPCRouter({
   getCategories: protectedProcedure.query(async ({ ctx }) => {
@@ -1416,7 +1417,8 @@ export const loanRequestRouter = createTRPCRouter({
           "MISSING_CHECKLIST_ITEMS",
         ])
         .distinctOn("Loan.id")
-        .orderBy("Loan.dateCreated desc")
+        .orderBy("Loan.id")
+        .orderBy("Loan.dateCreated", "desc")
         .execute();
       const data = lostAndDamagedLoan.map((item) => {
         let remarks = "";
@@ -1471,15 +1473,19 @@ export const loanRequestRouter = createTRPCRouter({
         jsonArrayFrom(
           eb
             .selectFrom("Loan")
+            .leftJoin("Waiver", "Waiver.loanId", "Loan.id")
             .select((eb) => [
-              jsonArrayFrom(
-                eb
-                  .selectFrom("Waiver")
-                  .whereRef("Waiver.loanId", "=", "Loan.id")
-                  .selectAll(),
-              ).as("outstandingItems"),
+              "Waiver.status",
               "Loan.id",
               "Loan.loanId",
+              jsonArrayFrom(
+                eb
+                  .selectFrom("LoanItem as li")
+                  .leftJoin("Equipment", "li.equipmentId", "Equipment.id")
+                  .whereRef("li.loanId", "=", "Loan.id")
+                  .selectAll("li")
+                  .select("Equipment.name"),
+              ).as("outstandingItems"),
             ])
             .whereRef("Loan.loanedById", "=", "User.id")
             .innerJoin("LoanItem", "Loan.id", "LoanItem.loanId")
@@ -1493,38 +1499,30 @@ export const loanRequestRouter = createTRPCRouter({
       ])
       .where("User.id", "=", ctx.user.id)
       .executeTakeFirstOrThrow();
+
+    console.log(data.outstandingLoans);
     if (data.outstandingLoans.length === 0 && data.overdueLoans.length === 0) {
       return undefined;
     }
 
     const updateedOutstandingData = data.outstandingLoans.map((item) => {
       let remarks = "";
-      const statusArray: string[] = [];
 
       item.outstandingItems.forEach((outstandingItem) => {
         if (
-          outstandingItem.status === "PENDING_REQUEST" ||
-          outstandingItem.status === "REJECTED"
+          outstandingItem.status === "DAMAGED" ||
+          outstandingItem.status === "LOST" ||
+          outstandingItem.status === "MISSING_CHECKLIST_ITEMS"
         ) {
-          remarks += outstandingItem.remarks + " ";
+          remarks += `${outstandingItem.name} (${toStartCase(outstandingItem.status)})\n`;
         }
-        statusArray.push(outstandingItem.status);
       });
-      let status;
 
-      if (statusArray.every((status) => status === "APPROVED")) {
-        status = "Approved";
-      } else if (statusArray.every((status) => status === "PENDING")) {
-        status = "Pending";
-      } else if (statusArray.every((status) => status === "PENDING_REQUEST")) {
-        status = "Pending Request";
-      } else {
-        status = "Partially Outstanding";
-      }
       return {
         id: item.id,
         loanId: item.loanId,
-        status: status,
+        status: "Outstanding",
+        waiverStatus: toStartCase(item.status ?? ""),
         remarks: remarks,
       };
     });
@@ -1766,3 +1764,10 @@ export const loanRequestRouter = createTRPCRouter({
       }
     }),
 });
+function toStartCase(string: string) {
+  return string
+    .replace(/_/g, " ")
+    .split(" ")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(" ");
+}

@@ -38,6 +38,14 @@ interface DataTableProps<TData, TValue> {
   allSemesters: { name: string }[];
 }
 
+const allWaiverStatus = [
+  "Pending",
+  "Approved",
+  "Resolved",
+  "Rejected",
+  "Pending Request",
+];
+
 export function WaiverTable<TData, TValue>({
   columns,
   data,
@@ -92,7 +100,7 @@ export function WaiverTable<TData, TValue>({
             }
           }}
         >
-          <SelectTrigger className=" w-1/4  min-w-44">
+          <SelectTrigger className=" mr-4 w-1/4 min-w-44">
             <SelectValue placeholder="Semester" />
           </SelectTrigger>
           <SelectContent>
@@ -104,6 +112,32 @@ export function WaiverTable<TData, TValue>({
               {allSemesters.map((semester) => (
                 <SelectItem key={semester.name} value={semester.name}>
                   {semester.name}
+                </SelectItem>
+              ))}
+            </SelectGroup>
+          </SelectContent>
+        </Select>
+        <Select
+          onValueChange={(key) => {
+            if (key === "All") {
+              table.getColumn("status")?.setFilterValue("");
+            } else {
+              table.getColumn("status")?.setFilterValue(key);
+            }
+          }}
+        >
+          <SelectTrigger className=" w-1/6  min-w-44">
+            <SelectValue placeholder="Semester" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectGroup>
+              <SelectLabel>Status</SelectLabel>
+              <SelectItem key={"All"} value={"All"}>
+                All
+              </SelectItem>
+              {allWaiverStatus.map((status) => (
+                <SelectItem key={status} value={status}>
+                  {status}
                 </SelectItem>
               ))}
             </SelectGroup>

@@ -149,7 +149,7 @@ const OutstandingItemDialog: React.FC<{
                     disabled={item.locked}
                     onChange={(event) => {
                       setEnableSubmit(true);
-                      setProcessedOutstandingItems((prevItems) => {
+                      setProcessedOutstandingItems(() => {
                         const updatedItems = [...processedOutstandingItems];
                         updatedItems[index]!.remarks = event.target.value;
                         updatedItems[index]!.edited = true;
@@ -187,26 +187,6 @@ const OutstandingItemDialog: React.FC<{
                     </SelectContent>
                   </Select>
                 </TableCell>
-                {/* <TableCell
-            className={
-              loanItem.returned === "MISSING_CHECKLIST_ITEMS"
-                ? ""
-                : "hidden"
-            }
-          >
-            <Textarea
-              disabled={loanItem.disabled}
-              value={loanItem.remarks}
-              onChange={(e) => {
-                setProcessLoanData((prevItems) => {
-                  const updatedItems = [...prevItems];
-                  updatedItems[index]!.remarks = e.target.value;
-                  return updatedItems;
-                });
-              }}
-              className="w-48"
-            />
-          </TableCell> */}
               </TableRow>
             ))}
           </TableBody>

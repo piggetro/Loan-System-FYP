@@ -20,6 +20,7 @@ const UnableToLoanComponent: React.FC<{
       loanId: string;
       remarks: string;
       status: string;
+      waiverStatus: string;
     }[];
     overdueLoans: { id: string; loanId: string }[];
   };
@@ -42,7 +43,8 @@ const UnableToLoanComponent: React.FC<{
             <TableHeader>
               <TableRow>
                 <TableHead className="w-[150px]">Loan ID</TableHead>
-                <TableHead className="w-[200px]">Status</TableHead>
+                <TableHead className="w-[200px]">Waiver Status</TableHead>
+                <TableHead className="w-[200px]">Loan Status</TableHead>
                 <TableHead className="w-[300px] text-left">Details</TableHead>
                 <TableHead className="w-[200px] text-center">Action</TableHead>
               </TableRow>
@@ -51,6 +53,7 @@ const UnableToLoanComponent: React.FC<{
               {userOutstandingLoans.overdueLoans.map((loan) => (
                 <TableRow key={loan.id}>
                   <TableCell className="font-medium">{loan.loanId}</TableCell>
+                  <TableCell>-</TableCell>
                   <TableCell>
                     <div className="flex  items-center">
                       <div className="mr-2 h-3 w-3 rounded-full bg-red-500"></div>
@@ -74,6 +77,22 @@ const UnableToLoanComponent: React.FC<{
               {userOutstandingLoans.outstandingLoans.map((loan) => (
                 <TableRow key={loan.id}>
                   <TableCell className="font-medium">{loan.loanId}</TableCell>
+                  <TableCell className="font-medium">
+                    <div className="flex  items-center">
+                      <div
+                        className={`mr-2 h-3 w-3 rounded-full ${
+                          loan.waiverStatus === "Approved" ||
+                          loan.waiverStatus === "Resolved"
+                            ? "bg-green-500"
+                            : loan.waiverStatus === "Pending" ||
+                                loan.waiverStatus === "Pending"
+                              ? "bg-yellow-500"
+                              : "bg-red-500"
+                        }`}
+                      ></div>
+                      {loan.waiverStatus}
+                    </div>
+                  </TableCell>
                   <TableCell>
                     <div className="flex  items-center">
                       <div

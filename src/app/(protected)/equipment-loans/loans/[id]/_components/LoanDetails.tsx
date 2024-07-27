@@ -55,11 +55,7 @@ const LoanDetails: React.FC<{
     useState<boolean>(false);
   const [openCancelLoanDialog, setOpenCancelLoanDialog] =
     useState<boolean>(false);
-  useEffect(() => {
-    if (outsandingItemsOptionFromURL === "true") {
-      setOpenOutstandingItemsDialog(true);
-    }
-  }, []);
+
   useEffect(() => {
     if (openOutstandingItemsDialog === false) refresh();
   }, [openOutstandingItemsDialog]);
@@ -71,6 +67,16 @@ const LoanDetails: React.FC<{
   } = api.loan.getUsersLoanAccess.useQuery({
     id: id,
   });
+  useEffect(() => {
+    if (userAccessRights !== undefined) {
+      if (
+        outsandingItemsOptionFromURL === "true" &&
+        !userAccessRights.includes("usersOwnLoan")
+      ) {
+        setOpenOutstandingItemsDialog(true);
+      }
+    }
+  }, [userAccessRights]);
   const requestCollection = api.loanRequest.requestForCollection.useMutation();
   const { toast } = useToast();
   const { refetch, data } = api.loan.getLoanById.useQuery({
@@ -413,7 +419,8 @@ const LoanDetails: React.FC<{
             </Button>
           ) : null}
 
-          {userAccessRights?.includes("Lost/Damaged Loans") ? (
+          {userAccessRights?.includes("Lost/Damaged Loans") &&
+          !userAccessRights.includes("usersOwnLoan") ? (
             <Button
               onClick={() => {
                 setOpenOutstandingItemsDialog(true);
