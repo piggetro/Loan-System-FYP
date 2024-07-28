@@ -250,6 +250,8 @@ export const loanRequestRouter = createTRPCRouter({
         [];
 
       const dueDateFormatted = input.dueDate;
+      dueDateFormatted.setDate(dueDateFormatted.getDate() + 1);
+      console.log(dueDateFormatted);
       dueDateFormatted.setUTCHours(23, 59, 59, 0);
       console.log(dueDateFormatted);
       const todayDate = new Date();

@@ -92,7 +92,7 @@ const ReviewLoanRequest: React.FC<LoanRequestType> = ({
           </div>
           <div className="mr-3 w-1/2 ">
             <div className="flex items-center justify-end">
-              <Label className=" mr-8 text-base">Return Date</Label>
+              <Label className=" mr-8 text-base">Due Date</Label>
               <Input
                 readOnly={true}
                 className=" w-44 focus-visible:ring-0 focus-visible:ring-offset-0"

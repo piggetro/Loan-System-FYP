@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 "use client";
@@ -208,6 +209,31 @@ const LoanRequestComponent: React.FC<{
     setReturnDate(values.returnDate);
     setReviewLoanRequestOpen(true);
   }
+  const isWeekend = (date: Date) => {
+    const day = date.getDay();
+    return day === 0 || day === 6;
+  };
+
+  const isInDisabledRange = (date: Date) => {
+    const today = new Date();
+    const oneWeekFromToday = new Date(today.setDate(today.getDate() + 7));
+    const oneYearFromToday = new Date(today.setDate(today.getDate() + 365));
+
+    return (
+      date < oneWeekFromToday ||
+      date > oneYearFromToday ||
+      disabledCalendarDates!.some(
+        (disabledDate) =>
+          date.getFullYear() === disabledDate.getFullYear() &&
+          date.getMonth() === disabledDate.getMonth() &&
+          date.getDate() === disabledDate.getDate(),
+      )
+    );
+  };
+
+  const customDisabled = (date: Date) => {
+    return isWeekend(date) || isInDisabledRange(date);
+  };
 
   return (
     <div className="">
@@ -309,7 +335,7 @@ const LoanRequestComponent: React.FC<{
               <div className="flex w-1/2 justify-end">
                 <div className="flex h-min w-3/5">
                   <div className="flex items-center">
-                    <Label className=" h-fit w-28">Return Date</Label>
+                    <Label className=" h-fit w-28">Due Date</Label>
                   </div>
                   <FormField
                     control={form.control}
@@ -336,37 +362,20 @@ const LoanRequestComponent: React.FC<{
                             </FormControl>
                           </PopoverTrigger>
                           <PopoverContent className="w-auto p-0" align="start">
-                            <Calendar
-                              captionLayout="dropdown-buttons"
-                              fromYear={new Date().getFullYear()}
-                              toYear={new Date().getFullYear() + 1}
-                              mode="single"
-                              selected={field.value}
-                              onSelect={field.onChange}
-                              disabled={(date) =>
-                                date <
-                                  new Date(
-                                    new Date().setDate(
-                                      new Date().getDate() + 7,
-                                    ),
-                                  ) ||
-                                date >
-                                  new Date(
-                                    new Date().setDate(
-                                      new Date().getDate() + 365,
-                                    ),
-                                  ) ||
-                                disabledCalendarDates!.some(
-                                  (disabledDate) =>
-                                    date.getFullYear() ===
-                                      disabledDate.getFullYear() &&
-                                    date.getMonth() ===
-                                      disabledDate.getMonth() &&
-                                    date.getDate() === disabledDate.getDate(),
-                                )
-                              }
-                              initialFocus
-                            />
+                            {disabledCalendarDates === undefined ? (
+                              <Skeleton />
+                            ) : (
+                              <Calendar
+                                captionLayout="dropdown-buttons"
+                                fromYear={new Date().getFullYear()}
+                                toYear={new Date().getFullYear() + 1}
+                                mode="single"
+                                selected={field.value}
+                                onSelect={field.onChange}
+                                disabled={customDisabled}
+                                initialFocus
+                              />
+                            )}
                           </PopoverContent>
                         </Popover>
                         <FormMessage className="" />
