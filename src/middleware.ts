@@ -54,6 +54,6 @@ export const config = {
      * - Register
      */
     "/",
-    "/((?!api|_next/static|_next/image|login|register|reset-password|reset-password/|not-found|favicon.ico).*)",
+    "/((?!api|_next/static|_next/image|login|register|reset-password|reset-password/|not-found|favicon.ico|user-guide.pdf).*)",
   ],
 };
