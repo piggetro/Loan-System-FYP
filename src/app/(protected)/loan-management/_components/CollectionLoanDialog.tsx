@@ -270,7 +270,7 @@ const CollectionLoanDialog: React.FC<{
           </div>
           <div>
             The Effective Date for the above items is&nbsp;
-            <b>{new Date().toLocaleDateString()}</b>
+            <b>{new Date(data.dueDate).toLocaleDateString()}</b>
           </div>
         </div>
 
