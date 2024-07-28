@@ -310,6 +310,136 @@ export const schoolAdminRouter = createTRPCRouter({
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
       }
     }),
+  bulkAddStaff: protectedProcedure
+    .input(
+      z.array(
+        z.object({
+          id: z.string().min(1),
+          email: z.string().email(),
+          name: z.string().min(1),
+          organizationUnit: z.string().min(1),
+          staffType: z.string().min(1),
+          role: z.string().min(1),
+        }),
+      ),
+    )
+    .mutation(async ({ ctx, input }) => {
+      try {
+        const result = await ctx.db.transaction().execute(async (trx) => {
+          // Retrieve the role and associated access rights for each staff member
+          const roles = await trx
+            .selectFrom("Role")
+            .select((eb) => [
+              "id",
+              "role",
+              jsonArrayFrom(
+                eb
+                  .selectFrom("AccessRightsOnRoles")
+                  .select(["AccessRightsOnRoles.accessRightId"])
+                  .whereRef(
+                    "AccessRightsOnRoles.roleId",
+                    "=",
+                    eb.ref("Role.id"),
+                  ),
+              ).as("accessRights"),
+            ])
+            .where(
+              "id",
+              "in",
+              input.map((staff) => staff.role),
+            )
+            .execute();
+
+          // Create a map of roles for quick lookup
+          const roleMap: Record<
+            string,
+            {
+              id: string;
+              role: string;
+              accessRights: { accessRightId: string }[];
+            }
+          > = roles.reduce<
+            Record<
+              string,
+              {
+                id: string;
+                role: string;
+                accessRights: { accessRightId: string }[];
+              }
+            >
+          >((acc, role) => {
+            acc[role.id] = role;
+            return acc;
+          }, {});
+
+          // Prepare the data for inserting staff members
+          const staffToInsert = input.map((staff) => ({
+            id: staff.id,
+            email: staff.email,
+            name: staff.name,
+            organizationUnitId: staff.organizationUnit,
+            staffTypeId: staff.staffType,
+            roleId: staff.role,
+          }));
+
+          // Insert staff members into the User table
+          await trx.insertInto("User").values(staffToInsert).execute();
+
+          // Prepare the access rights for each staff member
+          const userAccessRights = staffToInsert
+            .flatMap((staff) => {
+              const accessRights = roleMap[staff.roleId]?.accessRights ?? [];
+              return accessRights.map((accessRight) => ({
+                id: createId(),
+                accessRightId: accessRight.accessRightId,
+                grantedUserId: staff.id,
+                grantedById: ctx.user.id,
+              }));
+            })
+            .filter(Boolean);
+
+          // Insert access rights into UserAccessRights table
+          await trx
+            .insertInto("UserAccessRights")
+            .values(userAccessRights)
+            .execute();
+
+          // Retrieve and return the inserted staff details
+          const insertedStaffIds = staffToInsert.map((staff) => staff.id);
+          const staffDetails = await trx
+            .selectFrom("User")
+            .where("User.id", "in", insertedStaffIds)
+            .leftJoin(
+              "OrganizationUnit",
+              "User.organizationUnitId",
+              "OrganizationUnit.id",
+            )
+            .leftJoin("StaffType", "User.staffTypeId", "StaffType.id")
+            .leftJoin("Role", "User.roleId", "Role.id")
+            .select([
+              "User.id",
+              "User.email",
+              "User.name",
+              "OrganizationUnit.name as organizationUnit",
+              "StaffType.name as staffType",
+              "Role.role as role",
+            ])
+            .execute();
+
+          return staffDetails.map((staff) => ({
+            ...staff,
+            organizationUnit: staff.organizationUnit ?? "",
+            staffType: staff.staffType ?? "",
+            role: staff.role ?? "",
+          }));
+        });
+
+        return result;
+      } catch (err) {
+        console.error(err);
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      }
+    }),
   getStaff: protectedProcedure
     .input(z.object({ id: z.string().min(1) }))
     .query(async ({ ctx, input }) => {
