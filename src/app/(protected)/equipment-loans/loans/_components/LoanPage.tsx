@@ -249,9 +249,7 @@ const LoanPage: React.FC<{
           <TabsList className="mb-2">
             <TabsTrigger value="penApproval">Pending Approval</TabsTrigger>
             <TabsTrigger value="collectionReq">Collection Request</TabsTrigger>
-            <TabsTrigger value="prepCollect">
-              Preperation/Collection
-            </TabsTrigger>
+            <TabsTrigger value="collectionReady">Collection Ready</TabsTrigger>
             <TabsTrigger value="collected">Collected</TabsTrigger>
           </TabsList>
           <TabsContent value="penApproval">
@@ -302,13 +300,13 @@ const LoanPage: React.FC<{
               </div>
             )}
           </TabsContent>
-          <TabsContent value="prepCollect">
+          <TabsContent value="collectionReady">
             {prepCollectRequest !== undefined ? (
               <DefaultLoanDataTable
                 data={prepCollectRequest}
                 columns={PendingApprovalColumns}
                 allSemesters={allSemesters}
-                filterOptions={"prepCollect"}
+                filterOptions={"collectionReady"}
               />
             ) : (
               <div>

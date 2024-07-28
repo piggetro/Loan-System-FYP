@@ -36,7 +36,7 @@ interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
   allSemesters: { name: string }[];
-  filterOptions: "collectionReq" | "prepCollect" | null;
+  filterOptions: "collectionReq" | "collectionReady" | null;
 }
 
 export function DefaultLoanDataTable<TData, TValue>({
@@ -134,7 +134,7 @@ export function DefaultLoanDataTable<TData, TValue>({
             </SelectContent>
           </Select>
         ) : null}
-        {filterOptions === "prepCollect" ? (
+        {filterOptions === "collectionReady" ? (
           <Select
             onValueChange={(key) => {
               if (key === "All") {
