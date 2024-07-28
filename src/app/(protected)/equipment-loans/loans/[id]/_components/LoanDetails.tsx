@@ -55,7 +55,8 @@ const LoanDetails: React.FC<{
     useState<boolean>(false);
   const [openCancelLoanDialog, setOpenCancelLoanDialog] =
     useState<boolean>(false);
-
+  const [openRejectLoanDialog, setOpenRejectLoanDialog] =
+    useState<boolean>(false);
   useEffect(() => {
     if (openOutstandingItemsDialog === false) refresh();
   }, [openOutstandingItemsDialog]);
@@ -94,6 +95,10 @@ const LoanDetails: React.FC<{
     setOpenApproveDialog(true);
   }, []);
   const onReject = useCallback(() => {
+    setOpenRejectLoanDialog(true);
+  }, []);
+
+  function executeRejectLoan() {
     setIsPendingRejectLoan(true);
     rejectLoan
       .mutateAsync({ id: id })
@@ -105,7 +110,7 @@ const LoanDetails: React.FC<{
         setIsPendingRejectLoan(false);
         toast({ title: "Something Unexpected Happened" });
       });
-  }, []);
+  }
 
   const onRequestForCollectionLoan = useCallback(() => {
     setOpenRequestDialog(true);
@@ -206,7 +211,10 @@ const LoanDetails: React.FC<{
 
   return (
     <div className="w-full">
-      <AlertDialog open={openCancelLoanDialog}>
+      <AlertDialog
+        open={openCancelLoanDialog}
+        onOpenChange={setOpenCancelLoanDialog}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
@@ -230,6 +238,40 @@ const LoanDetails: React.FC<{
               disabled={isActionButtonPending}
             >
               Continue
+              {isActionButtonPending && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      <AlertDialog
+        open={openRejectLoanDialog}
+        onOpenChange={setOpenRejectLoanDialog}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will reject the Loan Request.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              onClick={() => {
+                setOpenRejectLoanDialog(false);
+              }}
+              disabled={isActionButtonPending}
+            >
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                executeRejectLoan();
+              }}
+              disabled={isActionButtonPending}
+            >
+              Reject
               {isActionButtonPending && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               )}
@@ -273,8 +315,8 @@ const LoanDetails: React.FC<{
         </DialogContent>
       </Dialog>
 
-      <Dialog open={openRequestDialog} onOpenChange={setOpenRequestDialog}>
-        <DialogContent>
+      <AlertDialog open={openRequestDialog} onOpenChange={setOpenRequestDialog}>
+        <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Request Collection</AlertDialogTitle>
             <AlertDialogDescription>
@@ -318,8 +360,8 @@ const LoanDetails: React.FC<{
               Continue
             </AlertDialogAction>
           </AlertDialogFooter>
-        </DialogContent>
-      </Dialog>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <PreparationLoanDialog
         isDialogOpen={openPreparationDialog}

@@ -24,12 +24,29 @@ import {
 } from "@/app/_components/ui/tabs";
 import ApprovalLoanDialog from "../../loan-management/_components/ApprovalLoanDialog";
 import { Skeleton } from "@/app/_components/ui/skeleton";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/app/_components/ui/alert-dialog";
+import { Loader2 } from "lucide-react";
 
 const ApprovalManagementComponent: React.FC<{
   allSemesters: { name: string }[];
 }> = ({ allSemesters }) => {
   const [openApprovalDialog, setOpenApprovalDialog] = useState<boolean>(false);
   const [approveLoanId, setApproveLoanId] = useState<string>();
+  const [rejectLoanId, setRejectLoanId] = useState<string>();
+  const [rejectLoanIdForUser, setRejectLoanIdForUser] = useState<string>();
+  const [openRejectLoanDialog, setOpenRejectLoanDialog] =
+    useState<boolean>(false);
+  const [isActionButtonPending, setIsActionButtonPending] =
+    useState<boolean>(false);
   const router = useRouter();
   const { toast } = useToast();
   const { data: approvalLoanRequest, refetch: approvalLoanRequestRefetch } =
@@ -70,43 +87,38 @@ const ApprovalManagementComponent: React.FC<{
   const onApprove = useCallback((loanDetails: ApprovalManagementType) => {
     setApproveLoanId(loanDetails.id);
     setOpenApprovalDialog(true);
-    // approveRequest
-    //   .mutateAsync({
-    //     loanId: loanDetails.loanId,
-    //   })
-    //   .then(() => {
-    //     toast({
-    //       title: "Loan has been approved",
-    //       description: `Loan ${loanDetails.loanId} has been approved`,
-    //     });
-
-    //     //Updating frontend for UX
-    //     removeLoan(loanDetails.loanId);
-    //     loanDetails.status = "REQUEST_COLLECTION";
-    //     setApproveRequestHistoryData((prev) => [...prev, loanDetails]);
-    //   })
-    //   .catch((error) => {
-    //     console.log(error);
-    //   });
   }, []);
 
   const onReject = useCallback((loanDetails: ApprovalManagementType) => {
+    setRejectLoanId(loanDetails.id);
+    setRejectLoanIdForUser(loanDetails.loanId);
+    setOpenRejectLoanDialog(true);
+  }, []);
+
+  const executeRejectLoan = () => {
+    setIsActionButtonPending(true);
     rejectRequest
-      .mutateAsync({ id: loanDetails.id })
+      .mutateAsync({ id: rejectLoanId! })
       .then(() => {
         toast({
           title: "Loan has been rejected",
-          description: `Loan ${loanDetails.loanId} has been rejected`,
+          description: `Loan has been rejected`,
         });
+        setRejectLoanId(undefined);
+        setRejectLoanIdForUser(undefined);
+        setOpenRejectLoanDialog(false);
+        setIsActionButtonPending(false);
         refresh();
       })
       .catch(() => {
         toast({
-          title: "Something Unexpected Happened",
-          description: `Contact Help Desk for assistance`,
+          title: "An unexpected error occured. Please try again later",
         });
+        setRejectLoanId(undefined);
+        setRejectLoanIdForUser(undefined);
+        setIsActionButtonPending(false);
       });
-  }, []);
+  };
 
   const TableColumns = useMemo(
     () => ApprovalManagementColumns({ onView, onApprove, onReject }),
@@ -126,6 +138,43 @@ const ApprovalManagementComponent: React.FC<{
           isDialogOpen={openApprovalDialog}
           setIsDialogOpen={setOpenApprovalDialog}
         />
+      ) : null}
+
+      {rejectLoanId !== undefined ? (
+        <AlertDialog
+          open={openRejectLoanDialog}
+          onOpenChange={setOpenRejectLoanDialog}
+        >
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This action cannot be undone. This will reject the Loan Request.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel
+                onClick={() => {
+                  setOpenRejectLoanDialog(false);
+                }}
+                disabled={isActionButtonPending}
+              >
+                Cancel
+              </AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => {
+                  executeRejectLoan();
+                }}
+                disabled={isActionButtonPending}
+              >
+                Reject
+                {isActionButtonPending && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       ) : null}
 
       <Tabs defaultValue="loanApprovals" className="mt-4">
