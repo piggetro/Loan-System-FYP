@@ -67,16 +67,19 @@ const ResetPasswordComponent = () => {
               className="mb-1"
             />
 
-            <p className="mb-2 text-sm text-muted-foreground">
+            <p className="mb-5 text-sm text-muted-foreground">
               Your School ID, pXXXXXXX, omit the &quot;p&quot;
             </p>
           </div>
-          <Button disabled={isPending} className="w-full">
+          <Button
+            disabled={isPending || adminId === ""}
+            className="mb-5 w-full"
+          >
             {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Reset Password
           </Button>
         </form>
-        <span className="mt-3 flex text-sm font-medium">
+        <span className=" flex text-sm font-medium">
           Need to register?
           <div
             className="ml-1 hover:cursor-pointer hover:text-cyan-700"
@@ -87,7 +90,7 @@ const ResetPasswordComponent = () => {
             Register Here
           </div>
         </span>
-        <span className="mt-1 flex text-sm font-medium">
+        <span className="mt-2 flex text-sm font-medium">
           Need to Login?
           <div
             className="ml-1 hover:cursor-pointer hover:text-cyan-700"

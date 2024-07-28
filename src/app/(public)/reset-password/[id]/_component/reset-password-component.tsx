@@ -1,12 +1,12 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Button } from "@/app/_components/ui/button";
 import { Label } from "@/app/_components/ui/label";
 import { Input } from "@/app/_components/ui/input";
 import { useToast } from "@/app/_components/ui/use-toast";
-import { login, resetPassword } from "@/lib/auth/actions";
+import { resetPassword } from "@/lib/auth/actions";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 
@@ -18,8 +18,14 @@ const ResetPasswordComponent: React.FC<{
   const [confirmPassword, setConfirmPassword] = useState<string>("");
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [isPending, setIsPending] = useState<boolean>(false);
-
+  const [isSubmitEnabled, setIsSubmitEnabled] = useState<boolean>(false);
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (password === confirmPassword && password !== "") {
+      setIsSubmitEnabled(true);
+    }
+  }, [password, confirmPassword]);
 
   const performLogin = () => {
     if (password !== confirmPassword) {
@@ -77,11 +83,9 @@ const ResetPasswordComponent: React.FC<{
               autoComplete="User Number"
               autoCorrect="off"
               disabled={true}
-              className="mb-1"
+              className="mb-4"
             />
-            <p className="mb-2 text-sm text-muted-foreground">
-              Your School ID, pXXXXXXX, omit the &quot;p&quot;
-            </p>
+
             <div className="mb-2 flex items-center text-sm">
               <Label
                 className="block w-1/2 font-bold text-gray-700"
@@ -142,7 +146,10 @@ const ResetPasswordComponent: React.FC<{
             />
           </div>
 
-          <Button disabled={isPending} className="mb-3 w-full">
+          <Button
+            disabled={isPending || !isSubmitEnabled}
+            className="mb-3 w-full"
+          >
             {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Reset Password
           </Button>

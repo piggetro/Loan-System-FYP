@@ -151,7 +151,7 @@ const RegisterComponent = () => {
               Register
             </Button>
           </form>
-          <span className="mt-2 flex  text-sm font-medium">
+          <span className="mt-4 flex  text-sm font-medium">
             Have an account?
             <div
               className="ml-1 hover:cursor-pointer hover:text-cyan-700"
@@ -160,6 +160,17 @@ const RegisterComponent = () => {
               }}
             >
               Login Here
+            </div>
+          </span>
+          <span className="mt-2 flex  text-sm font-medium">
+            Forgot Password?
+            <div
+              className="ml-1 hover:cursor-pointer hover:text-cyan-700"
+              onClick={() => {
+                router.push("reset-password");
+              }}
+            >
+              Reset Password
             </div>
           </span>
         </div>
