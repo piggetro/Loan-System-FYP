@@ -113,6 +113,7 @@ const ApprovalManagementComponent: React.FC<{
       .catch(() => {
         toast({
           title: "An unexpected error occured. Please try again later",
+          variant: "destructive",
         });
         setRejectLoanId(undefined);
         setRejectLoanIdForUser(undefined);

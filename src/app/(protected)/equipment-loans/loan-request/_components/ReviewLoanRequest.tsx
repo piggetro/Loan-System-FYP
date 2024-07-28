@@ -58,8 +58,7 @@ const ReviewLoanRequest: React.FC<LoanRequestType> = ({
       onError: (error) => {
         console.log(error.data);
         toast({
-          title: "Something Unexpected Happened",
-          description: error.message,
+          title: "An unexpected error occured. Please try again later",
           variant: "destructive",
         });
       },

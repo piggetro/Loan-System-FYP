@@ -86,7 +86,7 @@ const CollectionPage: React.FC<{
               setOpenCollectDialog(false);
               refetch().catch(() => {
                 toast({
-                  title: "Something Unexpected Happen",
+                  title: "An unexpected error occured. Please try again later",
                   description:
                     "Please refresh your browser to view updated data",
                 });

@@ -80,8 +80,7 @@ const LoanPage: React.FC<{
           refetch().catch((error) => {
             console.log(error);
             toast({
-              title: "Something Unexpected Happened",
-              description: "Please contact help desk",
+              title: "An unexpected error occured. Please try again later",
               variant: "destructive",
             });
           });
@@ -89,16 +88,14 @@ const LoanPage: React.FC<{
         .catch(() => {
           setPendingCancel(false);
           toast({
-            title: "Something Unexpected Happened",
-            description: "Please contact help desk",
+            title: "An unexpected error occured. Please try again later",
             variant: "destructive",
           });
         });
     } else {
       setPendingCancel(false);
       toast({
-        title: "Something Unexpected Happened",
-        description: "Please contact help desk",
+        title: "An unexpected error occured. Please try again later",
         variant: "destructive",
       });
     }
@@ -143,8 +140,8 @@ const LoanPage: React.FC<{
       })
       .catch(() => {
         toast({
-          title: "Something Unexpected Happened",
-          description: "Contact Help Desk For Assistance",
+          title: "An unexpected error occured. Please try again later",
+          variant: "destructive",
         });
         //handle error
       });

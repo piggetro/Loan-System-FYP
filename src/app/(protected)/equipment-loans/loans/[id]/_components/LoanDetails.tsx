@@ -108,7 +108,10 @@ const LoanDetails: React.FC<{
       })
       .catch(() => {
         setIsPendingRejectLoan(false);
-        toast({ title: "Something Unexpected Happened" });
+        toast({
+          title: "An unexpected error occured. Please try again later",
+          variant: "destructive",
+        });
       });
   }
 
@@ -152,7 +155,7 @@ const LoanDetails: React.FC<{
         //handle error
         setIsActionButtonPending(false);
         toast({
-          title: "Something Unexpected Happened",
+          title: "An unexpected error occured. Please try again later",
           variant: "destructive",
         });
       });
@@ -190,8 +193,7 @@ const LoanDetails: React.FC<{
       .catch(() => {
         setIsActionButtonPending(false);
         toast({
-          title: "Something Unexpected Happened",
-          description: "Please contact help desk",
+          title: "An unexpected error occured. Please try again later",
           variant: "destructive",
         });
       });
@@ -380,9 +382,8 @@ const LoanDetails: React.FC<{
               setOpenReturnDialog(false);
               refetch().catch(() => {
                 toast({
-                  title: "Something Unexpected Happen",
-                  description:
-                    "Please refresh your browser to view updated data",
+                  title: "An unexpected error occured. Please try again later",
+                  variant: "destructive",
                 });
               });
             }}

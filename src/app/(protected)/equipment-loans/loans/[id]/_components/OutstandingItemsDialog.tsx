@@ -83,7 +83,10 @@ const OutstandingItemDialog: React.FC<{
         refresh();
       })
       .catch((error: string) => {
-        toast({ title: "An unexpected error occurred", description: error });
+        toast({
+          title: "An unexpected error occured. Please try again later",
+          variant: "destructive",
+        });
         setEnableSubmit(false);
         setIsLoading(false);
       });

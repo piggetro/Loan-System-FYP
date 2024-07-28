@@ -1193,8 +1193,8 @@ export const loanRequestRouter = createTRPCRouter({
       } catch (error) {
         console.log(error);
         return {
-          title: "Something Unexpected Happened",
-          description: "Please contact Help Desk",
+          title: "An unexpected error occured. Please try again later",
+          description: "",
           variant: "destructive",
         };
       }
@@ -1435,8 +1435,8 @@ export const loanRequestRouter = createTRPCRouter({
       } catch (error) {
         console.log(error);
         return {
-          title: "Something Unexpected Happened",
-          description: "Please contact Help Desk",
+          title: "An unexpected error occured. Please try again later",
+          description: "",
           variant: "destructive",
         };
       }
