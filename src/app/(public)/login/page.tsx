@@ -1,7 +1,7 @@
 import React from "react";
-import LoginComponent from "./_component/login";
 import { redirect } from "next/navigation";
 import { validateRequest } from "@/lib/auth/validate-request";
+import LoginComponent from "./_component/Login";
 
 const LoginPage = async () => {
   //Checking if logged in
