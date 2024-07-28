@@ -8,14 +8,15 @@ interface pageProps {
 
 const page = async ({ params }: pageProps) => {
   const data = await verifyToken(params.id);
-  // if (!data.success || !data.user_id) {
-  //   redirect("/login");
-  // }
+
+  if (!data.success || !data.user_id) {
+    redirect("/login");
+  }
 
   return (
     <div className="flex h-screen w-full flex-col bg-[#EDEDED]">
       <div className="flex flex-grow items-center ">
-        <ResetPasswordComponent user_id={"2235633"} />
+        <ResetPasswordComponent user_id={data.user_id} />
       </div>
     </div>
   );
