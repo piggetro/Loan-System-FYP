@@ -1,0 +1,9 @@
+# Redirect HTTP to HTTPS
+http://localhost {
+    redir https://localhost{uri}
+}
+
+# Handle HTTPS requests
+https://localhost {
+    reverse_proxy localhost:3000
+}
