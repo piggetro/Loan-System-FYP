@@ -53,7 +53,6 @@ export const loanRouter = createTRPCRouter({
                   .selectFrom("Loan")
                   .select("Loan.id")
                   .where("Loan.approverId", "=", ctx.user.id)
-                  .where("Loan.status", "=", "PENDING_APPROVAL")
                   .where("Loan.id", "=", input.id)
                   .as("userAllowedToApproveLoan"),
                 ctx.db

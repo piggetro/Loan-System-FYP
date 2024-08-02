@@ -6,7 +6,7 @@ import { env } from "process";
 const transporter = createTransport({
   host: env.EMAIL_SERVER_HOST,
   port: Number(env.EMAIL_SERVER_PORT) || 0,
-  secure: true, // Use `true` for port 465, `false` for all other ports
+  secure: false, // Use `true` for port 465, `false` for all other ports
   auth: {
     user: env.EMAIL_SERVER_USER,
     pass: env.EMAIL_SERVER_PASSWORD,
@@ -15,7 +15,7 @@ const transporter = createTransport({
 
 export async function sendRegistrationEmail(emailTo: string, password: string) {
   await transporter.sendMail({
-    from: '"SOC Loan System" <jleeshancheng@gmail.com>', // sender address
+    from: `"SOC Loan System" <${env.EMAIL_FROM}>`,
     to: emailTo, // list of receivers
     subject: "SOC Loan System Password", // Subject line
     html: `<body style="font-family: Arial, sans-serif; background-color: #ffffff; margin: 0; padding: 0;">
@@ -29,12 +29,11 @@ export async function sendRegistrationEmail(emailTo: string, password: string) {
     </div>
 </body>`,
   });
-  // console.log("Message sent: %s", info.messageId);
 }
 
 export async function sendPasswordResetEmail(emailTo: string, link: string) {
   await transporter.sendMail({
-    from: '"SOC Loan System" <jleeshancheng@gmail.com>', // sender address
+    from: `"SOC Loan System" <${env.EMAIL_FROM}>`,
     to: emailTo,
     subject: "SOC Loan System Reset Password",
     html: `<body style="font-family: Arial, sans-serif; background-color: #ffffff; margin: 0; padding: 0;">
@@ -52,5 +51,4 @@ export async function sendPasswordResetEmail(emailTo: string, link: string) {
     </div>
 </body>`,
   });
-  // console.log("Message sent: %s", info.messageId);
 }
