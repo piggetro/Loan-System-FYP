@@ -495,6 +495,54 @@ export const loanRouter = createTRPCRouter({
       throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
     }
   }),
+
+  getUsersWaivers: protectedProcedure.query(async ({ ctx }) => {
+    try {
+      //get all holidays from today till next year
+      const waivers = await ctx.db
+        .selectFrom("Waiver")
+        .leftJoin("Loan", "Loan.id", "Waiver.loanId")
+        .selectAll("Waiver")
+        .select((eb) => [
+          "Loan.loanId",
+          "Loan.id as loan_id",
+          jsonArrayFrom(
+            eb
+              .selectFrom("LoanItem as li")
+              .leftJoin("Equipment", "li.equipmentId", "Equipment.id")
+              .whereRef("li.loanId", "=", "Loan.id")
+              .selectAll("li")
+              .select("Equipment.name"),
+          ).as("outstandingItems"),
+        ])
+        .where("Loan.loanedById", "=", ctx.user.id)
+        .execute();
+
+      return waivers.map((waiver) => {
+        let remarks = "";
+        waiver.outstandingItems.forEach((item) => {
+          if (
+            item.status === "DAMAGED" ||
+            item.status === "LOST" ||
+            item.status === "MISSING_CHECKLIST_ITEMS"
+          ) {
+            remarks += item.name + ` (${toStartCase(item.status)})<br>`;
+          }
+        });
+        return {
+          loanId: waiver.loanId,
+          id: waiver.loan_id,
+          dateIssued: waiver.dateIssued,
+          dateUpdated: waiver.dateUpdated,
+          status: waiver.status,
+          remarks: remarks,
+        };
+      });
+    } catch (err) {
+      console.log(err);
+      throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+    }
+  }),
 });
 function toStartCase(string: string) {
   return string

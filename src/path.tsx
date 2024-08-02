@@ -46,6 +46,10 @@ export const NAVBAR_NAV_ITEMS: NavbarNavItem[] = [
         title: "Lost/Damaged Loans",
         path: "/equipment-loans/lost-damaged-loans",
       },
+      {
+        title: "Waiver",
+        path: "/equipment-loans/waiver",
+      },
     ],
   },
   {

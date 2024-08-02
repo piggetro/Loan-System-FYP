@@ -1451,7 +1451,13 @@ export const loanRequestRouter = createTRPCRouter({
             .whereRef("User.id", "=", "Loan.loanedById")
             .select("User.name")
             .as("loanedByName"),
-          jsonArrayFrom(eb.selectFrom("LoanItem").selectAll()).as("loanItems"),
+          jsonArrayFrom(
+            eb
+              .selectFrom("LoanItem")
+              .leftJoin("Equipment", "Equipment.id", "LoanItem.equipmentId")
+              .selectAll("LoanItem")
+              .select("Equipment.name"),
+          ).as("loanItems"),
         ])
         .where("LoanItem.status", "in", [
           "DAMAGED",
@@ -1464,27 +1470,24 @@ export const loanRequestRouter = createTRPCRouter({
         .execute();
       const data = lostAndDamagedLoan.map((item) => {
         let remarks = "";
-        let lostRemarks = 0;
-        let damagedRemarks = 0;
-        let missingRemarks = 0;
-
+        let counter = 0;
         item.loanItems.forEach((loanitem) => {
-          if (loanitem.status === "LOST") {
-            lostRemarks++;
-          }
-          if (loanitem.status === "DAMAGED") {
-            damagedRemarks++;
-          }
-          if (loanitem.status === "MISSING_CHECKLIST_ITEMS") {
-            missingRemarks++;
+          if (
+            loanitem.status === "LOST" ||
+            loanitem.status === "DAMAGED" ||
+            loanitem.status === "MISSING_CHECKLIST_ITEMS"
+          ) {
+            if (counter < 2) {
+              remarks += `${counter === 0 ? "" : "\n"}${loanitem.name} (${loanitem.status})`;
+            }
+
+            counter++;
           }
         });
-        remarks =
-          (lostRemarks !== 0 ? lostRemarks + " x Lost " : "") +
-          (damagedRemarks !== 0 ? damagedRemarks + " x Damaged " : "") +
-          (missingRemarks !== 0
-            ? missingRemarks + " x Missing Checklist Items "
-            : "");
+        if (counter > 2) {
+          remarks += ` + ${counter - 2} More Outstanding Items`;
+        }
+
         return {
           id: item.id,
           loanId: item.loanId,

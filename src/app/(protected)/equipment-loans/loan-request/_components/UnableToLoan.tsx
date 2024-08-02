@@ -116,7 +116,7 @@ const UnableToLoanComponent: React.FC<{
                     <Button
                       onClick={() => {
                         router.push(
-                          `/equipment-loans/lost-damaged-loans/${loan.id}`,
+                          `/equipment-loans/waiver/${loan.id}?prev=loan-request`,
                         );
                       }}
                     >

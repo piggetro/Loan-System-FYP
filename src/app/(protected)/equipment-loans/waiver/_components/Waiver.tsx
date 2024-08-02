@@ -4,32 +4,28 @@
 
 import React, { useCallback, useMemo, useState } from "react";
 
-import { type LostDamagedLoanType } from "../page";
+import { type WaiverType } from "../page";
 import { useRouter } from "next/navigation";
-import { LostDamagedLoanColumns } from "./LostDamagedLoanColumns";
-import { LostDamagedLoanTable } from "./LostDamagedLoanDatatable";
+import { LostDamagedLoanColumns } from "./WaiverColumns";
+import { LostDamagedLoanTable } from "./WaiverDatatable";
 
 const LostDamagedLoanComponent: React.FC<{
-  lostAndDamagedLoans: LostDamagedLoanType[];
+  waivers: WaiverType[];
   allSemesters: { name: string }[];
-}> = ({ lostAndDamagedLoans, allSemesters }) => {
-  const [loanRequestsData] =
-    useState<LostDamagedLoanType[]>(lostAndDamagedLoans);
+}> = ({ waivers, allSemesters }) => {
+  const [loanRequestsData] = useState<WaiverType[]>(waivers);
   const router = useRouter();
 
-  const onView = useCallback((LostDamagedLoanDetails: LostDamagedLoanType) => {
+  const onView = useCallback((LostDamagedLoanDetails: WaiverType) => {
     router.push(
-      `/equipment-loans/loans/${LostDamagedLoanDetails.id}?prev=lost-damaged`,
+      `/equipment-loans/loans/${LostDamagedLoanDetails.id}?prev=equipment-loans-waiver`,
     );
   }, []);
-  const onViewWaiver = useCallback(
-    (LostDamagedLoanDetails: LostDamagedLoanType) => {
-      router.push(
-        `/equipment-loans/waiver/${LostDamagedLoanDetails.id}?prev=lost-damaged`,
-      );
-    },
-    [],
-  );
+  const onViewWaiver = useCallback((LostDamagedLoanDetails: WaiverType) => {
+    router.push(
+      `/equipment-loans/waiver/${LostDamagedLoanDetails.id}?prev=equipment-loans-waiver`,
+    );
+  }, []);
 
   const TableColumns = useMemo(
     () => LostDamagedLoanColumns({ onView, onViewWaiver }),

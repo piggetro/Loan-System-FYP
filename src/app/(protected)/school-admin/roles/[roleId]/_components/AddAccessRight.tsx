@@ -104,7 +104,9 @@ const AddAccessRight = ({
         <DialogFooter>
           <Button
             type="button"
-            disabled={isloadingData || selectedAccessRights.length === 0}
+            disabled={
+              isloadingData || isPending || selectedAccessRights.length === 0
+            }
             onClick={onSubmit}
           >
             {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

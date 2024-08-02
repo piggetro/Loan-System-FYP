@@ -33,7 +33,7 @@ const WaiverComponent: React.FC<{
         .then((results) => {
           if (results) {
             router.push(
-              `/equipment-loans/lost-damaged-loans/${waiverDetails.loan_id}`,
+              `/equipment-loans/waiver/${waiverDetails.loan_id}?prev=waiver`,
             );
           } else {
             router.push(`/loan-management/waiver/${waiverDetails.loan_id}`);

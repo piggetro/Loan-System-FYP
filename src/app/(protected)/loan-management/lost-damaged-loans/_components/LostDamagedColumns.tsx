@@ -35,9 +35,9 @@ export const LostDamagedColumns = ({
   },
   {
     accessorKey: "remarks",
-    header: "Remarks",
+    header: "Details",
     cell: ({ row }) => (
-      <div className="grow">
+      <div className=" grow  whitespace-pre-wrap">
         {row.getValue("remarks") === ""
           ? "No Outstanding Remarks"
           : toStartCase(row.getValue("remarks"))}

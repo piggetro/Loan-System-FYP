@@ -22,6 +22,7 @@ const LostBrokenLoanDetailsPage = async ({ params }: pageProps) => {
       <TopHeaderComponent
         pageName="Waiver"
         pathName="Equipment Loans / Lost & Broken Loan"
+        goBackLink="/equipment-loans/waiver"
       />
       <LostBrokenLoanDetails id={params.id} />
     </div>

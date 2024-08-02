@@ -451,7 +451,9 @@ const LoanDetails: React.FC<{
           {userAccessRights?.includes("Waiver Option") ? (
             <Button
               onClick={() => {
-                router.push(`/equipment-loans/lost-damaged-loans/${id}`);
+                router.push(
+                  `/equipment-loans/waiver/${id}?loan=${id}&prev=loan-details`,
+                );
               }}
             >
               View Waiver

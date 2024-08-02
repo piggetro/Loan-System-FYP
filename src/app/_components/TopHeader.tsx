@@ -65,9 +65,15 @@ const TopHeaderComponent: React.FC<TopHeaderType> = ({
                     const waiver = searchParams.get("loan");
                     window.location.href = `/loan-management/waiver/${waiver}`;
                     break;
+                  case "equipment-loans-waiver":
+                    window.location.href = `/equipment-loans/waiver`;
+                    break;
                   case "loan-details":
                     const loan = searchParams.get("loan");
                     window.location.href = `/equipment-loans/loans/${loan}`;
+                    break;
+                  case "loan-request":
+                    window.location.href = `/equipment-loans/loan-request`;
                     break;
                   default:
                     window.location.href = "/equipment-loans/loans";
