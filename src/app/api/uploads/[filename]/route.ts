@@ -18,9 +18,10 @@ export async function GET(
   }
 
   const imagePath = path.join(IMAGE_DIRECTORY, filename);
+  const defaultImagePath = path.join(IMAGE_DIRECTORY, "default.jpg");
 
   try {
-    // Check if the file exists
+    // Check if the requested file exists
     await fs.access(imagePath);
 
     // Read the file from the file system
@@ -50,8 +51,19 @@ export async function GET(
       },
     });
   } catch (error) {
-    return new NextResponse(JSON.stringify({ error: "File not found" }), {
-      status: 404,
-    });
+    try {
+      // Fallback to default.jpg if requested file does not exist
+      const defaultImageBuffer = await fs.readFile(defaultImagePath);
+
+      return new NextResponse(defaultImageBuffer, {
+        headers: {
+          "Content-Type": "image/jpeg", // Default to JPEG for fallback
+        },
+      });
+    } catch (fallbackError) {
+      return new NextResponse(JSON.stringify({ error: "File not found" }), {
+        status: 404,
+      });
+    }
   }
 }
