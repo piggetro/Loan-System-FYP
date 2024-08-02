@@ -2,13 +2,11 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { TRPCError } from "@trpc/server";
 import { protectedProcedure, createTRPCRouter } from "../../trpc";
-import { number, z } from "zod";
+import { z } from "zod";
 import { db } from "@/database";
 import { sql } from "kysely";
 import { createId } from "@paralleldrive/cuid2";
 import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
-import { LoanStatus } from "@/db/enums";
-import { stat } from "fs";
 
 export const loanRequestRouter = createTRPCRouter({
   getCategories: protectedProcedure.query(async ({ ctx }) => {
