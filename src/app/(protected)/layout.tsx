@@ -73,7 +73,7 @@ export default async function ProtectedLayout({
           </div>
           <div className="bg-[#1b698d]">
             <div className="container flex h-12 max-w-screen-2xl items-center justify-between">
-              <nav className="hidden items-center gap-4 text-sm md:flex lg:gap-8">
+              <nav className="items-center gap-4 text-sm md:flex lg:gap-8">
                 <NavBarItem navBarItems={filteredNavItems} />
               </nav>
             </div>
