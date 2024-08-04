@@ -6,10 +6,10 @@ import React, { useCallback, useMemo, useState } from "react";
 
 import { type WaiverType } from "../page";
 import { useRouter } from "next/navigation";
-import { LostDamagedLoanColumns } from "./WaiverColumns";
-import { LostDamagedLoanTable } from "./WaiverDatatable";
+import { WaiverColumns } from "./WaiverColumns";
+import { WaiverTable } from "./WaiverDatatable";
 
-const LostDamagedLoanComponent: React.FC<{
+const WaiverComponent: React.FC<{
   waivers: WaiverType[];
   allSemesters: { name: string }[];
 }> = ({ waivers, allSemesters }) => {
@@ -28,14 +28,14 @@ const LostDamagedLoanComponent: React.FC<{
   }, []);
 
   const TableColumns = useMemo(
-    () => LostDamagedLoanColumns({ onView, onViewWaiver }),
+    () => WaiverColumns({ onView, onViewWaiver }),
     [],
   );
 
   return (
     <div className="rounded-md bg-white shadow-lg">
       <div className="mt-2 rounded-md bg-white px-6 py-4">
-        <LostDamagedLoanTable
+        <WaiverTable
           data={loanRequestsData}
           columns={TableColumns}
           allSemesters={allSemesters}
@@ -45,4 +45,4 @@ const LostDamagedLoanComponent: React.FC<{
   );
 };
 
-export default LostDamagedLoanComponent;
+export default WaiverComponent;

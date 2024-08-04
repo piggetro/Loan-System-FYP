@@ -6,7 +6,7 @@ import { env } from "process";
 const transporter = createTransport({
   host: env.EMAIL_SERVER_HOST,
   port: Number(env.EMAIL_SERVER_PORT) || 0,
-  secure: false, // Use `true` for port 465, `false` for all other ports
+  secure: true, // Use `true` for port 465, `false` for all other ports
   auth: {
     user: env.EMAIL_SERVER_USER,
     pass: env.EMAIL_SERVER_PASSWORD,

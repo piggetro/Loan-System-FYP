@@ -1,8 +1,8 @@
 import TopHeaderComponent from "@/app/_components/TopHeader";
 import React from "react";
 import { api } from "@/trpc/server";
-import LostDamagedLoanComponent from "./_components/Waiver";
-import { WaiveRequestStatus } from "@/db/enums";
+import { type WaiveRequestStatus } from "@/db/enums";
+import WaiverComponent from "./_components/Waiver";
 
 export interface WaiverType {
   loanId: string;
@@ -23,7 +23,7 @@ const LostDamagedLoanPage = async () => {
         pathName="Equipment Loans / Waiver"
         pageName="Waiver"
       />
-      <LostDamagedLoanComponent waivers={waivers} allSemesters={allSemesters} />
+      <WaiverComponent waivers={waivers} allSemesters={allSemesters} />
     </div>
   );
 };
