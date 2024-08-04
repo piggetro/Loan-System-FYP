@@ -157,6 +157,32 @@ const CollectionLoanDialog: React.FC<{
       }
     }
   };
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (canvas) {
+      canvas.addEventListener(
+        "touchstart",
+        startDrawing as unknown as EventListener,
+      );
+      canvas.addEventListener("touchmove", draw as unknown as EventListener);
+      canvas.addEventListener("touchend", stopDrawing as EventListener);
+      canvas.addEventListener("touchcancel", stopDrawing as EventListener);
+
+      return () => {
+        canvas.removeEventListener(
+          "touchstart",
+          startDrawing as unknown as EventListener,
+        );
+        canvas.removeEventListener(
+          "touchmove",
+          draw as unknown as EventListener,
+        );
+        canvas.removeEventListener("touchend", stopDrawing as EventListener);
+        canvas.removeEventListener("touchcancel", stopDrawing as EventListener);
+      };
+    }
+  }, [isDrawing]);
+
   if (isFetching || !data) {
     return (
       <div className="w-7/8 h-full p-5 ">
