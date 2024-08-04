@@ -7,6 +7,11 @@ import { db } from "@/database";
 import { sql } from "kysely";
 import { createId } from "@paralleldrive/cuid2";
 import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
+import {
+  loanApproved,
+  loanPrepared,
+  sendLoanRequestApprover,
+} from "@/lib/email/emails";
 
 export const loanRequestRouter = createTRPCRouter({
   getCategories: protectedProcedure.query(async ({ ctx }) => {
@@ -276,7 +281,7 @@ export const loanRequestRouter = createTRPCRouter({
               .where("Semesters.endDate", ">", todayDate),
           )
           .executeTakeFirstOrThrow();
-        await db.transaction().execute(async (trx) => {
+        const loanInsertId = await db.transaction().execute(async (trx) => {
           //Creating Loan
           const loanInsert = await trx
             .insertInto("Loan")
@@ -306,8 +311,12 @@ export const loanRequestRouter = createTRPCRouter({
           });
           //Inserting Loan Items
           await trx.insertInto("LoanItem").values(loanItems).execute();
+          return loanInsert.id;
         });
-
+        await sendLoanRequestApprover(
+          input.approverEmail,
+          process.env.DOMAIN + `/equipment-loans/loans/${loanInsertId}`,
+        );
         return "Success";
       } catch (err) {
         console.log(err);
@@ -487,13 +496,20 @@ export const loanRequestRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       try {
-        await ctx.db.transaction().execute(async (trx) => {
-          await trx
+        const loan = await ctx.db.transaction().execute(async (trx) => {
+          const loan = await trx
             .updateTable("Loan")
             .set({ status: "REQUEST_COLLECTION", approvedById: ctx.user.id })
             .where("Loan.id", "=", input.id)
             .where("Loan.approverId", "=", ctx.user.id)
-            .execute();
+            .returning(["Loan.id", "Loan.loanId", "Loan.loanedById"])
+            .executeTakeFirstOrThrow();
+
+          const borrower = await trx
+            .selectFrom("User as Borrower")
+            .select("Borrower.email")
+            .where("Borrower.id", "=", loan.loanedById)
+            .executeTakeFirstOrThrow();
 
           await trx
             .updateTable("LoanItem")
@@ -520,8 +536,16 @@ export const loanRequestRouter = createTRPCRouter({
                 .execute();
             }
           }
+          return {
+            ...loan,
+            borrowerEmail: borrower.email,
+          };
         });
-
+        await loanApproved(
+          loan.borrowerEmail,
+          process.env.DOMAIN + `/equipment-loans/loans/${loan.id}`,
+          loan.loanId,
+        );
         return {
           title: "Loan Successfully Approved",
           description: "Loan status is now Request Collection",
@@ -982,7 +1006,7 @@ export const loanRequestRouter = createTRPCRouter({
             .execute();
         });
 
-        await Promise.all([
+        const [, loan] = await Promise.all([
           await trx
             .updateTable("Inventory")
             .set({ status: "LOANED" })
@@ -1006,8 +1030,21 @@ export const loanRequestRouter = createTRPCRouter({
               preparedById: ctx.user.id,
             })
             .where("Loan.id", "=", input.id)
-            .execute(),
+            .returning(["Loan.loanedById", "Loan.loanId", "Loan.id"])
+            .executeTakeFirstOrThrow(),
         ]);
+
+        const borrower = await trx
+          .selectFrom("User as Borrower")
+          .select("Borrower.email")
+          .where("Borrower.id", "=", loan.loanedById)
+          .executeTakeFirstOrThrow();
+
+        await loanPrepared(
+          borrower.email,
+          process.env.DOMAIN + `/equipment-loans/loans/${loan.id}`,
+          loan.loanId,
+        );
 
         return {
           title: "Successful",

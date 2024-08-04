@@ -3,14 +3,7 @@
 
 import React from "react";
 import PersonalParticularForm from "./PersonalParticularForm";
-import PasswordForm from "./PasswordForm";
-
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/app/_components/ui/tabs";
+import PasswordForm from "./PasswordForm"; // Make sure the import path is correct
 
 interface ProfilePageProps {
   user: {
@@ -25,22 +18,15 @@ interface ProfilePageProps {
 }
 
 const Profile = ({ user }: ProfilePageProps) => {
-  // This file (the front end) is by Jing Ru but heavily refactored by Franc.
   return (
-    <Tabs defaultValue="Personal" className="mt-4">
+    <div defaultValue="Personal" className="mt-4">
       <div className="mt-2 rounded-md bg-white px-6 py-4">
-        <TabsList className="mb-2">
-          <TabsTrigger value="Personal">Personal Particulars</TabsTrigger>
-          <TabsTrigger value="Password">Change Password</TabsTrigger>
-        </TabsList>
-        <TabsContent value="Personal">
+        <div className="flex items-center justify-between">
           <PersonalParticularForm user={user} />
-        </TabsContent>
-        <TabsContent value="Password" className="flex-1">
-          <PasswordForm />
-        </TabsContent>
+        </div>
+        <PasswordForm adminId={user.id} />
       </div>
-    </Tabs>
+    </div>
   );
 };
 

@@ -6,7 +6,7 @@ import { Button } from "@/app/_components/ui/button";
 import { Label } from "@/app/_components/ui/label";
 import { Input } from "@/app/_components/ui/input";
 import { useToast } from "@/app/_components/ui/use-toast";
-import { createPasswordResetToken, login } from "@/lib/auth/actions";
+import { createPasswordResetToken } from "@/lib/auth/actions";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 
@@ -27,6 +27,7 @@ const ResetPasswordComponent = () => {
           variant: result.success ? "default" : "destructive",
         });
         setIsPending(false);
+        setAdminId("");
       })
       .catch((error) => {
         console.log(error);
