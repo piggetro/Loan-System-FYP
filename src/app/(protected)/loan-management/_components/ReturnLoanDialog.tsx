@@ -239,14 +239,14 @@ const ReturnLoanDialog: React.FC<{
                       });
                     }}
                   >
-                    <SelectTrigger className="w-[180px]">
+                    <SelectTrigger className="w-[200px]">
                       <SelectValue placeholder="Select a status" />
                     </SelectTrigger>
 
                     <SelectContent>
                       <SelectItem value="COLLECTED">
                         <div className="flex items-center justify-start gap-2">
-                          <div className="h-3 w-3 rounded-full bg-orange-500"></div>
+                          <div className="h-3 w-3 rounded-full bg-yellow-500"></div>
                           <p>Not Returned</p>
                         </div>
                       </SelectItem>

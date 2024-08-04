@@ -61,7 +61,7 @@ export const ApprovalManagementColumns = ({
   {
     accessorKey: "dueDate",
     header: ({ column }) => {
-      return <p>Return Date</p>;
+      return <p>Due Date</p>;
     },
     cell: ({ row }) => {
       const dueDate = new Date(row.getValue("dueDate")).toLocaleDateString();
@@ -157,7 +157,7 @@ export const ApprovalManagementHistoryColumns = ({
   {
     accessorKey: "dueDate",
     header: ({ column }) => {
-      return <p>Return Date</p>;
+      return <p>Due Date</p>;
     },
     cell: ({ row }) => {
       const dueDate = new Date(row.getValue("dueDate")).toLocaleDateString();

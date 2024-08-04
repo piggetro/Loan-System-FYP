@@ -289,6 +289,7 @@ export const loanRequestRouter = createTRPCRouter({
               id: createId(),
               loanId: loanId.loanId,
               remarks: input.remarks,
+              dateCreated: new Date(),
               dueDate: dueDateFormatted.toISOString(),
               status: "PENDING_APPROVAL",
               loanedById: ctx.user.id,
@@ -1430,6 +1431,7 @@ export const loanRequestRouter = createTRPCRouter({
                   status: "PENDING_REQUEST",
                   loanId: input.id,
                   remarks: outstandingItemsRemarks,
+                  dateIssued: new Date(),
                 })
                 .execute();
               await trx
@@ -1596,7 +1598,7 @@ export const loanRequestRouter = createTRPCRouter({
           loanitem.status === "MISSING_CHECKLIST_ITEMS"
         ) {
           if (counter < 2) {
-            remarks += `${counter === 0 ? "" : "\n"}${loanitem.name} (${loanitem.status})`;
+            remarks += `${counter === 0 ? "" : "\n"}${loanitem.name} (${toStartCase(loanitem.status)})`;
           }
 
           counter++;

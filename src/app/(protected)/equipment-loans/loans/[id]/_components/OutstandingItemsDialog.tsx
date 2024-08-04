@@ -141,7 +141,7 @@ const OutstandingItemDialog: React.FC<{
           <Button
             disabled={
               processedOutstandingItems.findIndex(
-                (item) => item.edited === true,
+                (item) => item.locked === false,
               ) === -1
                 ? true
                 : false
@@ -243,9 +243,11 @@ const OutstandingItemDialog: React.FC<{
                       <SelectItem value="UNAVAILABLE">
                         <div className="flex items-center">
                           <div
-                            className={`mr-2 h-3 w-3 rounded-full bg-orange-500`}
+                            className={`mr-2 min-h-3 min-w-3 rounded-full bg-yellow-500`}
                           ></div>
-                          Unavailable
+                          <div className="truncate">
+                            Returned (Mark Inventory As Unavailable)
+                          </div>
                         </div>
                       </SelectItem>
                     </SelectContent>

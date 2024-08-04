@@ -160,6 +160,22 @@ export const loanRouter = createTRPCRouter({
           .where("LoanItem.waiverId", "is not", null)
           .execute();
 
+        const markLoanWithOutstandingItem = await ctx.db
+          .selectFrom("LoanItem")
+          .leftJoin("Equipment", "LoanItem.equipmentId", "Equipment.id")
+          .leftJoin("Inventory", "Inventory.id", "LoanItem.inventoryId")
+          .selectAll("LoanItem")
+          .select([
+            "Equipment.name",
+            "Equipment.checklist",
+            "Inventory.assetNumber",
+            "Inventory.remarks",
+          ])
+          .where("LoanItem.loanId", "=", input.id)
+          .where("LoanItem.waiverId", "is not", null)
+          .where("LoanItem.status", "!=", "RETURNED")
+          .execute();
+
         const results: LoanDetailsData = {
           ...loanDetails,
           outstandingItems: outstandingItems,
@@ -229,6 +245,7 @@ export const loanRouter = createTRPCRouter({
             ]),
           ]),
         )
+        .orderBy("Loan.dateCreated desc")
         .execute();
 
       return loanHistory;
