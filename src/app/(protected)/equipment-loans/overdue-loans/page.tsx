@@ -12,7 +12,7 @@ export interface OverdueLoanType {
 }
 
 const OverdueLoanPage = async () => {
-  const overdueLoans = await api.loan.getOverdueLoans();
+  const overdueLoans = await api.loan.getUsersOverdueLoans();
 
   const allSemesters = await api.loan.getSemesters();
 

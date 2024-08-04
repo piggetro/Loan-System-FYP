@@ -283,42 +283,34 @@ export const loanRouter = createTRPCRouter({
         .where("Loan.loanedById", "=", ctx.user.id)
         .distinctOn("Loan.id")
         .execute();
-      console.log(lostAndDamagedLoan[0]?.outstandingItems);
+
       const data = lostAndDamagedLoan.map((item) => {
         let remarks = "";
-        const statusArray: string[] = [];
-
-        item.outstandingItems.forEach((outstandingItem) => {
+        let counter = 0;
+        item.outstandingItems.forEach((loanitem) => {
           if (
-            outstandingItem.status === "DAMAGED" ||
-            outstandingItem.status === "LOST" ||
-            outstandingItem.status === "MISSING_CHECKLIST_ITEMS"
+            loanitem.status === "LOST" ||
+            loanitem.status === "DAMAGED" ||
+            loanitem.status === "MISSING_CHECKLIST_ITEMS"
           ) {
-            remarks +=
-              outstandingItem.name +
-              ` (${toStartCase(outstandingItem.status)})`;
-          }
-          statusArray.push(outstandingItem.status!);
-        });
-        let status;
+            if (counter < 2) {
+              remarks += `${counter === 0 ? "" : "\n"}${loanitem.name} (${toStartCase(loanitem.status)})`;
+            }
 
-        if (statusArray.every((status) => status === "APPROVED")) {
-          status = "Approved";
-        } else if (statusArray.every((status) => status === "PENDING")) {
-          status = "Pending";
-        } else if (
-          statusArray.every((status) => status === "PENDING_REQUEST")
-        ) {
-          status = "Awaiting Request";
-        } else {
-          status = "Partially Outstanding";
+            counter++;
+          }
+        });
+        if (counter > 2) {
+          remarks += ` + ${counter - 2} More Outstanding Items`;
         }
 
         return {
           id: item.id,
           loanId: item.loanId,
-          status: status,
+          status: "Outstanding",
           remarks: remarks,
+          dueDate: item.dueDate,
+          dateCreated: item.dateCreated,
         };
       });
 
@@ -423,7 +415,7 @@ export const loanRouter = createTRPCRouter({
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
       }
     }),
-  getOverdueLoans: protectedProcedure.query(async ({ ctx }) => {
+  getUsersOverdueLoans: protectedProcedure.query(async ({ ctx }) => {
     try {
       const overdueLoans = await ctx.db
         .selectFrom("Loan")
