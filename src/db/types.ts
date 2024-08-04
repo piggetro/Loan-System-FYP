@@ -163,6 +163,7 @@ export type Waiver = {
     dateSubmitted: Timestamp | null;
     status: WaiveRequestStatus;
     updatedById: string | null;
+    imagePath: string | null;
 };
 export type DB = {
     AccessRights: AccessRights;

@@ -197,6 +197,7 @@ model Waiver {
     updatedBy     User?              @relation(fields: [updatedById], references: [id])
     status        WaiveRequestStatus
     updatedById   String?
+    imagePath     String?
 }
 
 model PasswordResetToken {

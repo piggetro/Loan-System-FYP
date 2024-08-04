@@ -5,7 +5,7 @@
 
 import { Skeleton } from "@/app/_components/ui/skeleton";
 import { api } from "@/trpc/react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useToast } from "@/app/_components/ui/use-toast";
 import { Button } from "@/app/_components/ui/button";
 import { z } from "zod";
@@ -24,18 +24,24 @@ import {
   FormControl,
   FormField,
   FormItem,
+  FormLabel,
   FormMessage,
 } from "@/app/_components/ui/form";
 import { Textarea } from "@/app/_components/ui/textarea";
+import { Label } from "@/app/_components/ui/label";
+import { Input } from "@/app/_components/ui/input";
 const formSchema = z.object({
   //Change this for the word requirement
-  waiverRequest: z.string().min(1),
+  waiverRequest: z.string().min(1, { message: "Waiver Request is required" }),
 });
 
 const LostBrokenLoanDetails: React.FC<{
   id: string;
 }> = ({ id }) => {
   const { toast } = useToast();
+  const [file, setFile] = useState<File | undefined>();
+  const [fileType, setFileType] = useState<string | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
   //Get the Loan
   const { isFetching, refetch, data } =
     api.loan.getLostBrokenLoanByLoanId.useQuery({
@@ -56,6 +62,40 @@ const LostBrokenLoanDetails: React.FC<{
   }, [data]);
   //To Refresh
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0] ?? undefined;
+
+    if (selectedFile) {
+      const validImageTypes = ["image/jpeg", "image/png", "image/gif"];
+
+      if (!validImageTypes.includes(selectedFile.type)) {
+        alert("Please select a valid image file (JPG, PNG, GIF).");
+        setFile(undefined);
+        setFileType(null);
+        setImagePreview(null);
+        return;
+      }
+
+      setFile(selectedFile);
+
+      const previewUrl = URL.createObjectURL(selectedFile);
+      setImagePreview(previewUrl);
+
+      const mimeTypeToExtension: Record<string, string> = {
+        "image/jpeg": ".jpg",
+        "image/png": ".png",
+        "image/gif": ".gif",
+      };
+
+      const fileExtension = mimeTypeToExtension[selectedFile.type] ?? "unknown";
+      setFileType(fileExtension);
+    } else {
+      setFile(undefined);
+      setFileType(null);
+      setImagePreview(null);
+    }
+  };
+
   function refresh() {
     refetch().catch(() => {
       toast({
@@ -66,13 +106,35 @@ const LostBrokenLoanDetails: React.FC<{
   }
   function onSubmit(values: z.infer<typeof formSchema>) {
     submitWaiver
-      .mutateAsync({ id: id, waiveRequest: values.waiverRequest })
-      .then(() => {
-        toast({
-          title: "Successfully Submitted Waive Request",
-          description: "You Will be notified once Waiver has been reviewed",
-        });
-        refresh();
+      .mutateAsync({
+        id: id,
+        waiveRequest: values.waiverRequest,
+        photoType: fileType,
+      })
+      .then(async (data) => {
+        try {
+          if (!file) return;
+          const formData = new FormData();
+          formData.set("file", file);
+          formData.set("photoPath", data.imagePath);
+
+          const res = await fetch("/api/uploads", {
+            method: "POST",
+            body: formData,
+          });
+          if (!res.ok) throw new Error(await res.text());
+        } catch (e) {
+          console.error(e);
+        } finally {
+          toast({
+            title: "Successfully Submitted Waive Request",
+            description: "You Will be notified once Waiver has been reviewed",
+          });
+          setFile(undefined);
+          setFileType(null);
+          setImagePreview(null);
+          refresh();
+        }
       })
       .catch((error) => {
         toast({ title: error });
@@ -153,23 +215,69 @@ const LostBrokenLoanDetails: React.FC<{
         <div>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)}>
-              <p className="mb-3 mt-5 text-lg font-semibold">Waive Request</p>
-              <FormField
-                control={form.control}
-                name="waiverRequest"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormControl>
-                      <Textarea
-                        disabled={data.status !== "PENDING_REQUEST"}
-                        {...field}
+              <div className="mt-2 flex items-start space-x-4">
+                <div className="w-3/4">
+                  <FormField
+                    control={form.control}
+                    name="waiverRequest"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-base">
+                          Waive Request
+                        </FormLabel>
+                        <FormControl>
+                          <Textarea
+                            className="h-72 w-full"
+                            disabled={data.status !== "PENDING_REQUEST"}
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                <div className="w-1/4">
+                  <Label htmlFor="file-upload">
+                    Upload any necessary evidence
+                  </Label>
+                  {data.status === "PENDING_REQUEST" ? (
+                    <Input
+                      id="file-upload"
+                      type="file"
+                      name="file"
+                      className="mt-2 cursor-pointer"
+                      accept="image/jpeg, image/png, image/gif"
+                      onChange={handleFileChange}
+                      disabled={data.status !== "PENDING_REQUEST"}
+                      style={{ color: "transparent" }}
+                    />
+                  ) : null}
+                  {imagePreview ? (
+                    <div className="mt-2 flex-shrink-0">
+                      <img
+                        src={imagePreview}
+                        alt="Selected File Preview"
+                        className="h-40 w-40 border border-gray-300 object-cover"
                       />
-                    </FormControl>
-
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                    </div>
+                  ) : (
+                    <div className="mt-2 flex-shrink-0">
+                      <img
+                        src={"/api/uploads/" + data.imagePath}
+                        alt="Selected File Preview"
+                        className="h-40 w-40 border border-gray-300 object-cover"
+                      />
+                    </div>
+                  )}
+                  {file && (
+                    <div className="mt-2">
+                      <p>Selected file: {file.name}</p>
+                      <p>File type: {fileType}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
 
               <p className="mt-2 text-sm font-medium">
                 <b>Submitted On: </b>

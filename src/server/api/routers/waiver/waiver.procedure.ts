@@ -213,22 +213,29 @@ export const waiverRouter = createTRPCRouter({
       z.object({
         id: z.string().min(1),
         waiveRequest: z.string().min(1),
+        photoType: z.union([z.string(), z.null()]),
       }),
     )
     .mutation(async ({ ctx, input }) => {
       try {
-        await ctx.db.transaction().execute(async (trx) => {
-          await trx
+        const waiver = await ctx.db.transaction().execute(async (trx) => {
+          return await trx
             .updateTable("Waiver")
             .set({
               status: "PENDING",
               waiveRequest: input.waiveRequest,
               dateSubmitted: new Date(),
+              imagePath: input.photoType
+                ? createId() + input.photoType
+                : "default.jpg",
             })
             .where("Waiver.loanId", "=", input.id)
-            .execute();
+            .returning("Waiver.imagePath")
+            .executeTakeFirstOrThrow();
         });
-        return true;
+        return {
+          imagePath: waiver.imagePath ?? "default.jpg",
+        };
       } catch (err) {
         console.log(err);
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });

@@ -11,6 +11,7 @@ import { useToast } from "@/app/_components/ui/use-toast";
 import { Button } from "@/app/_components/ui/button";
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { Label } from "@/app/_components/ui/label";
 
 const WaiverDetails: React.FC<{
   id: string;
@@ -161,15 +162,31 @@ const WaiverDetails: React.FC<{
             {data.updatedByName?.name ?? "-"}
           </p>
           <div className="mt-5">
-            <p className="mb-2 text-lg font-semibold">Waive Request</p>
+            <div className="mb-1 flex items-start space-x-4">
+              <div className="w-3/4">
+                <p className="mb-2 text-lg font-semibold">Waive Request</p>
 
-            <p className="min-h-20 w-full rounded-md border-2 p-2">
-              {data.waiveRequest ?? (
-                <span className="flex min-h-20 w-full items-center justify-center text-lg font-medium text-red-500 ">
-                  Awaiting Request
-                </span>
-              )}
-            </p>
+                <p className="min-h-20 w-full rounded-md border-2 p-2">
+                  {data.waiveRequest ?? (
+                    <span className="flex min-h-20 w-full items-center justify-center text-lg font-medium text-red-500 ">
+                      Awaiting Request
+                    </span>
+                  )}
+                </p>
+              </div>
+              <div className="w-1/4">
+                <Label htmlFor="file-upload">
+                  Upload any necessary evidence
+                </Label>
+                <div className="mt-4 flex-shrink-0">
+                  <img
+                    src={"/api/uploads/" + data.imagePath}
+                    alt="Selected File Preview"
+                    className="h-40 w-40 border border-gray-300 object-cover"
+                  />
+                </div>
+              </div>
+            </div>
 
             <p>
               <b>Submitted On: </b>
