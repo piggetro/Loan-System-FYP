@@ -21,36 +21,38 @@ export const HistoryColumns = ({
   {
     accessorKey: "loanId",
     header: "Loan ID",
-    cell: ({ row }) => <div className="w-96">{row.getValue("loanId")}</div>,
+    cell: ({ row }) => <div className="w-24">{row.getValue("loanId")}</div>,
   },
   {
-    accessorKey: "approvingLecturer.name",
+    accessorKey: "name",
     id: "name",
-    header: "Approving Lecturer",
+    header: "Approver",
     cell: ({ row }) => <div className="">{row.getValue("name")}</div>,
   },
 
   {
     accessorKey: "dateCreated",
-    header: "Date Requested",
+    header: "Date Created",
     cell: ({ row }) => (
-      <div className="" suppressHydrationWarning>
+      <div suppressHydrationWarning>
         {new Date(row.getValue("dateCreated")).toLocaleDateString()}
       </div>
     ),
   },
   {
-    accessorKey: "dueDate",
-    header: "Due Date",
+    accessorKey: "dateReturned",
+    header: "Date Returned",
     cell: ({ row }) => (
-      <div className="" suppressHydrationWarning>
-        {new Date(row.getValue("dueDate")).toLocaleDateString()}
+      <div suppressHydrationWarning>
+        {row.getValue("dateReturned") === null
+          ? "-"
+          : new Date(row.getValue("dateReturned")).toLocaleDateString()}
       </div>
     ),
   },
   {
     accessorKey: "status",
-    header: "Status",
+    header: () => <div>Status</div>,
     cell: ({ row }) => {
       let statusColor;
       switch (row.getValue("status")) {

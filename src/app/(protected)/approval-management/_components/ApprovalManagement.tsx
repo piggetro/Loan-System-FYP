@@ -185,7 +185,8 @@ const ApprovalManagementComponent: React.FC<{
             <TabsTrigger value="approvalHistory">Approval History</TabsTrigger>
           </TabsList>
           <TabsContent value="loanApprovals">
-            {approvalLoanRequest === undefined ? (
+            {approvalLoanRequest === undefined ||
+            approvalLoanRequest === null ? (
               <div className="flex flex-col gap-2">
                 <Skeleton className="h-7 w-1/3" />
                 <Skeleton className="h-7 w-1/2" />

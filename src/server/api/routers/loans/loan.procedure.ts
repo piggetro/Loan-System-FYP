@@ -210,20 +210,14 @@ export const loanRouter = createTRPCRouter({
     try {
       const loanHistory = await ctx.db
         .selectFrom("Loan")
-        .selectAll("Loan")
-        .select((eb) => [
-          jsonObjectFrom(
-            eb
-              .selectFrom("User")
-              .select("User.name")
-              .whereRef("Loan.loanedById", "=", "User.id"),
-          ).as("loanedBy"),
-          jsonObjectFrom(
-            eb
-              .selectFrom("User")
-              .select("User.name")
-              .whereRef("approverId", "=", "User.id"),
-          ).as("approver"),
+        .leftJoin("User", "Loan.approverId", "User.id")
+        .select([
+          "Loan.id",
+          "Loan.loanId",
+          "Loan.dateCreated",
+          "Loan.dateReturned",
+          "Loan.status",
+          "User.name",
         ])
         .where((eb) =>
           eb.and([

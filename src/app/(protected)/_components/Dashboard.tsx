@@ -7,25 +7,47 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/app/_components/ui/tabs";
-import { CurrentLoans, currentLoansColumns } from "./CurrentLoansColumns";
-import { OverdueLoans, overdueLoansColumns } from "./OverdueLoansColumns";
+import { type CurrentLoans, currentLoansColumns } from "./CurrentLoansColumns";
+import { type OverdueLoans, overdueLoansColumns } from "./OverdueLoansColumns";
 import { useRouter } from "next/navigation";
 import { LoanDataTable } from "./LoanDataTable";
+import { type HistoryLoans, historyLoansColumns } from "./HistoryLoansColumns";
+import {
+  approvalLoansColumns,
+  type ApprovalLoans,
+} from "./ApprovalLoansColumns";
 
 interface DashboardProps {
   currentLoans: CurrentLoans[];
   overdueLoans: OverdueLoans[];
+  historyLoans: HistoryLoans[];
+  approvalLoans: ApprovalLoans[] | null;
 }
 
-const Dashboard = ({ currentLoans, overdueLoans }: DashboardProps) => {
+const Dashboard = ({
+  currentLoans,
+  overdueLoans,
+  historyLoans,
+  approvalLoans,
+}: DashboardProps) => {
   const router = useRouter();
-
+  const onViewApproval = useCallback((loan: ApprovalLoans) => {
+    router.push(`/equipment-loans/loans/${loan.id}?prev=dashboard`);
+  }, []);
   const onViewCurrent = useCallback((loan: CurrentLoans) => {
     router.push(`/equipment-loans/loans/${loan.id}?prev=dashboard`);
   }, []);
   const onViewOverdue = useCallback((loan: OverdueLoans) => {
     router.push(`/equipment-loans/loans/${loan.id}?prev=dashboard`);
   }, []);
+  const onViewHistory = useCallback((loan: HistoryLoans) => {
+    router.push(`/equipment-loans/loans/${loan.id}?prev=dashboard`);
+  }, []);
+
+  const ApprovalColumns = useMemo(
+    () => approvalLoansColumns({ onView: onViewApproval }),
+    [],
+  );
 
   const CurrentColumns = useMemo(
     () => currentLoansColumns({ onView: onViewCurrent }),
@@ -37,32 +59,39 @@ const Dashboard = ({ currentLoans, overdueLoans }: DashboardProps) => {
     [],
   );
 
+  const HistoryColumns = useMemo(
+    () => historyLoansColumns({ onView: onViewHistory }),
+    [],
+  );
+
   return (
-    <Tabs defaultValue="current" className="mt-4">
+    <Tabs
+      defaultValue={approvalLoans ? "approval" : "current"}
+      className="mt-4"
+    >
       <div className="mt-2 rounded-md bg-white px-6 py-4">
         <TabsList className="mb-2">
-          <TabsTrigger value="current">
-            Current Loans&nbsp;
-            {/* {currentLoans.length === 0 ? null : (
-              <div className="focus-visible::bg-white flex h-5 w-5 items-center justify-center rounded-full bg-primary font-semibold text-primary">
-                <p>{currentLoans.length}</p>
-              </div>
-            )} */}
-          </TabsTrigger>
-          <TabsTrigger value="overdue">
-            Overdue Loans&nbsp;
-            {/* {overdueLoans.length === 0 ? null : (
-              <div className="h-5 w-5 rounded-full bg-primary text-center font-semibold text-white ">
-                {overdueLoans.length}
-              </div>
-            )} */}
-          </TabsTrigger>
+          {approvalLoans ? (
+            <TabsTrigger value="approval">Approval Loans</TabsTrigger>
+          ) : null}
+          <TabsTrigger value="current">Current Loans</TabsTrigger>
+          <TabsTrigger value="overdue">Overdue Loans</TabsTrigger>
+          <TabsTrigger value="history">History Loans</TabsTrigger>
         </TabsList>
+        {approvalLoans ? (
+          <TabsContent value="approval">
+            <LoanDataTable data={approvalLoans} columns={ApprovalColumns} />
+          </TabsContent>
+        ) : null}
+
         <TabsContent value="current">
           <LoanDataTable data={currentLoans} columns={CurrentColumns} />
         </TabsContent>
         <TabsContent value="overdue" className="flex-1">
           <LoanDataTable data={overdueLoans} columns={OverdueColumns} />
+        </TabsContent>
+        <TabsContent value="history" className="flex-1">
+          <LoanDataTable data={historyLoans} columns={HistoryColumns} />
         </TabsContent>
       </div>
     </Tabs>

@@ -4,15 +4,15 @@ import { type ColumnDef } from "@tanstack/react-table";
 import { type WaiverType } from "../page";
 import { LostDamagedLoanTableRowActionsProps } from "./WaiverRowAction";
 
-interface LostDamagedLoanProps {
+interface WavierProps {
   onView: (value: WaiverType) => void;
   onViewWaiver: (value: WaiverType) => void;
 }
 
-export const LostDamagedLoanColumns = ({
+export const WaiverColumns = ({
   onView,
   onViewWaiver,
-}: LostDamagedLoanProps): ColumnDef<WaiverType>[] => [
+}: WavierProps): ColumnDef<WaiverType>[] => [
   {
     accessorKey: "loanId",
     header: "Loan ID",
@@ -29,7 +29,7 @@ export const LostDamagedLoanColumns = ({
   },
   {
     accessorKey: "dateUpdated",
-    header: "Date Issued",
+    header: "Date Updated",
     cell: ({ row }) => (
       <div className="w-20" suppressHydrationWarning>
         {row.getValue("dateUpdated") !== null
@@ -63,9 +63,10 @@ export const LostDamagedLoanColumns = ({
         <div className="flex items-center">
           <div
             className={`mr-2 h-3 w-3 rounded-full ${
-              row.getValue("status") === "Approved" || "Resolved"
+              row.getValue("status") === "APPROVED" ||
+              row.getValue("status") === "RESOLVED"
                 ? "bg-green-500"
-                : row.getValue("status") === "Rejected"
+                : row.getValue("status") === "REJECTED"
                   ? "bg-red-500"
                   : "bg-yellow-500"
             }`}
