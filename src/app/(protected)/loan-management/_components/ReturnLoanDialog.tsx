@@ -191,7 +191,8 @@ const ReturnLoanDialog: React.FC<{
             </p>
             <p className="flex" suppressHydrationWarning>
               <span className="font-bold">Due Date:&nbsp;</span>
-              {new Date(data.dueDate) < new Date() ? (
+              {new Date(data.dueDate) < new Date() &&
+              data.status === "COLLECTED" ? (
                 <p className="font-semibold text-red-500">
                   {new Date(data.dueDate).toLocaleDateString()}&nbsp;(Overdue)
                 </p>
@@ -211,6 +212,11 @@ const ReturnLoanDialog: React.FC<{
               <TableHead className="w-1/2">Checklist</TableHead>
               <TableHead className="w-1/6">Asset Number</TableHead>
               <TableHead>Returned</TableHead>
+              {processedLoanData.findIndex(
+                (loanData) => loanData.returned === "MISSING_CHECKLIST_ITEMS",
+              ) !== -1 ? (
+                <TableHead>Remarks</TableHead>
+              ) : null}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -271,6 +277,11 @@ const ReturnLoanDialog: React.FC<{
                     </SelectContent>
                   </Select>
                 </TableCell>
+                {processedLoanData.findIndex(
+                  (loanData) => loanData.returned === "MISSING_CHECKLIST_ITEMS",
+                ) !== -1 && loanItem.returned !== "MISSING_CHECKLIST_ITEMS" ? (
+                  <TableCell></TableCell>
+                ) : null}
                 <TableCell
                   className={
                     loanItem.returned === "MISSING_CHECKLIST_ITEMS"

@@ -11,7 +11,7 @@ import { Loader2 } from "lucide-react";
 
 import { useToast } from "@/app/_components/ui/use-toast";
 import { Button } from "@/app/_components/ui/button";
-import { LoanedItemsStatus } from "@/db/enums";
+import { type LoanedItemsStatus } from "@/db/enums";
 import {
   Select,
   SelectContent,
@@ -19,17 +19,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/app/_components/ui/select";
-import { Input } from "@/app/_components/ui/input";
 import { Skeleton } from "@/app/_components/ui/skeleton";
 import { api } from "@/trpc/react";
+import { Textarea } from "@/app/_components/ui/textarea";
 
-type CollectionDataType = {
-  equipmentId: string;
-  loanItemId: string;
-  description: string;
-  checklist: string | undefined;
-  assetNumber: string;
-};
 export type OutstandingItems = {
   id: string;
   loanId: string;
@@ -61,7 +54,7 @@ const OutstandingItemDialog: React.FC<{
   id: string;
   loanId: string;
   refresh: () => void;
-}> = ({ id, outstandingItems, loanId, refresh }) => {
+}> = ({ outstandingItems, loanId, refresh }) => {
   const [enableSubmit, setEnableSubmit] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [processedOutstandingItems, setProcessedOutstandingItems] =
@@ -82,7 +75,7 @@ const OutstandingItemDialog: React.FC<{
         setIsLoading(false);
         refresh();
       })
-      .catch((error: string) => {
+      .catch(() => {
         toast({
           title: "An unexpected error occured. Please try again later",
           variant: "destructive",
@@ -109,6 +102,22 @@ const OutstandingItemDialog: React.FC<{
     );
   }, [outstandingItems]);
 
+  function markAllAsReturned() {
+    setProcessedOutstandingItems(() => {
+      const updatedItems: ProcessedOutstandingItems[] = [];
+      processedOutstandingItems?.forEach((item) => {
+        updatedItems.push({
+          ...item,
+          status: "RETURNED",
+          remarks: "",
+          edited: true,
+        });
+      });
+      setEnableSubmit(true);
+      return updatedItems;
+    });
+  }
+
   if (!processedOutstandingItems || processedOutstandingItems === undefined) {
     return (
       <div className="w-7/8 h-full p-5 ">
@@ -123,14 +132,28 @@ const OutstandingItemDialog: React.FC<{
   }
   return (
     <div className="w-7/8 h-full overflow-y-scroll p-5">
-      <div className="flex">
+      <div className="mb-3 flex">
         <div className="flex w-1/2 flex-col">
           <div className="text-xl font-bold">{loanId}</div>
           <div className="text-lg font-bold">Outstanding Items</div>
         </div>
+        <div className="flex w-1/2 items-end justify-end">
+          <Button
+            disabled={
+              processedOutstandingItems.findIndex(
+                (item) => item.edited === true,
+              ) === -1
+                ? true
+                : false
+            }
+            onClick={markAllAsReturned}
+          >
+            Mark All As Returned
+          </Button>
+        </div>
       </div>
 
-      <div className="mt-7 rounded-lg shadow-lg">
+      <div className=" rounded-lg shadow-lg">
         <Table className="rounded-lg  shadow-lg">
           <TableHeader>
             <TableRow>
@@ -148,7 +171,7 @@ const OutstandingItemDialog: React.FC<{
                 <TableCell>{item.checklist}</TableCell>
                 <TableCell>{item.assetNumber}</TableCell>
                 <TableHead>
-                  <Input
+                  <Textarea
                     disabled={item.locked}
                     onChange={(event) => {
                       setEnableSubmit(true);
@@ -159,6 +182,7 @@ const OutstandingItemDialog: React.FC<{
                         return updatedItems;
                       });
                     }}
+                    className="my-2 h-7"
                     value={item.remarks}
                   />
                 </TableHead>
@@ -171,23 +195,59 @@ const OutstandingItemDialog: React.FC<{
                         const updatedItems = [...processedOutstandingItems];
                         updatedItems[index]!.status = value;
                         updatedItems[index]!.edited = true;
+                        if (value === "RETURNED") {
+                          updatedItems[index]!.remarks = "";
+                        }
                         return updatedItems;
                       });
                       setEnableSubmit(true);
                     }}
                   >
-                    <SelectTrigger className="w-[180px]">
+                    <SelectTrigger className="w-[200px]">
                       <SelectValue placeholder="Select a status" />
                     </SelectTrigger>
 
                     <SelectContent>
-                      <SelectItem value="RETURNED">Returned</SelectItem>
-                      <SelectItem value="LOST">Lost</SelectItem>
-                      <SelectItem value="DAMAGED">Damaged</SelectItem>
-                      <SelectItem value="MISSING_CHECKLIST_ITEMS">
-                        Penalty For Checklist
+                      <SelectItem value="RETURNED">
+                        <div className="flex items-center">
+                          <div
+                            className={`mr-2 h-3 w-3 rounded-full bg-green-500`}
+                          ></div>
+                          Returned
+                        </div>
                       </SelectItem>
-                      <SelectItem value="UNAVAILABLE">Unavailable</SelectItem>
+                      <SelectItem value="LOST">
+                        <div className="flex items-center">
+                          <div
+                            className={`mr-2 h-3 w-3 rounded-full bg-red-500`}
+                          ></div>
+                          Lost
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="DAMAGED">
+                        <div className="flex items-center">
+                          <div
+                            className={`mr-2 h-3 w-3 rounded-full bg-red-500`}
+                          ></div>
+                          Damaged
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="MISSING_CHECKLIST_ITEMS">
+                        <div className="flex items-center">
+                          <div
+                            className={`mr-2 h-3 w-3 rounded-full bg-red-500`}
+                          ></div>
+                          Penalty For Checklist
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="UNAVAILABLE">
+                        <div className="flex items-center">
+                          <div
+                            className={`mr-2 h-3 w-3 rounded-full bg-orange-500`}
+                          ></div>
+                          Unavailable
+                        </div>
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                 </TableCell>

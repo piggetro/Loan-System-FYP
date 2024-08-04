@@ -45,7 +45,7 @@ export const WaiverColumns = ({
     },
     cell: ({ row }) => {
       return (
-        <div className="grow">
+        <div className="grow whitespace-pre-wrap">
           {row.getValue("remarks") === ""
             ? "No Outstanding Items"
             : row.getValue("remarks")}

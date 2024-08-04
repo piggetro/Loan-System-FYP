@@ -1355,16 +1355,16 @@ export const loanRequestRouter = createTRPCRouter({
                 inventoryStatus = "LOST";
                 outstandingItems.push(loanItem.loanItemId);
                 outstandingItemsRemarks === ""
-                  ? (outstandingItemsRemarks = "Lost")
-                  : (outstandingItemsRemarks += ", Lost");
+                  ? (outstandingItemsRemarks = `${loanItem.description} (Lost)`)
+                  : (outstandingItemsRemarks += `, ${loanItem.description} (Lost)`);
                 break;
               case "DAMAGED":
                 loanItemStatus = "DAMAGED";
                 inventoryStatus = "DAMAGED";
                 outstandingItems.push(loanItem.loanItemId);
                 outstandingItemsRemarks === ""
-                  ? (outstandingItemsRemarks = "Damaged")
-                  : (outstandingItemsRemarks += ", Damaged");
+                  ? (outstandingItemsRemarks = `${loanItem.description} (Damaged)`)
+                  : (outstandingItemsRemarks += `, ${loanItem.description} (Damaged)`);
                 break;
               case "MISSING_CHECKLIST_ITEMS":
                 loanItemStatus = "MISSING_CHECKLIST_ITEMS";
@@ -1379,8 +1379,8 @@ export const loanRequestRouter = createTRPCRouter({
                   .where("Inventory.assetNumber", "=", loanItem.assetNumber)
                   .execute();
                 outstandingItemsRemarks === ""
-                  ? (outstandingItemsRemarks = `Penalty For Checklist: ${loanItem.remarks}`)
-                  : (outstandingItemsRemarks += `, Penalty For Checklist: ${loanItem.remarks}`);
+                  ? (outstandingItemsRemarks = `${loanItem.description} (Penalty For Checklist: ${loanItem.remarks})`)
+                  : (outstandingItemsRemarks += `, ${loanItem.description} (Penalty For Checklist: ${loanItem.remarks})`);
                 break;
               case "COLLECTED":
                 partialReturn = true;
@@ -1582,23 +1582,29 @@ export const loanRequestRouter = createTRPCRouter({
       .where("User.id", "=", ctx.user.id)
       .executeTakeFirstOrThrow();
 
-    console.log(data.outstandingLoans);
     if (data.outstandingLoans.length === 0 && data.overdueLoans.length === 0) {
       return undefined;
     }
 
     const updateedOutstandingData = data.outstandingLoans.map((item) => {
       let remarks = "";
-
-      item.outstandingItems.forEach((outstandingItem) => {
+      let counter = 0;
+      item.outstandingItems.forEach((loanitem) => {
         if (
-          outstandingItem.status === "DAMAGED" ||
-          outstandingItem.status === "LOST" ||
-          outstandingItem.status === "MISSING_CHECKLIST_ITEMS"
+          loanitem.status === "LOST" ||
+          loanitem.status === "DAMAGED" ||
+          loanitem.status === "MISSING_CHECKLIST_ITEMS"
         ) {
-          remarks += `${outstandingItem.name} (${toStartCase(outstandingItem.status)})\n`;
+          if (counter < 2) {
+            remarks += `${counter === 0 ? "" : "\n"}${loanitem.name} (${loanitem.status})`;
+          }
+
+          counter++;
         }
       });
+      if (counter > 2) {
+        remarks += ` + ${counter - 2} More Outstanding Items`;
+      }
 
       return {
         id: item.id,

@@ -438,7 +438,8 @@ const LoanDetails: React.FC<{
           </p>
           <p className="flex" suppressHydrationWarning>
             <span className="font-bold">Due Date:&nbsp;</span>
-            {new Date(data.dueDate) < new Date() ? (
+            {new Date(data.dueDate) < new Date() &&
+            data.status === "COLLECTED" ? (
               <p className="font-semibold text-red-500">
                 {new Date(data.dueDate).toLocaleDateString()}&nbsp;(Overdue)
               </p>

@@ -27,16 +27,16 @@ const WaiverComponent: React.FC<{
   const isUserOwnLoad = api.loanRequest.checkIfUsersOwnLoan.useMutation();
   const { toast } = useToast();
   const onView = useCallback((waiverDetails: WaiverType) => {
-    if (waiverDetails.loan_id !== null) {
+    if (waiverDetails.id !== null) {
       isUserOwnLoad
-        .mutateAsync({ id: waiverDetails.loan_id })
+        .mutateAsync({ id: waiverDetails.id })
         .then((results) => {
           if (results) {
             router.push(
-              `/equipment-loans/waiver/${waiverDetails.loan_id}?prev=waiver`,
+              `/equipment-loans/waiver/${waiverDetails.id}?prev=waiver`,
             );
           } else {
-            router.push(`/loan-management/waiver/${waiverDetails.loan_id}`);
+            router.push(`/loan-management/waiver/${waiverDetails.id}`);
           }
         })
         .catch(() => {
@@ -54,10 +54,7 @@ const WaiverComponent: React.FC<{
   }, []);
 
   const TableColumns = useMemo(() => WaiverColumns({ onView }), []);
-  const TableColumnsHistory = useMemo(
-    () => WaiverHistoryColumns({ onView }),
-    [],
-  );
+
   return (
     <div className="rounded-lg bg-white p-5 shadow-lg">
       <WaiverTable
@@ -65,28 +62,6 @@ const WaiverComponent: React.FC<{
         columns={TableColumns}
         allSemesters={allSemesters}
       />
-      {/* <Tabs defaultValue="loanApprovals" className="mt-4">
-        <div className="mt-2 rounded-md bg-white px-6 py-4">
-          <TabsList className="mb-2">
-            <TabsTrigger value="loanApprovals">Pending Waivers</TabsTrigger>
-            <TabsTrigger value="approvalHistory">Waiver History</TabsTrigger>
-          </TabsList>
-          <TabsContent value="loanApprovals">
-            <WaiverTable
-              data={loanRequestsData}
-              columns={TableColumns}
-              allSemesters={allSemesters}
-            />
-          </TabsContent>
-          <TabsContent value="approvalHistory" className="flex-1">
-            <WaiverHistoryTable
-              data={loanRequestHistory}
-              columns={TableColumnsHistory}
-              allSemesters={allSemesters}
-            />
-          </TabsContent>
-        </div>
-      </Tabs> */}
     </div>
   );
 };

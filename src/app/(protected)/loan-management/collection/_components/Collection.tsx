@@ -55,8 +55,8 @@ const CollectionPage: React.FC<{
       .then((results) => {
         if (results) {
           toast({
-            title: "Unable to Return loan",
-            description: "Unable to return own loan",
+            title: "Unable to Process Collection",
+            description: "Unable to Process Collection for own loan",
             variant: "destructive",
           });
         } else {
