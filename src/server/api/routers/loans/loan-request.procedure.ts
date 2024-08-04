@@ -317,9 +317,23 @@ export const loanRequestRouter = createTRPCRouter({
   getUserApprovalManagementLoanRequests: protectedProcedure.query(
     async ({ ctx }) => {
       try {
+        //Check if user has access rights
+        const doesUserHaveApprovalRights = await ctx.db
+          .selectFrom("UserAccessRights")
+          .leftJoin(
+            "AccessRights",
+            "UserAccessRights.accessRightId",
+            "AccessRights.id",
+          )
+          .selectAll()
+          .where("UserAccessRights.grantedUserId", "=", ctx.user.id)
+          .where("AccessRights.pageName", "=", "Approval Management")
+          .executeTakeFirst();
+        if (doesUserHaveApprovalRights === undefined) {
+          return null;
+        }
         const userApprovalManagementLoanRequests = await ctx.db
           .selectFrom("Loan")
-          .selectAll("Loan")
           .select((eb) => [
             jsonObjectFrom(
               eb
@@ -327,26 +341,11 @@ export const loanRequestRouter = createTRPCRouter({
                 .select("User.name")
                 .whereRef("Loan.loanedById", "=", "User.id"),
             ).as("loanedBy"),
-            jsonObjectFrom(
-              eb
-                .selectFrom("User")
-                .select("User.name")
-                .whereRef("Loan.approverId", "=", "User.id"),
-            ).as("approvingLecturer"),
-            jsonArrayFrom(
-              eb
-                .selectFrom("Equipment")
-                .leftJoin("LoanItem", "LoanItem.loanId", "Loan.id")
-                .where("Equipment.name", "!=", null)
-                .select((eb1) => [
-                  jsonObjectFrom(
-                    eb1
-                      .selectFrom("Equipment")
-                      .select("Equipment.name")
-                      .whereRef("Equipment.id", "=", "LoanItem.equipmentId"),
-                  ).as("equipment"),
-                ]),
-            ).as("loanItems"),
+            "Loan.loanId",
+            "Loan.id",
+            "Loan.status",
+            "Loan.dateCreated",
+            "Loan.dueDate",
           ])
           .where("Loan.approverId", "=", ctx.user.id)
           .where("Loan.status", "=", "PENDING_APPROVAL")
