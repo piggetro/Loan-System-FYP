@@ -187,6 +187,7 @@ const OutstandingItemDialog: React.FC<{
                       <SelectItem value="MISSING_CHECKLIST_ITEMS">
                         Penalty For Checklist
                       </SelectItem>
+                      <SelectItem value="UNAVAILABLE">Unavailable</SelectItem>
                     </SelectContent>
                   </Select>
                 </TableCell>

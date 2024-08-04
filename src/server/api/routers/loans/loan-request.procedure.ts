@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { TRPCError } from "@trpc/server";
 import { protectedProcedure, createTRPCRouter } from "../../trpc";
-import { z } from "zod";
+import { number, z } from "zod";
 import { db } from "@/database";
 import { sql } from "kysely";
 import { createId } from "@paralleldrive/cuid2";
@@ -679,6 +679,7 @@ export const loanRequestRouter = createTRPCRouter({
             const numberOfAvailableItems = inventoryAvailability.find(
               (inventory) => inventory.equipmentId === loanItem.equipmentId,
             )?.count;
+
             if (numberOfAvailableItems! < loanItem.count) {
               return "UNAVAILABLE";
             }
@@ -1606,7 +1607,8 @@ export const loanRequestRouter = createTRPCRouter({
             | "AVAILABLE"
             | "DAMAGED"
             | "LOST"
-            | "MISSING_CHECKLIST_ITEMS" = "AVAILABLE";
+            | "MISSING_CHECKLIST_ITEMS"
+            | "UNAVAILABLE" = "AVAILABLE";
           switch (item.status) {
             case "LOST":
               loanItemStatus = "LOST";
@@ -1619,6 +1621,9 @@ export const loanRequestRouter = createTRPCRouter({
             case "MISSING_CHECKLIST_ITEMS":
               loanItemStatus = "MISSING_CHECKLIST_ITEMS";
               inventoryStatus = "MISSING_CHECKLIST_ITEMS";
+              break;
+            case "UNAVAILABLE":
+              inventoryStatus = "UNAVAILABLE";
               break;
           }
           if (!item.edited) continue;
