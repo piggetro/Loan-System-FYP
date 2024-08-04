@@ -12,10 +12,20 @@ import { SubmitHandler, useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "@/app/_components/ui/input";
-import { Loader2 } from "lucide-react";
+import { Delete, Loader2 } from "lucide-react";
 import { api } from "@/trpc/react";
 import { useToast } from "@/app/_components/ui/use-toast";
 import { Category } from "../../_components/CategoriesColumns";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogCancel,
+  AlertDialogAction,
+} from "@/app/_components/ui/alert-dialog";
 
 interface CategoryProps {
   category: Category;
@@ -38,6 +48,7 @@ const CategoryInfo = ({ category, setCategory }: CategoryProps) => {
 
   const { toast } = useToast();
   const [disabled, setDisabled] = useState(true);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState<boolean>(false);
 
   const { mutate: updateCategory, isPending } =
     api.equipment.updateCategory.useMutation({
@@ -55,25 +66,6 @@ const CategoryInfo = ({ category, setCategory }: CategoryProps) => {
         toast({
           title: "Error",
           description: "An error occurred while updating category",
-          variant: "destructive",
-        });
-      },
-    });
-
-  const { mutate: deleteCategory, isPending: isDeleting } =
-    api.equipment.deleteCategory.useMutation({
-      onSuccess: () => {
-        window.location.href = "/equipment-management/equipment-categories";
-        toast({
-          title: "Category Deleted",
-          description: "The category has been deleted successfully",
-        });
-      },
-      onError: (err) => {
-        console.log(err);
-        toast({
-          title: "Error",
-          description: "An error occurred while deleting the category",
           variant: "destructive",
         });
       },
@@ -109,16 +101,19 @@ const CategoryInfo = ({ category, setCategory }: CategoryProps) => {
           />
         </div>
       </Form>
+      <DeleteCategory
+        isDeleteDialogOpen={isDeleteDialogOpen}
+        setIsDeleteDialogOpen={setIsDeleteDialogOpen}
+        category={category}
+      />
       <div className="flex justify-end">
         <Button
           variant="destructive"
           className="me-2 mt-2"
-          disabled={isDeleting}
           onClick={() => {
-            deleteCategory({ id: category.id });
+            setIsDeleteDialogOpen(true);
           }}
         >
-          {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           Delete
         </Button>
         <Button
@@ -150,3 +145,71 @@ const CategoryInfo = ({ category, setCategory }: CategoryProps) => {
 };
 
 export default CategoryInfo;
+
+interface DeleteCategoryProps {
+  isDeleteDialogOpen: boolean;
+  setIsDeleteDialogOpen: (value: boolean) => void;
+  category: Category | null;
+}
+
+const DeleteCategory = ({
+  isDeleteDialogOpen,
+  setIsDeleteDialogOpen,
+  category,
+}: DeleteCategoryProps) => {
+  const { toast } = useToast();
+
+  const { mutate: deleteCategory, isPending: isDeleting } =
+    api.equipment.deleteCategory.useMutation({
+      onSuccess: () => {
+        window.location.href = "/equipment-management/equipment-categories";
+        toast({
+          title: "Category Deleted",
+          description: "The category has been deleted successfully",
+        });
+      },
+      onError: (err) => {
+        console.log(err);
+        toast({
+          title: "Error",
+          description: "An error occurred while deleting the category",
+          variant: "destructive",
+        });
+      },
+    });
+
+  return (
+    <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+          <AlertDialogDescription>
+            This action cannot be undone. This will permanently delete the data
+            and remove the data from our servers.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel
+            onClick={() => {
+              setIsDeleteDialogOpen(false);
+            }}
+          >
+            Cancel
+          </AlertDialogCancel>
+          <AlertDialogAction
+            disabled={isDeleting || category?.id === undefined} // Disable if pending or id is undefined
+            onClick={() => {
+              if (category?.id !== undefined) {
+                // Check for undefined before calling deleteCourse
+                deleteCategory({ id: category.id });
+              }
+            }}
+          >
+            {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Continue
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+};

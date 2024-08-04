@@ -27,6 +27,16 @@ import { Checkbox } from "@/app/_components/ui/checkbox";
 import { Category } from "../../_components/AddEquipment";
 import { Course } from "@/app/(protected)/school-admin/courses/_components/CoursesColumns";
 import { Label } from "@/app/_components/ui/label";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogCancel,
+  AlertDialogAction,
+} from "@/app/_components/ui/alert-dialog";
 
 interface EquipmentInfoProps {
   equipment: Equipment;
@@ -89,6 +99,7 @@ const EquipmentInfo = ({
   const [fileType, setFileType] = useState<string | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [deletePhoto, setDeletePhoto] = useState<boolean>(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState<boolean>(false);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0] ?? undefined;
@@ -166,25 +177,6 @@ const EquipmentInfo = ({
         toast({
           title: "Error",
           description: "An error occurred while updating equipment",
-          variant: "destructive",
-        });
-      },
-    });
-
-  const { mutate: deleteEquipment, isPending: isDeleting } =
-    api.equipment.deleteEquipment.useMutation({
-      onSuccess: () => {
-        window.location.href = "/equipment-management/equipment";
-        toast({
-          title: "Equipment Deleted",
-          description: "The equipment has been deleted successfully",
-        });
-      },
-      onError: (err) => {
-        console.log(err);
-        toast({
-          title: "Error",
-          description: "An error occurred while deleting the equipment",
           variant: "destructive",
         });
       },
@@ -436,16 +428,19 @@ const EquipmentInfo = ({
           </div>
         </div>
       </Form>
+      <DeleteEquipment
+        equipment={equipment}
+        isDeleteDialogOpen={isDeleteDialogOpen}
+        setIsDeleteDialogOpen={setIsDeleteDialogOpen}
+      />
       <div className="flex justify-end">
         <Button
           variant="destructive"
           className="me-2 mt-2"
-          disabled={isDeleting}
           onClick={() => {
-            deleteEquipment({ id: equipment.id });
+            setIsDeleteDialogOpen(true);
           }}
         >
-          {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           Delete
         </Button>
         <Button
@@ -482,3 +477,71 @@ const EquipmentInfo = ({
 };
 
 export default EquipmentInfo;
+
+interface DeleteEquipmentProps {
+  equipment: Equipment | null;
+  isDeleteDialogOpen: boolean;
+  setIsDeleteDialogOpen: (value: boolean) => void;
+}
+
+const DeleteEquipment = ({
+  isDeleteDialogOpen,
+  setIsDeleteDialogOpen,
+  equipment,
+}: DeleteEquipmentProps) => {
+  const { toast } = useToast();
+
+  const { mutate: deleteEquipment, isPending: isDeleting } =
+    api.equipment.deleteEquipment.useMutation({
+      onSuccess: () => {
+        window.location.href = "/equipment-management/equipment";
+        toast({
+          title: "Equipment Deleted",
+          description: "The equipment has been deleted successfully",
+        });
+      },
+      onError: (err) => {
+        console.log(err);
+        toast({
+          title: "Error",
+          description: "An error occurred while deleting the equipment",
+          variant: "destructive",
+        });
+      },
+    });
+
+  return (
+    <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+          <AlertDialogDescription>
+            This action cannot be undone. This will permanently delete the data
+            and remove the data from our servers.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel
+            onClick={() => {
+              setIsDeleteDialogOpen(false);
+            }}
+          >
+            Cancel
+          </AlertDialogCancel>
+          <AlertDialogAction
+            disabled={isDeleting || equipment?.id === undefined} // Disable if pending or id is undefined
+            onClick={() => {
+              if (equipment?.id !== undefined) {
+                // Check for undefined before calling deleteCourse
+                deleteEquipment({ id: equipment.id });
+              }
+            }}
+          >
+            {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Continue
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+};

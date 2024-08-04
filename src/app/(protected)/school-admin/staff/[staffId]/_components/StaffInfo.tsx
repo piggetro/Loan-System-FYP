@@ -23,6 +23,16 @@ import { Loader2 } from "lucide-react";
 import { api } from "@/trpc/react";
 import { useToast } from "@/app/_components/ui/use-toast";
 import { AccessRights } from "./AccessRightColumns";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogCancel,
+  AlertDialogAction,
+} from "@/app/_components/ui/alert-dialog";
 
 interface StaffInfoProps {
   staff: Staff;
@@ -116,6 +126,7 @@ const StaffInfo = ({
   const { toast } = useToast();
 
   const [disabled, setDisabled] = useState(true);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState<boolean>(false);
 
   const { mutate: updateStaff, isPending } =
     api.schoolAdmin.updateStaff.useMutation({
@@ -145,25 +156,6 @@ const StaffInfo = ({
         toast({
           title: "Error",
           description: "An error occurred while updating staff",
-          variant: "destructive",
-        });
-      },
-    });
-
-  const { mutate: deleteStaff, isPending: isDeleting } =
-    api.schoolAdmin.deleteStaff.useMutation({
-      onSuccess: () => {
-        window.location.href = "/school-admin/staff";
-        toast({
-          title: "Success",
-          description: "Staff deleted successfully",
-        });
-      },
-      onError: (err) => {
-        console.log(err);
-        toast({
-          title: "Error",
-          description: "An error occurred while deleting staff",
           variant: "destructive",
         });
       },
@@ -357,16 +349,15 @@ const StaffInfo = ({
           </div>
         </div>
       </Form>
+      <DeleteStaff {...{ isDeleteDialogOpen, setIsDeleteDialogOpen, staff }} />
       <div className="flex justify-end">
         <Button
           variant="destructive"
           className="me-2 mt-2"
-          disabled={isDeleting}
           onClick={() => {
-            deleteStaff({ id: staff.id });
+            setIsDeleteDialogOpen(true);
           }}
         >
-          {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           Delete
         </Button>
         <Button
@@ -396,3 +387,70 @@ const StaffInfo = ({
 };
 
 export default StaffInfo;
+
+interface DeleteStaffProps {
+  isDeleteDialogOpen: boolean;
+  setIsDeleteDialogOpen: (value: boolean) => void;
+  staff: Staff | null;
+}
+
+const DeleteStaff = ({
+  isDeleteDialogOpen,
+  setIsDeleteDialogOpen,
+  staff,
+}: DeleteStaffProps) => {
+  const { toast } = useToast();
+
+  const { mutate: deleteStaff, isPending: isDeleting } =
+    api.schoolAdmin.deleteStaff.useMutation({
+      onSuccess: () => {
+        window.location.href = "/school-admin/staff";
+        toast({
+          title: "Success",
+          description: "Staff deleted successfully",
+        });
+      },
+      onError: (err) => {
+        console.log(err);
+        toast({
+          title: "Error",
+          description: "An error occurred while deleting staff",
+          variant: "destructive",
+        });
+      },
+    });
+
+  return (
+    <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+          <AlertDialogDescription>
+            This action cannot be undone. This will permanently delete the data
+            and remove the data from our servers.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel
+            onClick={() => {
+              setIsDeleteDialogOpen(false);
+            }}
+          >
+            Cancel
+          </AlertDialogCancel>
+          <AlertDialogAction
+            disabled={isDeleting}
+            onClick={() => {
+              if (staff?.id) {
+                deleteStaff({ id: staff.id });
+              }
+            }}
+          >
+            {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Continue
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+};
