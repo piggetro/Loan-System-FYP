@@ -36,11 +36,47 @@ export const waiverRouter = createTRPCRouter({
           "User.name as loanedBy",
           "Loan.loanId as loanId",
           "Loan.id as loan_id",
+          jsonArrayFrom(
+            eb
+              .selectFrom("LoanItem as li")
+              .leftJoin("Equipment", "li.equipmentId", "Equipment.id")
+              .whereRef("li.loanId", "=", "Loan.id")
+              .selectAll("li")
+              .select("Equipment.name"),
+          ).as("outstandingItems"),
         ])
         .distinctOn("Loan.id")
         .execute();
 
-      return data;
+      return data.map((waiver) => {
+        let remarks = "";
+        let counter = 0;
+        waiver.outstandingItems.forEach((loanitem) => {
+          if (
+            loanitem.status === "LOST" ||
+            loanitem.status === "DAMAGED" ||
+            loanitem.status === "MISSING_CHECKLIST_ITEMS"
+          ) {
+            if (counter < 2) {
+              remarks += `${counter === 0 ? "" : "\n"}${loanitem.name} (${toStartCase(loanitem.status)})`;
+            }
+
+            counter++;
+          }
+        });
+        if (counter > 2) {
+          remarks += ` + ${counter - 2} More Outstanding Items`;
+        }
+        return {
+          loanId: waiver.loanId,
+          loanedBy: waiver.loanedBy,
+          id: waiver.loan_id,
+          dateIssued: waiver.dateIssued,
+          dateUpdated: waiver.dateUpdated,
+          status: waiver.status,
+          remarks: remarks,
+        };
+      });
     } catch (err) {
       console.log(err);
       throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
@@ -235,3 +271,11 @@ export const waiverRouter = createTRPCRouter({
       }
     }),
 });
+
+function toStartCase(string: string) {
+  return string
+    .replace(/_/g, " ")
+    .split(" ")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(" ");
+}

@@ -51,7 +51,11 @@ export const WaiverColumns = ({
       return <p>Remarks</p>;
     },
     cell: ({ row }) => {
-      return <div className="grow">{row.getValue("remarks")}</div>;
+      return (
+        <div className="grow whitespace-pre-wrap">
+          {row.getValue("remarks")}
+        </div>
+      );
     },
   },
   {

@@ -514,15 +514,23 @@ export const loanRouter = createTRPCRouter({
 
       return waivers.map((waiver) => {
         let remarks = "";
-        waiver.outstandingItems.forEach((item) => {
+        let counter = 0;
+        waiver.outstandingItems.forEach((loanitem) => {
           if (
-            item.status === "DAMAGED" ||
-            item.status === "LOST" ||
-            item.status === "MISSING_CHECKLIST_ITEMS"
+            loanitem.status === "LOST" ||
+            loanitem.status === "DAMAGED" ||
+            loanitem.status === "MISSING_CHECKLIST_ITEMS"
           ) {
-            remarks += item.name + ` (${toStartCase(item.status)})<br>`;
+            if (counter < 2) {
+              remarks += `${counter === 0 ? "" : "\n"}${loanitem.name} (${toStartCase(loanitem.status)})`;
+            }
+
+            counter++;
           }
         });
+        if (counter > 2) {
+          remarks += ` + ${counter - 2} More Outstanding Items`;
+        }
         return {
           loanId: waiver.loanId,
           id: waiver.loan_id,

@@ -50,7 +50,7 @@ export const LostDamagedLoanColumns = ({
     },
     cell: ({ row }) => {
       return (
-        <div className="grow">
+        <div className="grow whitespace-pre-wrap">
           {row.getValue("remarks") === ""
             ? "No Outstanding Remarks"
             : row.getValue("remarks")}
