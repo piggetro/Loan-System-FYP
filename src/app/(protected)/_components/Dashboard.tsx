@@ -19,14 +19,14 @@ import {
 
 interface DashboardProps {
   currentLoans: CurrentLoans[];
-  overdueLoans: OverdueLoans[];
+  outstandingLoans: OverdueLoans[];
   historyLoans: HistoryLoans[];
   approvalLoans: ApprovalLoans[] | null;
 }
 
 const Dashboard = ({
   currentLoans,
-  overdueLoans,
+  outstandingLoans,
   historyLoans,
   approvalLoans,
 }: DashboardProps) => {
@@ -88,7 +88,7 @@ const Dashboard = ({
           <LoanDataTable data={currentLoans} columns={CurrentColumns} />
         </TabsContent>
         <TabsContent value="overdue" className="flex-1">
-          <LoanDataTable data={overdueLoans} columns={OverdueColumns} />
+          <LoanDataTable data={outstandingLoans} columns={OverdueColumns} />
         </TabsContent>
         <TabsContent value="history" className="flex-1">
           <LoanDataTable data={historyLoans} columns={HistoryColumns} />

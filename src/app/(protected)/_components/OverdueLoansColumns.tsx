@@ -7,7 +7,9 @@ export type OverdueLoans = {
   id: string;
   loanId: string;
   dueDate: Date;
-  numberOfDaysDue: string;
+  remarks: string;
+  dateCreated: Date;
+  status: string;
 };
 
 interface OverdueLoansProps {
@@ -22,20 +24,26 @@ export const overdueLoansColumns = ({
     header: "Loan ID",
   },
   {
+    accessorKey: "dateCreated",
+    header: "Date Created",
+    cell: (props) => {
+      const date = props.cell.getValue() as Date;
+      return <span className={``}>{date?.toLocaleDateString("en-SG")}</span>;
+    },
+  },
+  {
     accessorKey: "dueDate",
     header: "Due Date",
     cell: (props) => {
       const date = props.cell.getValue() as Date;
       return (
-        <span className="font-semibold text-red-500">
+        <span
+          className={`font-semibold ${date < new Date() ? "text-red-500" : ""}`}
+        >
           {date?.toLocaleDateString("en-SG")}
         </span>
       );
     },
-  },
-  {
-    accessorKey: "numberOfDaysDue",
-    header: "Number of Days Due",
   },
   {
     accessorKey: "status",

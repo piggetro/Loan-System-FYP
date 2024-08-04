@@ -127,7 +127,7 @@ export function WaiverTable<TData, TValue>({
           }}
         >
           <SelectTrigger className=" w-1/6  min-w-44">
-            <SelectValue placeholder="Semester" />
+            <SelectValue placeholder="Status" />
           </SelectTrigger>
           <SelectContent>
             <SelectGroup>

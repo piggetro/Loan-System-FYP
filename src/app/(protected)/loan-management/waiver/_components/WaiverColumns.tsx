@@ -37,10 +37,11 @@ export const WaiverColumns = ({
     cell: ({ row }) => {
       const dateCreated = new Date(
         row.getValue("dateIssued"),
-      ).toLocaleDateString();
+      ).toLocaleDateString("en-SG");
+      console.log(dateCreated);
       return (
         <div className="" suppressHydrationWarning>
-          {dateCreated}
+          {new Date(row.getValue("dateIssued")).toLocaleDateString("en-SG")}
         </div>
       );
     },

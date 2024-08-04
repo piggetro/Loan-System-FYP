@@ -103,11 +103,7 @@ const LoanDetailsTable: React.FC<{
               <div className="flex items-center">
                 <div
                   className={`mr-2 h-3 w-3 rounded-full ${
-                    item.status === "RETURNED"
-                      ? "bg-green-500"
-                      : item.status === "DAMAGED"
-                        ? "bg-red-500"
-                        : "bg-yellow-500"
+                    item.status === "RETURNED" ? "bg-green-500" : "bg-red-500"
                   }`}
                 ></div>
                 <p> {toStartCase(item.status!)}</p>
