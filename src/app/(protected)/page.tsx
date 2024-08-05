@@ -2,7 +2,7 @@ import React from "react";
 import TopHeaderComponent from "../_components/TopHeader";
 import { api } from "@/trpc/server";
 import Dashboard from "./_components/Dashboard";
-import { OverdueLoans } from "./_components/OverdueLoansColumns";
+import { OverdueLoans } from "./_components/OutstandingLoansColumns";
 
 const page = async () => {
   const [

@@ -51,6 +51,21 @@ export const HistoryColumns = ({
     ),
   },
   {
+    accessorKey: "remarks",
+    header: "Details",
+    cell: ({ row }) => (
+      <div className="flex items-center">
+        <span
+          className={`whitespace-pre ${row.getValue("remarks") === "" ? "" : "font-semibold text-red-500"}`}
+        >
+          {row.getValue("remarks") === ""
+            ? "-"
+            : toStartCase(row.getValue("remarks"))}
+        </span>
+      </div>
+    ),
+  },
+  {
     accessorKey: "status",
     header: () => <div>Status</div>,
     cell: ({ row }) => {

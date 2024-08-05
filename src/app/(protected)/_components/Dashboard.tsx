@@ -8,7 +8,10 @@ import {
   TabsTrigger,
 } from "@/app/_components/ui/tabs";
 import { type CurrentLoans, currentLoansColumns } from "./CurrentLoansColumns";
-import { type OverdueLoans, overdueLoansColumns } from "./OverdueLoansColumns";
+import {
+  type OverdueLoans,
+  overdueLoansColumns,
+} from "./OutstandingLoansColumns";
 import { useRouter } from "next/navigation";
 import { LoanDataTable } from "./LoanDataTable";
 import { type HistoryLoans, historyLoansColumns } from "./HistoryLoansColumns";
@@ -75,7 +78,7 @@ const Dashboard = ({
             <TabsTrigger value="approval">Approval Loans</TabsTrigger>
           ) : null}
           <TabsTrigger value="current">Current Loans</TabsTrigger>
-          <TabsTrigger value="overdue">Overdue Loans</TabsTrigger>
+          <TabsTrigger value="outstanding">Outstanding Loans</TabsTrigger>
           <TabsTrigger value="history">History Loans</TabsTrigger>
         </TabsList>
         {approvalLoans ? (
@@ -87,7 +90,7 @@ const Dashboard = ({
         <TabsContent value="current">
           <LoanDataTable data={currentLoans} columns={CurrentColumns} />
         </TabsContent>
-        <TabsContent value="overdue" className="flex-1">
+        <TabsContent value="outstanding" className="flex-1">
           <LoanDataTable data={outstandingLoans} columns={OverdueColumns} />
         </TabsContent>
         <TabsContent value="history" className="flex-1">

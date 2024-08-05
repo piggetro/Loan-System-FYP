@@ -1530,7 +1530,7 @@ export const loanRequestRouter = createTRPCRouter({
         return {
           id: item.id,
           loanId: item.loanId,
-          status: "Outstanding Items",
+          status: item.status,
           remarks: remarks,
           name: item.loanedByName,
         };
@@ -1560,6 +1560,7 @@ export const loanRequestRouter = createTRPCRouter({
             .leftJoin("Waiver", "Waiver.loanId", "Loan.id")
             .select((eb) => [
               "Waiver.status",
+              "Loan.status as loanStatus",
               "Loan.id",
               "Loan.loanId",
               jsonArrayFrom(
@@ -1611,7 +1612,7 @@ export const loanRequestRouter = createTRPCRouter({
       return {
         id: item.id,
         loanId: item.loanId,
-        status: "Outstanding",
+        status: toStartCase(item.loanStatus),
         waiverStatus: toStartCase(item.status ?? ""),
         remarks: remarks,
       };

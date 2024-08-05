@@ -16,7 +16,7 @@ export const PreparationColumns = ({
   {
     accessorKey: "loanId",
     header: "Loan ID",
-    cell: ({ row }) => <div className="w-96">{row.getValue("loanId")}</div>,
+    cell: ({ row }) => <div className="w-20">{row.getValue("loanId")}</div>,
   },
   {
     accessorKey: "loanedBy.name",

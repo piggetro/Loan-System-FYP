@@ -7,12 +7,15 @@ import LostDamagedLoanComponent from "./_components/LostDamagedLoan";
 export interface LostDamagedLoanType {
   id: string;
   loanId: string;
-  status: string | undefined;
+  status: LoanStatus;
   remarks: string;
+  dueDate: Date;
+  dateCreated: Date;
+  approver: string | null;
 }
 
 const LostDamagedLoanPage = async () => {
-  const loanRequests = await api.loan.getUserLostAndDamagedLoans();
+  const lostDamagedLoans = await api.loan.getUserLostAndDamagedLoans();
 
   const allSemesters = await api.loan.getSemesters();
 
@@ -23,7 +26,7 @@ const LostDamagedLoanPage = async () => {
         pageName="Lost / Damaged Loans"
       />
       <LostDamagedLoanComponent
-        lostAndDamagedLoans={loanRequests}
+        lostAndDamagedLoans={lostDamagedLoans}
         allSemesters={allSemesters}
       />
     </div>

@@ -20,6 +20,36 @@ export const LostDamagedLoanColumns = ({
   },
 
   {
+    accessorKey: "approver",
+    header: "Approver",
+    cell: ({ row }) => <div>{row.getValue("approver")}</div>,
+  },
+  {
+    accessorKey: "dateCreated",
+    header: "Date Created",
+    cell: ({ row }) => (
+      <div suppressHydrationWarning>
+        {new Date(row.getValue("dateCreated")).toLocaleDateString()}
+      </div>
+    ),
+  },
+
+  {
+    accessorKey: "remarks",
+    header: () => {
+      return <p>Remarks</p>;
+    },
+    cell: ({ row }) => {
+      return (
+        <div className="grow whitespace-pre-wrap font-semibold text-red-500">
+          {row.getValue("remarks") === ""
+            ? "No Outstanding Remarks"
+            : row.getValue("remarks")}
+        </div>
+      );
+    },
+  },
+  {
     accessorKey: "status",
     header: () => {
       return <p>Status</p>;
@@ -29,31 +59,14 @@ export const LostDamagedLoanColumns = ({
         <div className="flex items-center">
           <div
             className={`mr-2 h-3 w-3 rounded-full ${
-              row.getValue("status") === "Approved"
+              row.getValue("status") === "RETURNED"
                 ? "bg-green-500"
-                : row.getValue("status") === "Partially Outstanding" ||
-                    row.getValue("status") === "Awaiting Request" ||
-                    row.getValue("status") === "Pending"
+                : row.getValue("status") === "PARTIALLY OUTSTANDING"
                   ? "bg-yellow-500"
                   : "bg-red-500"
             }`}
           ></div>
           {toStartCase(row.getValue("status"))}
-        </div>
-      );
-    },
-  },
-  {
-    accessorKey: "remarks",
-    header: () => {
-      return <p>Remarks</p>;
-    },
-    cell: ({ row }) => {
-      return (
-        <div className="grow whitespace-pre-wrap">
-          {row.getValue("remarks") === ""
-            ? "No Outstanding Remarks"
-            : row.getValue("remarks")}
         </div>
       );
     },

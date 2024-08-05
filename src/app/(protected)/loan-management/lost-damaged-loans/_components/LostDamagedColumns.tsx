@@ -24,23 +24,25 @@ export const LostDamagedColumns = ({
   },
 
   {
-    accessorKey: "status",
-    header: "Status",
+    accessorKey: "remarks",
+    header: "Details",
     cell: ({ row }) => (
-      <div className="flex items-center">
-        <div className={`mr-2 h-3 w-3 rounded-full ${"bg-red-500"}`}></div>
-        <span>{toStartCase(row.getValue("status"))}</span>
+      <div className=" grow whitespace-pre-wrap font-semibold text-red-500">
+        {row.getValue("remarks") === ""
+          ? "No Outstanding Remarks"
+          : toStartCase(row.getValue("remarks"))}
       </div>
     ),
   },
   {
-    accessorKey: "remarks",
-    header: "Details",
+    accessorKey: "status",
+    header: "Status",
     cell: ({ row }) => (
-      <div className=" grow  whitespace-pre-wrap">
-        {row.getValue("remarks") === ""
-          ? "No Outstanding Remarks"
-          : toStartCase(row.getValue("remarks"))}
+      <div className="flex items-center">
+        <div
+          className={`mr-2 h-3 w-3 rounded-full ${row.getValue("status") === "RETURNED" ? "bg-green-500" : "bg-yellow-500"}`}
+        ></div>
+        <span>{toStartCase(row.getValue("status"))}</span>
       </div>
     ),
   },

@@ -97,20 +97,22 @@ const UnableToLoanComponent: React.FC<{
                     <div className="flex  items-center">
                       <div
                         className={`mr-2 h-3 w-3 rounded-full ${
-                          loan.status === "Partially Outstanding" ||
-                          loan.status === "Pending Request" ||
-                          loan.status === "Pending"
-                            ? "bg-yellow-500"
-                            : "bg-red-500"
+                          loan.status === "Returned"
+                            ? "bg-green-500"
+                            : "bg-yellow-500"
                         }`}
                       ></div>
                       {loan.status}
                     </div>
                   </TableCell>
                   <TableCell className="w-[300px] text-left ">
-                    {loan.remarks === ""
-                      ? "No Outstanding Remarks"
-                      : loan.remarks}
+                    {loan.remarks === "" ? (
+                      "No Outstanding Remarks"
+                    ) : (
+                      <p className="font-semibold text-red-500">
+                        {loan.remarks}
+                      </p>
+                    )}
                   </TableCell>
                   <TableCell className="text-center">
                     <Button

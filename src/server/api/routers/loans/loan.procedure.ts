@@ -227,13 +227,21 @@ export const loanRouter = createTRPCRouter({
       const loanHistory = await ctx.db
         .selectFrom("Loan")
         .leftJoin("User", "Loan.approverId", "User.id")
-        .select([
+        .select((eb) => [
           "Loan.id",
           "Loan.loanId",
           "Loan.dateCreated",
           "Loan.dateReturned",
           "Loan.status",
           "User.name",
+          jsonArrayFrom(
+            eb
+              .selectFrom("Waiver")
+              .leftJoin("LoanItem", "LoanItem.waiverId", "Waiver.id")
+              .leftJoin("Equipment", "LoanItem.equipmentId", "Equipment.id")
+              .whereRef("Waiver.loanId", "=", "Loan.id")
+              .select(["Equipment.name", "LoanItem.status"]),
+          ).as("outstandingItems"),
         ])
         .where((eb) =>
           eb.and([
@@ -248,7 +256,31 @@ export const loanRouter = createTRPCRouter({
         .orderBy("Loan.dateCreated desc")
         .execute();
 
-      return loanHistory;
+      return loanHistory.map((item) => {
+        let remarks = "";
+        let counter = 0;
+        item.outstandingItems.forEach((loanitem) => {
+          if (
+            loanitem.status === "LOST" ||
+            loanitem.status === "DAMAGED" ||
+            loanitem.status === "MISSING_CHECKLIST_ITEMS"
+          ) {
+            if (counter < 2) {
+              remarks += `${counter === 0 ? "" : "\n"}${loanitem.name} (${loanitem.status})`;
+            }
+
+            counter++;
+          }
+        });
+        if (counter > 2) {
+          remarks += ` + ${counter - 2} More Outstanding Items`;
+        }
+
+        return {
+          ...item,
+          remarks: remarks,
+        };
+      });
     } catch (err) {
       console.log(err);
       throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
@@ -263,9 +295,9 @@ export const loanRouter = createTRPCRouter({
         .select((eb) => [
           eb
             .selectFrom("User")
-            .whereRef("User.id", "=", "Loan.loanedById")
+            .whereRef("User.id", "=", "Loan.approvedById")
             .select("User.name")
-            .as("loanedByName"),
+            .as("approverName"),
           jsonArrayFrom(
             eb
               .selectFrom("LoanItem")
@@ -307,10 +339,11 @@ export const loanRouter = createTRPCRouter({
         return {
           id: item.id,
           loanId: item.loanId,
-          status: "Outstanding",
+          status: item.status,
           remarks: remarks,
           dueDate: item.dueDate,
           dateCreated: item.dateCreated,
+          approver: item.approverName,
         };
       });
 

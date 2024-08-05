@@ -38,12 +38,27 @@ export const overdueLoansColumns = ({
       const date = props.cell.getValue() as Date;
       return (
         <span
-          className={`font-semibold ${date < new Date() ? "text-red-500" : ""}`}
+          className={`\ ${date < new Date() ? "font-semibold text-red-500" : ""}`}
         >
           {date?.toLocaleDateString("en-SG")}
         </span>
       );
     },
+  },
+  {
+    accessorKey: "remarks",
+    header: "Details",
+    cell: ({ row }) => (
+      <div className="flex items-center">
+        <span
+          className={`whitespace-pre ${row.getValue("remarks") === "" ? "" : "font-semibold text-red-500"}`}
+        >
+          {row.getValue("remarks") === ""
+            ? "-"
+            : toStartCase(row.getValue("remarks"))}
+        </span>
+      </div>
+    ),
   },
   {
     accessorKey: "status",
