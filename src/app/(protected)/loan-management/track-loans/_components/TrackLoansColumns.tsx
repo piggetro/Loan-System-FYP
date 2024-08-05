@@ -26,7 +26,7 @@ export const PreparationColumns = ({
         </Button>
       );
     },
-    cell: ({ row }) => <div className="w-96">{row.getValue("loanId")}</div>,
+    cell: ({ row }) => <div className="w-20">{row.getValue("loanId")}</div>,
   },
   {
     accessorKey: "loanedBy.name",
@@ -61,6 +61,21 @@ export const PreparationColumns = ({
     ),
   },
   {
+    accessorKey: "remarks",
+    header: "Details",
+    cell: ({ row }) => (
+      <div className="flex items-center">
+        <span
+          className={`whitespace-pre ${row.getValue("remarks") === "" ? "" : "font-semibold text-red-500"}`}
+        >
+          {row.getValue("remarks") === ""
+            ? "-"
+            : toStartCase(row.getValue("remarks"))}
+        </span>
+      </div>
+    ),
+  },
+  {
     accessorKey: "status",
     header: "Status",
     cell: ({ row }) => (
@@ -80,6 +95,7 @@ export const PreparationColumns = ({
       </div>
     ),
   },
+
   {
     id: "actions",
     cell: ({ row }) => <PreparationRowActionsProps row={row} onView={onView} />,

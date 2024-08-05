@@ -26,20 +26,7 @@ export interface TrackLoansType {
   remarks: string;
   dueDate: Date;
   status: string;
-  signature: string | null;
-  loanedById: string | null;
-  approvedById: string | null;
-  preparedById: string | null;
-  issuedById: string | null;
-  returnedToId: string | null;
-  approverId: string | null;
   dateCreated: Date;
-  collectionReferenceNumber: string | null;
-  datePrepared: Date | null;
-  dateIssued: Date | null;
-  dateCollected: Date | null;
-  dateReturned: Date | null;
-  waiverId: string | null;
   loanedBy: { name: string } | null;
 }
 

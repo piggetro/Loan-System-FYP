@@ -1712,43 +1712,26 @@ export const loanRequestRouter = createTRPCRouter({
         let loansForReturnQuery = ctx.db
           .selectFrom("Loan")
           .leftJoin("User as b", "b.id", "Loan.loanedById")
-          .selectAll("Loan")
           .select((eb) => [
+            "Loan.id",
+            "Loan.loanId",
+            "dateCreated",
+            "dueDate",
+            "status",
             jsonObjectFrom(
               eb
                 .selectFrom("User")
                 .select("User.name")
                 .whereRef("Loan.loanedById", "=", "User.id"),
             ).as("loanedBy"),
-            jsonObjectFrom(
+            jsonArrayFrom(
               eb
-                .selectFrom("User")
-                .select("User.name")
-                .whereRef("Loan.approvedById", "=", "User.id"),
-            ).as("approvedBy"),
-            jsonObjectFrom(
-              eb
-                .selectFrom("User")
-                .select("User.name")
-                .whereRef("Loan.preparedById", "=", "User.id"),
-            ).as("preparedBy"),
-            jsonObjectFrom(
-              eb
-                .selectFrom("User")
-                .select("User.name")
-                .whereRef("Loan.issuedById", "=", "User.id"),
-            ).as("issuedBy"),
-            jsonObjectFrom(
-              eb
-                .selectFrom("User")
-                .select("User.name")
-                .whereRef("Loan.returnedToId", "=", "User.id"),
-            ).as("returnedTo"),
-            eb
-              .selectFrom("Waiver")
-              .whereRef("Waiver.loanId", "=", "Loan.id")
-              .select("Waiver.id")
-              .as("waiverId"),
+                .selectFrom("Waiver")
+                .leftJoin("LoanItem", "LoanItem.waiverId", "Waiver.id")
+                .leftJoin("Equipment", "LoanItem.equipmentId", "Equipment.id")
+                .whereRef("Waiver.loanId", "=", "Loan.id")
+                .select(["Equipment.name", "LoanItem.status"]),
+            ).as("outstandingItems"),
           ])
           .where((eb) =>
             eb.or([
@@ -1756,7 +1739,8 @@ export const loanRequestRouter = createTRPCRouter({
               eb("b.name", "ilike", `%${input.searchInput}%`),
             ]),
           )
-          .orderBy("Loan.loanId desc");
+          .orderBy("Loan.dateCreated desc");
+
         if (input.status !== "All") {
           loansForReturnQuery = loansForReturnQuery.where(
             "Loan.status",
@@ -1772,7 +1756,37 @@ export const loanRequestRouter = createTRPCRouter({
           );
         }
         const loansForReturn = await loansForReturnQuery.execute();
-        return loansForReturn;
+
+        return loansForReturn.map((item) => {
+          let remarks = "";
+          let counter = 0;
+          item.outstandingItems.forEach((loanitem) => {
+            if (
+              loanitem.status === "LOST" ||
+              loanitem.status === "DAMAGED" ||
+              loanitem.status === "MISSING_CHECKLIST_ITEMS"
+            ) {
+              if (counter < 2) {
+                remarks += `${counter === 0 ? "" : "\n"}${loanitem.name} (${loanitem.status})`;
+              }
+
+              counter++;
+            }
+          });
+          if (counter > 2) {
+            remarks += ` + ${counter - 2} More Outstanding Items`;
+          }
+
+          return {
+            id: item.id,
+            loanId: item.loanId,
+            dateCreated: item.dateCreated,
+            dueDate: item.dueDate,
+            status: item.status,
+            loanedBy: item.loanedBy,
+            remarks: remarks,
+          };
+        });
       } catch (err) {
         console.log(err);
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
