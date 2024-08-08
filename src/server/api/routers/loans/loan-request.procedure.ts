@@ -110,7 +110,7 @@ export const loanRequestRouter = createTRPCRouter({
           equipmentsQuery = equipmentsQuery.where(
             "EquipmentOnCourses.courseId",
             "=",
-            "clw7z6fyo00003qp95wbipxtr",
+            referingCourseId,
           );
         }
 
