@@ -50,7 +50,8 @@ export const PreparationColumns = ({
     cell: ({ row }) => (
       <div className="" suppressHydrationWarning>
         {new Date(row.getValue("dueDate")) < new Date() &&
-        row.getValue("status") === "COLLECTED" ? (
+        (row.getValue("status") === "COLLECTED" ||
+          row.getValue("status") === "PARTIAL_RETURN") ? (
           <p className="font-semibold text-red-500">
             {new Date(row.getValue("dueDate")).toLocaleDateString()}
           </p>
