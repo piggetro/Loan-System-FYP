@@ -14,14 +14,14 @@ const LostBrokenLoanDetailsPage = async ({ params }: pageProps) => {
     id: params.id,
   });
   if (!LostBrokenLoanExist) {
-    redirect("/loan-management/LostBrokenLoan");
+    redirect("/equipment-loans/waiver");
   }
 
   return (
     <div className="">
       <TopHeaderComponent
         pageName="Waiver"
-        pathName="Equipment Loans / Lost & Broken Loan"
+        pathName="Equipment Loans / Waiver"
         goBackLink="/equipment-loans/waiver"
       />
       <LostBrokenLoanDetails id={params.id} />

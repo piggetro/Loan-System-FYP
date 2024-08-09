@@ -364,7 +364,7 @@ export const loanRouter = createTRPCRouter({
           .where("LoanItem.waiverId", "is not", null)
           .where("Loan.id", "=", input.id)
           .distinctOn("Loan.id")
-          .executeTakeFirstOrThrow();
+          .executeTakeFirst();
 
         return lostAndBrokenHistory;
       } catch (err) {
