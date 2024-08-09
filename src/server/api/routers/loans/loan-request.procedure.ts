@@ -1493,6 +1493,7 @@ export const loanRequestRouter = createTRPCRouter({
           jsonArrayFrom(
             eb
               .selectFrom("LoanItem")
+              .whereRef("LoanItem.loanId", "=", "Loan.id")
               .leftJoin("Equipment", "Equipment.id", "LoanItem.equipmentId")
               .selectAll("LoanItem")
               .select("Equipment.name"),
