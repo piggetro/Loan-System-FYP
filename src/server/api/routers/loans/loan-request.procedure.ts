@@ -98,12 +98,7 @@ export const loanRequestRouter = createTRPCRouter({
           .leftJoin("Equipment as e", "LoanItem.equipmentId", "e.id")
           .leftJoin("SubCategory", "SubCategory.id", "e.subCategoryId")
           .where("e.name", "ilike", `%${input.searchInput}%`)
-          .where((eb) =>
-            eb.or([
-              eb("LoanItem.status", "=", "REQUEST_COLLECTION"),
-              eb("LoanItem.status", "=", "PREPARING"),
-            ]),
-          )
+          .where((eb) => eb.or([eb("LoanItem.status", "=", "PREPARING")]))
           .groupBy("LoanItem.equipmentId");
 
         if (referingCourseId !== undefined) {

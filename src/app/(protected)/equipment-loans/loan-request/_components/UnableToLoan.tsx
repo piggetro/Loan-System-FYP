@@ -109,7 +109,7 @@ const UnableToLoanComponent: React.FC<{
                     {loan.remarks === "" ? (
                       "No Outstanding Remarks"
                     ) : (
-                      <p className="font-semibold text-red-500">
+                      <p className="whitespace-pre-wrap font-semibold text-red-500">
                         {loan.remarks}
                       </p>
                     )}

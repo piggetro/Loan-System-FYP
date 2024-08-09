@@ -14,11 +14,9 @@ import {
   FormControl,
   FormField,
   FormItem,
-  FormLabel,
   FormMessage,
 } from "@/app/_components/ui/form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Input } from "@/app/_components/ui/input";
 import { api } from "@/trpc/react";
 import { Skeleton } from "@/app/_components/ui/skeleton";
 import { useForm } from "react-hook-form";
@@ -97,7 +95,20 @@ const ApprovalLoanDialog: React.FC<{
 
   const onSubmit = useCallback(
     (values: z.infer<typeof formSchema>) => {
-      console.log(values);
+      let totalApprovedQty = 0;
+      values.loanItems.forEach((item) => {
+        totalApprovedQty += parseInt(item.quantityApproved);
+      });
+
+      if (totalApprovedQty === 0) {
+        approvalLoanToast({
+          title: "At least one quantity must be approved",
+          description: "You may reject the entire loan",
+          variant: "destructive",
+        });
+        return;
+      }
+
       setIsPreparing(true);
       approveLoan
         .mutateAsync(values)
