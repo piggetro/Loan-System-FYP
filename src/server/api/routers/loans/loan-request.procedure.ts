@@ -254,9 +254,7 @@ export const loanRequestRouter = createTRPCRouter({
 
       const dueDateFormatted = input.dueDate;
       dueDateFormatted.setDate(dueDateFormatted.getDate() + 1);
-      console.log(dueDateFormatted);
       dueDateFormatted.setUTCHours(23, 59, 59, 0);
-      console.log(dueDateFormatted);
       const todayDate = new Date();
 
       try {
@@ -266,10 +264,12 @@ export const loanRequestRouter = createTRPCRouter({
             sql<string>`CONCAT(${db
               .selectFrom("Semesters")
               .select("Semesters.name")
-              .where("Semesters.startDate", "<", todayDate)
-              .where("Semesters.endDate", ">", todayDate)},'/', COUNT(*)+1)`.as(
-              "loanId",
-            ),
+              .where("Semesters.startDate", "<=", todayDate)
+              .where(
+                "Semesters.endDate",
+                ">=",
+                todayDate,
+              )},'/', COUNT(*)+1)`.as("loanId"),
           )
           .where(
             "Loan.loanId",
@@ -1873,6 +1873,24 @@ export const loanRequestRouter = createTRPCRouter({
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
       }
     }),
+  checkIfSemesterExist: protectedProcedure.query(async ({ ctx }) => {
+    try {
+      const data = await ctx.db
+        .selectFrom("Semesters")
+        .select("Semesters.name")
+        .where("Semesters.startDate", "<=", new Date())
+        .where("Semesters.endDate", ">=", new Date())
+        .executeTakeFirst();
+      if (data === undefined) {
+        console.log("Error: There is no semester for the current time");
+        return false;
+      }
+      return true;
+    } catch (err) {
+      console.log(err);
+      throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+    }
+  }),
 });
 function toStartCase(string: string) {
   return string

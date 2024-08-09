@@ -90,6 +90,20 @@ const LoanRequestComponent: React.FC<{
   const { data: equipmentAndInventory, mutateAsync: fetchSearch } =
     api.loanRequest.getEquipmentAndInventory.useMutation();
   const { data: disabledCalendarDates } = api.loan.getHolidays.useQuery();
+  const { data: validSemester } =
+    api.loanRequest.checkIfSemesterExist.useQuery();
+
+  //Check if there is a semester for loan
+  useEffect(() => {
+    if (validSemester === false) {
+      toast({
+        title: "An unexpected error occured. Please try again later",
+        description: "System Is unable to create Loan Requests at this moment",
+        variant: "destructive",
+      });
+    }
+  }, [validSemester]);
+
   function addItem(itemToAdd: Inventory) {
     if (
       selectedEquipment.some(
@@ -503,7 +517,9 @@ const LoanRequestComponent: React.FC<{
                 <Button
                   type="submit"
                   className=" w-28"
-                  disabled={selectedEquipment.length === 0}
+                  disabled={
+                    selectedEquipment.length === 0 || validSemester === false
+                  }
                 >
                   Next
                 </Button>
