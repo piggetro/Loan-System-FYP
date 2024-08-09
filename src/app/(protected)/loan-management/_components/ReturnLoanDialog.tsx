@@ -40,6 +40,7 @@ const ReturnLoanDialog: React.FC<{
   id: string;
 }> = ({ closeDialog, id }) => {
   const [isReturning, setIsReturning] = useState<boolean>(false);
+  const [allowedToReturn, setAllowedToReturn] = useState<boolean>(false);
   const { isFetching, data, isFetched, refetch } =
     api.loanRequest.getReturnLoanById.useQuery({
       id: id,
@@ -54,8 +55,18 @@ const ReturnLoanDialog: React.FC<{
   const [returnedItemLength, setReturnedItemLength] = useState<number>(0);
 
   const { toast: collectionLoanToast } = useToast();
+  useEffect(() => {
+    setAllowedToReturn(false);
+    console.log(processedLoanData);
+    processedLoanData.forEach((item) => {
+      if (item.returned !== "COLLECTED") {
+        setAllowedToReturn(true);
+      }
+    });
+  }, [processedLoanData]);
 
   useEffect(() => {
+    console.log(data);
     data?.loanItems.forEach((loanItem) => {
       setProcessLoanData((prev) => [
         ...prev,
@@ -354,6 +365,7 @@ const ReturnLoanDialog: React.FC<{
           onClick={() => {
             onSubmit();
           }}
+          disabled={!allowedToReturn}
         >
           {isReturning && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           Process Return

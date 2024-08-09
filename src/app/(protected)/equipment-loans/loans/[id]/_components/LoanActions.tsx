@@ -147,7 +147,7 @@ const LoanActions: React.FC<{
   }
   if (
     userAccessRights.includes("Return") &&
-    status === "COLLECTED" &&
+    (status === "COLLECTED" || status === "PARTIAL_RETURN") &&
     !userAccessRights.includes("usersOwnLoan")
   ) {
     return (
