@@ -203,8 +203,8 @@ const EditInventoryItem = ({
                         <SelectItem key="LOST" value="LOST">
                           Lost
                         </SelectItem>
-                        <SelectItem key="BROKEN" value="BROKEN">
-                          Broken
+                        <SelectItem key="DAMAGED" value="DAMAGED">
+                          Damaged
                         </SelectItem>
                         <SelectItem
                           key="MISSING_CHECKLIST_ITEMS"

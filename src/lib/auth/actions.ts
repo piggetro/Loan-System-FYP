@@ -120,9 +120,11 @@ export async function register(adminId: string, mobile: string) {
         };
       }
       const password = generate({
-        length: 10,
+        length: 12,
         numbers: true,
         symbols: true,
+        uppercase: true,
+        lowercase: true,
       });
       sendRegistrationEmail(results?.email, password).catch((error) => {
         console.log(error);

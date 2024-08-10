@@ -12,6 +12,7 @@ import { Loader2 } from "lucide-react";
 import { Checkbox } from "@/app/_components/ui/checkbox";
 import { Dialog, DialogContent } from "@/app/_components/ui/dialog";
 import TermsComponent from "./Terms";
+import { set } from "date-fns";
 
 const RegisterComponent = () => {
   const router = useRouter();
@@ -51,6 +52,9 @@ const RegisterComponent = () => {
           });
         }
         setIsPending(false);
+        setAdminId("");
+        setMobile("");
+        setTermsSelected(false);
       })
       .catch((error) => {
         console.log(error);

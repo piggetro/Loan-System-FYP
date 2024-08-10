@@ -136,13 +136,16 @@ export const semesterHolidayRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       try {
+        const endDate = new Date(input.endDate);
+
+        endDate.setHours(23, 59, 59, 999);
         return await ctx.db
           .insertInto("Holiday")
           .values({
             id: createId(),
             name: input.name,
             startDate: input.startDate,
-            endDate: input.endDate,
+            endDate,
           })
           .returning([
             "id",
@@ -170,12 +173,15 @@ export const semesterHolidayRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       try {
+        const endDate = new Date(input.endDate);
+
+        endDate.setHours(23, 59, 59, 999);
         return await ctx.db
           .updateTable("Holiday")
           .set({
             name: input.name,
             startDate: input.startDate,
-            endDate: input.endDate,
+            endDate,
           })
           .where("id", "=", input.id)
           .returning([

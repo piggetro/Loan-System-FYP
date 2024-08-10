@@ -13,6 +13,7 @@
     "start": "next start"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.627.0",
     "@hookform/resolvers": "^3.3.4",
     "@lucia-auth/adapter-mysql": "^3.0.2",
     "@lucia-auth/adapter-postgresql": "^3.1.2",
@@ -65,6 +66,7 @@
     "superjson": "^2.2.1",
     "tailwind-merge": "^2.3.0",
     "tailwindcss-animate": "^1.0.7",
+    "unzipper": "^0.12.3",
     "zod": "^3.23.4"
   },
   "devDependencies": {
@@ -76,6 +78,7 @@
     "@types/react": "^18.2.57",
     "@types/react-dom": "^18.2.19",
     "@types/react-signature-canvas": "^1.0.5",
+    "@types/unzipper": "^0.10.10",
     "@typescript-eslint/eslint-plugin": "^7.1.1",
     "@typescript-eslint/parser": "^7.1.1",
     "eslint": "^8.57.0",
