@@ -186,7 +186,7 @@ enum LoanedItemsStatus {
 
 model Waiver {
     id            String             @id @default(cuid())
-    loan          Loan               @relation(fields: [loanId], references: [id])
+    loan          Loan               @relation(fields: [loanId], references: [id], onDelete: Cascade)
     loanId        String
     loanItems     LoanItem[]
     waiveRequest  String?
@@ -194,7 +194,7 @@ model Waiver {
     dateIssued    DateTime           @default(now())
     dateUpdated   DateTime?
     dateSubmitted DateTime?
-    updatedBy     User?              @relation(fields: [updatedById], references: [id])
+    updatedBy     User?              @relation(fields: [updatedById], references: [id], onDelete: SetNull)
     status        WaiveRequestStatus
     updatedById   String?
     imagePath     String?
