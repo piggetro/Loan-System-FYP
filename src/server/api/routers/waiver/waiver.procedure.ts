@@ -45,7 +45,7 @@ export const waiverRouter = createTRPCRouter({
               .select("Equipment.name"),
           ).as("outstandingItems"),
         ])
-        .distinctOn("Loan.id")
+        .orderBy("wr.dateIssued desc")
         .execute();
 
       return data.map((waiver) => {

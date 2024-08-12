@@ -160,8 +160,8 @@ const OutstandingItemDialog: React.FC<{
               <TableHead className="w-1/6">Item Description</TableHead>
               <TableHead className="w-1/3">Checklist</TableHead>
               <TableHead className="w-1/8">Asset Number</TableHead>
-              <TableHead>Remarks</TableHead>
-              <TableHead>Returned</TableHead>
+              <TableHead>Inventory Remarks</TableHead>
+              <TableHead>Loan Item Status</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -216,6 +216,16 @@ const OutstandingItemDialog: React.FC<{
                           Returned
                         </div>
                       </SelectItem>
+                      <SelectItem value="UNAVAILABLE">
+                        <div className="flex items-center">
+                          <div
+                            className={`mr-2 min-h-3 min-w-3 rounded-full bg-green-500`}
+                          ></div>
+                          <div className="truncate">
+                            Returned (Mark Inventory As Unavailable)
+                          </div>
+                        </div>
+                      </SelectItem>
                       <SelectItem value="LOST">
                         <div className="flex items-center">
                           <div
@@ -238,16 +248,6 @@ const OutstandingItemDialog: React.FC<{
                             className={`mr-2 h-3 w-3 rounded-full bg-red-500`}
                           ></div>
                           Penalty For Checklist
-                        </div>
-                      </SelectItem>
-                      <SelectItem value="UNAVAILABLE">
-                        <div className="flex items-center">
-                          <div
-                            className={`mr-2 min-h-3 min-w-3 rounded-full bg-yellow-500`}
-                          ></div>
-                          <div className="truncate">
-                            Returned (Mark Inventory As Unavailable)
-                          </div>
                         </div>
                       </SelectItem>
                     </SelectContent>

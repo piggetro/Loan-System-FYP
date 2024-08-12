@@ -664,7 +664,6 @@ export const loanRequestRouter = createTRPCRouter({
           loanItemsRequested.forEach((loanitem) => {
             arrayOfEquipmentIdReq.push(loanitem.equipmentId!);
           });
-
           //Checking if equipment is enabled
           const equipmentCheck = await trx
             .selectFrom("Equipment")
@@ -711,23 +710,22 @@ export const loanRequestRouter = createTRPCRouter({
               "LoanItem.equipmentId",
               eb.fn.count<number>("LoanItem.equipmentId").as("count"),
             ])
-            .where((eb) =>
-              eb.or([
-                eb("LoanItem.status", "=", "REQUEST_COLLECTION"),
-                eb("LoanItem.status", "=", "PREPARING"),
-              ]),
-            )
+            .where((eb) => eb.or([eb("LoanItem.status", "=", "PREPARING")]))
             .groupBy("LoanItem.equipmentId")
             .where("LoanItem.equipmentId", "in", arrayOfEquipmentIdReq)
             .where("LoanItem.loanId", "!=", input.id)
             .execute();
 
           let allowedToRequestForLoan = true;
-
-          loanItemsRequested.forEach((item) => {
-            const inventoryCount = inventoryAvailability.find(
+          for (const item of loanItemsRequested) {
+            const inventory = inventoryAvailability.find(
               (inventory) => inventory.equipmentId === item.equipmentId,
-            )!.count;
+            );
+            console.log(inventory);
+            if (inventory === undefined) {
+              return "UNAVAILABLE";
+            }
+            const inventoryCount = inventory.count;
             const itemUnavailability = loanItemsUnavailable.find(
               (loanItem) => loanItem.equipmentId === item.equipmentId,
             );
@@ -736,7 +734,7 @@ export const loanRequestRouter = createTRPCRouter({
                 allowedToRequestForLoan = false;
               }
             }
-          });
+          }
 
           if (allowedToRequestForLoan) {
             await trx
