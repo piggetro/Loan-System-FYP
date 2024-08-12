@@ -125,10 +125,10 @@ export function DefaultLoanDataTable<TData, TValue>({
                   key={"REQUEST_COLLECTION"}
                   value={"REQUEST_COLLECTION"}
                 >
-                  REQUEST_COLLECTION
+                  Request Collection
                 </SelectItem>
                 <SelectItem key={"APPROVED"} value={"APPROVED"}>
-                  APPROVED
+                  Approved
                 </SelectItem>
               </SelectGroup>
             </SelectContent>
@@ -154,10 +154,10 @@ export function DefaultLoanDataTable<TData, TValue>({
                   All
                 </SelectItem>
                 <SelectItem key={"PREPARING"} value={"PREPARING"}>
-                  PREPARING
+                  Preparing
                 </SelectItem>
                 <SelectItem key={"READY"} value={"READY"}>
-                  READY
+                  Ready
                 </SelectItem>
               </SelectGroup>
             </SelectContent>
